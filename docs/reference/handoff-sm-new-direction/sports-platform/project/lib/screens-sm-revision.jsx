@@ -3251,6 +3251,261 @@ const SMRevisionProfileReviewMobileGridSM2 = () => (
   ]}/>
 );
 
+const SM3_TEAM_BROWSE_ACTIONS_RESTORED = [
+  ['검색 입력', '상단 검색바 focus/type', '검색 실행 버튼 활성화, query 유지', '검색 결과 목록. 빠른 입력은 마지막 query만 반영', 'search'],
+  ['검색 실행', 'blue search icon tap', 'loading row 후 결과 갱신', 'empty/error/permission이면 복구 CTA와 context 유지', 'submit'],
+  ['종목 chip', '가로 chip tap', 'active chip과 count 갱신', '목록 재조회. 0건이면 조건 초기화 제공', 'filter'],
+  ['팀 카드', '카드 또는 팀 보기 tap', 'pressed scale + selected border', '팀 상세/가입 CTA 화면 진입', 'detail'],
+  ['팀 비교 저장', '비교 담기 tap', 'toast + 카드 compare badge', '비교 drawer. 3개 초과 시 교체 확인', 'compare'],
+  ['가입 가능 확인', '상세 sticky CTA tap', '가입 조건 sheet open', '신청 가능/권한 없음/마감/중복 신청으로 분기', 'join'],
+  ['가입 신청', 'sheet primary CTA tap', '중복 submit lock + pending', '승인 대기 상태. 처리 주체와 예상 다음 상태 표시', 'apply'],
+  ['알림 받기', '마감/검토중 카드 CTA tap', 'notification permission 확인', '권한 거부 시 수동 확인 안내와 설정 CTA', 'notify'],
+  ['공유', '상세 공유 icon tap', 'native share 또는 링크 복사 toast', '실패 시 링크 복사 fallback', 'share'],
+  ['뒤로가기', 'detail back tap', 'pressed feedback', '목록 scroll/query/filter/selected 상태 복원', 'nav'],
+  ['하단 팀 탭', 'bottom nav 팀 tap', 'active 유지', '05 main으로 복귀, 이미 main이면 scroll top optional', 'nav'],
+  ['my team shortcut', '홈 my team shortcut 진입', '목적지 미정 reason sheet', 'false affordance 차단. 결정 전 route 이동 금지', 'blocked'],
+];
+
+const SMRevisionTeamBrowseShellSM3Restored = ({ children }) => (
+  <div style={{ width: 375, height: 812, background: 'var(--bg)', fontFamily: 'var(--font)', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+    <StatusBar/>
+    <div style={{ flex: 1, overflow: 'auto', paddingBottom: 12 }}>
+      {children}
+    </div>
+    <SMBottomNav active="teams"/>
+  </div>
+);
+
+const SMRevisionTeamBrowseSearchBlockSM3Restored = ({ state = 'results' }) => {
+  const isEmpty = state === 'empty';
+  const isError = state === 'error';
+  return (
+    <div style={{ padding: '12px 20px 96px' }}>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{ flex: 1, minHeight: 48, borderRadius: 14, border: '1px solid var(--border)', padding: '0 12px', display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg)' }}>
+          <Icon name="search" size={18} color="var(--grey500)"/>
+          <div className="tm-text-body" style={{ color: state === 'idle' ? 'var(--text-placeholder)' : 'var(--text-strong)', flex: 1 }}>풋살 강동</div>
+          <button className="tm-btn tm-btn-icon tm-btn-primary" aria-label="팀 검색 실행" style={{ width: 38, minWidth: 38, height: 38, borderRadius: 12 }}>
+            <Icon name="arrow" size={17} color="var(--static-white)"/>
+          </button>
+        </div>
+        <SBtn variant="ghost" size="sm">취소</SBtn>
+      </div>
+      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '14px 0 10px' }}>
+        {['전체 42', '모집중 18', '내 주변', '초중급', '주 1회'].map((label, index) => <HapticChip key={label} active={index === 0}>{label}</HapticChip>)}
+      </div>
+      {isEmpty || isError ? (
+        <EmptyState
+          title={isError ? '팀 목록을 불러오지 못했습니다' : '조건에 맞는 팀이 없습니다'}
+          sub={isError ? '검색어와 필터는 유지합니다. 다시 시도하거나 지역 조건을 넓혀볼 수 있습니다.' : '선택한 종목과 지역 조건을 유지한 채 필터를 초기화하거나 추천 팀을 볼 수 있습니다.'}
+          cta={isError ? '다시 시도' : '필터 초기화'}
+        />
+      ) : (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 2 }}>
+            <SM2InlineStat label="모집중" value="18팀" sub="서울 기준"/>
+            <SM2InlineStat label="내 프로필 매칭" value="7팀" sub="sample"/>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
+            {SM2_TEAM_BROWSE_TEAMS.map((team, index) => <SM2TeamBrowseCard key={team.name} team={team} selected={index === 0}/>)}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+const SMRevisionTeamBrowseMobileSM3Restored = () => (
+  <SMRevisionTeamBrowseShellSM3Restored>
+    <SMRevisionTeamBrowseSearchBlockSM3Restored/>
+  </SMRevisionTeamBrowseShellSM3Restored>
+);
+
+const SMRevisionTeamBrowseSearchMobileSM3Restored = ({ state = 'results' }) => (
+  <SMRevisionTeamBrowseShellSM3Restored>
+    <SMRevisionTeamBrowseSearchBlockSM3Restored state={state}/>
+  </SMRevisionTeamBrowseShellSM3Restored>
+);
+
+const SMRevisionTeamBrowseListSearchBarSM4Restored = ({ state = 'results' }) => {
+  const isError = state === 'error';
+  const isTyping = state === 'typing' || state === 'results';
+  const value = state === 'empty' ? '하키 강남' : isTyping ? '풋살 강동' : '';
+  return (
+    <div style={{ minHeight: 56, padding: '8px 10px 8px 20px', borderBottom: '1px solid var(--grey100)', display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg)', flexShrink: 0 }}>
+      <div style={{ flex: 1, minHeight: 44, borderRadius: 14, background: 'var(--grey100)', border: isError ? '1px solid var(--red500)' : isTyping ? '1px solid var(--blue500)' : '1px solid transparent', display: 'flex', alignItems: 'center', gap: 6, padding: '0 8px 0 14px' }}>
+        <div className="tm-text-body" style={{ flex: 1, color: value ? 'var(--text-strong)' : 'var(--text-placeholder)' }}>{value || '팀명, 지역, 종목 검색'}</div>
+        {value && (
+          <button aria-label="검색어 지우기" style={{ width: 30, minWidth: 30, height: 30, border: 0, background: 'transparent', display: 'grid', placeItems: 'center', padding: 0 }}>
+            <span style={{ width: 20, height: 20, borderRadius: 999, background: 'var(--grey400)', color: 'var(--static-white)', display: 'grid', placeItems: 'center', fontSize: 14, lineHeight: '20px', fontWeight: 800 }}>×</span>
+          </button>
+        )}
+        <button className="tm-btn tm-btn-icon tm-btn-ghost" aria-label="팀 검색 실행" style={{ width: 34, minWidth: 34, height: 34, borderRadius: 11, color: isError ? 'var(--red500)' : 'var(--blue500)' }}>
+          <Icon name="search" size={19}/>
+        </button>
+      </div>
+      <button className="tm-btn tm-btn-icon tm-btn-ghost" aria-label="팀 목록 필터" style={{ width: 40, minWidth: 40, height: 40, padding: 0 }}>
+        <Icon name="filter" size={21}/>
+      </button>
+    </div>
+  );
+};
+
+const SMRevisionTeamBrowseShellSM4Restored = ({ children, state = 'results' }) => (
+  <div style={{ width: 375, height: 812, background: 'var(--bg)', fontFamily: 'var(--font)', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+    <StatusBar/>
+    <SMRevisionTeamBrowseListSearchBarSM4Restored state={state}/>
+    <div style={{ flex: 1, overflow: 'auto', paddingBottom: 12 }}>
+      {children}
+    </div>
+    <SMBottomNav active="teams"/>
+  </div>
+);
+
+const SMRevisionTeamBrowseListBodySM4Restored = ({ state = 'results' }) => {
+  const isEmpty = state === 'empty';
+  const isError = state === 'error';
+  return (
+    <div style={{ padding: '14px 20px 96px' }}>
+      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 10 }}>
+        {['전체 42', '모집중 18', '내 주변', '초중급', '주 1회'].map((label, index) => <HapticChip key={label} active={index === 0}>{label}</HapticChip>)}
+      </div>
+      {isEmpty || isError ? (
+        <EmptyState
+          title={isError ? '팀 목록을 불러오지 못했습니다' : '조건에 맞는 팀이 없습니다'}
+          sub={isError ? '00 최종본의 목록 상단바처럼 검색어와 필터는 상단에 유지하고, 재시도는 본문 CTA로 둡니다.' : '검색어는 상단바에 남긴 채 필터 초기화, 추천 팀 보기, 지역 넓히기로 복구합니다.'}
+          cta={isError ? '검색 재시도' : '필터 초기화'}
+        />
+      ) : (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <SM2InlineStat label="모집중" value="18팀" sub="서울 기준"/>
+            <SM2InlineStat label="내 프로필 매칭" value="7팀" sub="sample"/>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
+            {SM2_TEAM_BROWSE_TEAMS.map((team, index) => <SM2TeamBrowseCard key={team.name} team={team} selected={index === 0}/>)}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+const SMRevisionTeamBrowseMobileSM4Restored = ({ state = 'results' }) => (
+  <SMRevisionTeamBrowseShellSM4Restored state={state}>
+    <SMRevisionTeamBrowseListBodySM4Restored state={state}/>
+  </SMRevisionTeamBrowseShellSM4Restored>
+);
+
+const SMRevisionTeamBrowseJoinSheetSM3Restored = ({ state = 'ready' }) => {
+  const team = SM2_TEAM_BROWSE_TEAMS[0];
+  const content = {
+    ready: ['가입 신청 전 확인', '팀 공개 범위와 활동 조건을 확인했습니다.', '가입 신청하기', 'primary'],
+    pending: ['이미 신청 검토 중', '팀장이 검토 중입니다. 중복 신청은 막고 상태 확인으로 이동합니다.', '신청 상태 보기', 'neutral'],
+    permission: ['가입 조건이 부족합니다', '프로필 공개 범위 또는 레벨 정보가 부족합니다. 필요한 항목을 먼저 보완해야 합니다.', '프로필 보완하기', 'secondary'],
+    closed: ['현재 모집이 마감되었습니다', '정원이 찼습니다. 다음 모집 알림을 받을 수 있습니다.', '모집 알림 받기', 'neutral'],
+    rejected: ['최근 거절 이력이 있습니다', '거절 사유를 확인한 뒤 재신청 가능 시점에 다시 시도합니다.', '사유 확인하기', 'secondary'],
+  }[state];
+  return (
+    <SMRevisionShell title="" back notificationNew={false} bottom={false}>
+      <div style={{ padding: '18px 20px 118px' }}>
+        <Card pad={18} style={{ background: 'var(--grey900)', color: 'var(--static-white)' }}>
+          <div style={{ width: 60, height: 60, borderRadius: 18, background: 'var(--blue500)', display: 'grid', placeItems: 'center', fontWeight: 800 }}>{team.logo}</div>
+          <div className="tm-text-heading" style={{ color: 'var(--static-white)', marginTop: 14 }}>{team.name}</div>
+          <div className="tm-text-caption" style={{ color: 'rgba(255,255,255,.72)', marginTop: 4 }}>{team.sport} · {team.region} · 매너 {team.manner}</div>
+        </Card>
+      </div>
+      <div className="tm-animate-sheet" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '18px 20px 22px', background: 'var(--bg)', borderTop: '1px solid var(--grey100)', borderRadius: '20px 20px 0 0', boxShadow: 'var(--sh-2)' }}>
+        <div className="tm-text-subhead">{content[0]}</div>
+        <div className="tm-text-body" style={{ color: 'var(--text-muted)', marginTop: 8 }}>{content[1]}</div>
+        <div style={{ display: 'grid', gap: 8, marginTop: 14 }}>
+          <SMRevisionInfoRow label="팀" value={team.name}/>
+          <SMRevisionInfoRow label="활동 조건" value="주 1회 · 초중급 · 강동/광진권"/>
+          <SMRevisionInfoRow label="신뢰 상태" value={`${team.trust} · sample/estimated/verified 구분 유지`}/>
+        </div>
+        <SBtn full size="lg" variant={content[3]} style={{ marginTop: 14 }}>{content[2]}</SBtn>
+      </div>
+    </SMRevisionShell>
+  );
+};
+
+const SMRevisionTeamBrowseMembershipStateSM3Restored = ({ state = 'pending' }) => {
+  const rows = {
+    pending: ['가입 신청 검토 중', '성수 러너스 FC 팀장이 신청서를 확인하고 있습니다.', '처리 주체: 팀장 · 예상 다음 상태: 승인 또는 거절', 'orange'],
+    approved: ['가입이 승인되었습니다', '팀 일정과 채팅방에 입장할 수 있습니다.', '다음 행동: 팀 채팅 입장 / 팀 프로필 보기', 'green'],
+    rejected: ['가입 신청이 거절되었습니다', '사유를 확인하고 프로필을 보완한 뒤 재신청할 수 있습니다.', '복구 행동: 사유 확인 / 다른 팀 보기', 'red'],
+    duplicate: ['이미 신청한 팀입니다', '중복 제출은 막고 기존 신청 상태로 이동합니다.', '다음 행동: 신청 상태 보기', 'orange'],
+    private: ['프로필 공개가 필요합니다', '팀 가입 판단에 필요한 레벨/지역/매너 정보가 비공개입니다.', '복구 행동: 공개 범위 설정', 'orange'],
+  }[state];
+  return (
+    <SMRevisionShell title="" back notificationNew={false} bottom={false}>
+      <div style={{ padding: '20px 20px 118px' }}>
+        <Badge tone={rows[3]}>{state}</Badge>
+        <div className="tm-text-heading" style={{ marginTop: 14 }}>{rows[0]}</div>
+        <div className="tm-text-body" style={{ marginTop: 8, color: 'var(--text-muted)' }}>{rows[1]}</div>
+        <Card pad={16} style={{ marginTop: 18, background: rows[3] === 'green' ? 'var(--green50)' : rows[3] === 'red' ? 'var(--red50)' : 'var(--orange50)' }}>
+          <div className="tm-text-body-lg">{rows[2]}</div>
+          <div className="tm-text-caption" style={{ marginTop: 8 }}>toast 단독 처리 금지. 상태는 이 화면 또는 팀 상세 CTA에 지속 표시한다.</div>
+        </Card>
+      </div>
+      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '14px 20px 22px', background: 'var(--bg)', borderTop: '1px solid var(--grey100)' }}>
+        <SBtn full size="lg" variant={rows[3] === 'red' ? 'secondary' : 'primary'}>{rows[3] === 'green' ? '팀 채팅 입장' : rows[3] === 'red' ? '다른 팀 보기' : '상태 확인하기'}</SBtn>
+      </div>
+    </SMRevisionShell>
+  );
+};
+
+const SMRevisionTeamBrowseSM3ActionMatrixRestored = () => (
+  <SMRevisionPlusBoard eyebrow="05 TEAM BROWSE SM3 · ACTIONS" title="팀 둘러보기 모든 버튼 동작/예외 매트릭스" columns={4}>
+    {SM3_TEAM_BROWSE_ACTIONS_RESTORED.map(([title, trigger, feedback, next, state], index) => (
+      <SMRevisionPlusCard key={title} index={index + 1} title={title} trigger={trigger} feedback={feedback} next={next} state={state} tone={state === 'blocked' || state === 'notify' ? 'orange' : 'blue'}/>
+    ))}
+  </SMRevisionPlusBoard>
+);
+
+const SMRevisionTeamBrowseSM3StateMatrixRestored = () => (
+  <SMRevisionPlusBoard eyebrow="05 TEAM BROWSE SM3 · STATES" title="팀 둘러보기 상태/예외 처리 완성본" columns={4}>
+    {[
+      ['loading', '팀 카드 skeleton은 로고, 제목 2줄, 신뢰 지표 3칸, CTA row shape를 유지한다.', 'skeleton', 'blue'],
+      ['empty', '검색어와 필터를 유지하고 필터 초기화, 추천 팀 보기, 지역 넓히기를 제공한다.', 'recover', 'blue'],
+      ['network error', '마지막 query/filter context를 유지하고 재시도 CTA를 제공한다. toast 단독 금지.', 'retry', 'red'],
+      ['permission', '내 주변/프로필 기반 추천에 필요한 위치 또는 프로필 공개 권한이 없으면 이유와 설정 CTA를 둔다.', 'permission', 'orange'],
+      ['pending', '가입 신청 후 CTA를 잠그고 처리 주체와 예상 다음 상태를 표시한다.', 'pending', 'orange'],
+      ['approved', '승인 완료는 팀 채팅/팀 프로필/일정 확인 후속 행동으로 연결한다.', 'next action', 'green'],
+      ['rejected', '거절 사유와 재신청 가능 조건을 지속 UI로 표시한다.', 'reason', 'red'],
+      ['closed', '모집 마감 팀은 가입 CTA를 알림 받기로 바꾸고, 대체 추천을 제공한다.', 'notify', 'orange'],
+      ['duplicate', '중복 신청은 새 submit 대신 기존 신청 상태 화면으로 이동한다.', 'status', 'orange'],
+      ['stale result', '빠른 필터 전환에서 이전 응답이 최신 목록을 덮지 못하게 마지막 요청 기준으로 표시한다.', 'last-write wins', 'orange'],
+      ['trust sample', 'sample/estimated/verified 신뢰 신호를 명확히 구분하고 실제 검증처럼 보이지 않게 한다.', 'truth gate', 'blue'],
+      ['my team undecided', '목적지 미정 shortcut은 disabled reason sheet로 막고 임의 route 이동을 하지 않는다.', 'blocked', 'orange'],
+    ].map(([title, body, action, tone]) => <SMRevisionPlusStateCard key={title} title={title} body={body} action={action} tone={tone}/>)}
+  </SMRevisionPlusBoard>
+);
+
+const SMRevisionTeamBrowseSM3FlowRestored = () => (
+  <SMRevisionPlusBoard eyebrow="05 TEAM BROWSE SM3 · FLOW" title="홈/탭 → 팀 탐색 → 상세 → 가입 상태 흐름" columns={4}>
+    {[
+      ['진입', '홈 team shortcut 또는 하단 팀 탭에서 05 main으로 진입한다. query/filter 초기값은 지역/관심 종목 기반.', 'main'],
+      ['탐색', '검색, 종목 chip, 모집중/내 주변 조건으로 팀 목록을 좁힌다. stale query race를 막는다.', 'filter'],
+      ['비교', '팀 카드의 적합도/매너/신뢰 상태를 비교하고 최대 3개까지 비교 drawer에 담는다.', 'compare'],
+      ['상세 판단', '팀 상세에서 활동 방식, 신뢰 신호, 가입 조건, 공개 범위를 확인한다.', 'detail'],
+      ['신청 전 확인', 'sticky CTA는 가입 조건 sheet를 열고 프로필/권한/정원/중복 신청을 먼저 검사한다.', 'guard'],
+      ['신청', '가능 상태에서만 신청 submit. 중복 submit lock과 pending 상태를 지속 표시한다.', 'apply'],
+      ['결과', '승인/거절/마감/중복/권한 부족을 각각 별도 화면 또는 상세 CTA 상태로 표시한다.', 'state'],
+      ['후속', '승인 완료는 팀 채팅, 팀 프로필, 팀 일정으로 연결한다. 거절/마감은 대체 팀 추천으로 복구한다.', 'next'],
+    ].map(([title, body, action], index) => <SMRevisionPlusStateCard key={title} title={`${index + 1}. ${title}`} body={body} action={action} tone={index >= 4 ? 'orange' : 'blue'}/>)}
+  </SMRevisionPlusBoard>
+);
+
+const SMRevisionTeamBrowseSM4TopbarRuleRestored = () => (
+  <SMRevisionPlusBoard eyebrow="05 TEAM BROWSE SM4 · 00 LIST TOPBAR" title="00 최종본 목록 상단바 검색 적용" columns={4}>
+    <SMRevisionPlusStateCard title="검색 위치" body="SM3의 본문 첫 요소 검색바를 00 최종본 기준의 목록 상단바로 올린다. 팀 목록 본문은 chip과 결과부터 시작한다." action="topbar search" tone="blue"/>
+    <SMRevisionPlusStateCard title="필터 노출" body="목록에서는 검색창과 필터 버튼을 동시에 노출한다. 별도 검색 아이콘 진입이나 숨은 필터 entry를 만들지 않는다." action="filter visible" tone="blue"/>
+    <SMRevisionPlusStateCard title="상태 유지" body="empty/error에서도 검색어와 필터 버튼은 상단바에 남기고, 복구 CTA만 본문으로 내려 검색 context를 잃지 않는다." action="persistent context" tone="orange"/>
+    <SMRevisionPlusStateCard title="하단 탭" body="05는 팀 둘러보기 루트이므로 하단 5탭은 유지하고 팀 탭을 active로 둔다. 상세/신청 상태 화면은 기존 SM3 규칙을 따른다." action="teams active" tone="green"/>
+  </SMRevisionPlusBoard>
+);
+
 Object.assign(window, {
   SMBottomNav,
   SM_BOTTOM_TABS,
@@ -3337,4 +3592,1194 @@ Object.assign(window, {
   SMRevisionPaymentMobile,
   SMRevisionLandingMobile,
   SMRevisionAdminMobile,
+});
+
+const SMCoreIconButton = ({ label, icon, active = false, children }) => (
+  <button aria-label={label} style={{ width: 34, minWidth: 34, height: 34, border: 0, background: active ? 'var(--blue500)' : 'transparent', borderRadius: 11, display: 'grid', placeItems: 'center', color: active ? 'var(--static-white)' : 'var(--text-strong)', padding: 0, position: 'relative' }}>
+    <Icon name={icon} size={icon === 'chevL' ? 20 : 21}/>
+    {children}
+  </button>
+);
+
+const SMCoreBackButton = () => (
+  <button aria-label="뒤로가기" style={{ width: 30, minWidth: 30, height: 40, border: 0, background: 'transparent', borderRadius: 12, display: 'grid', placeItems: 'center', color: 'var(--text-strong)', padding: 0 }}>
+    <Icon name="chevL" size={20}/>
+  </button>
+);
+
+const SMCorePreviewSearchBox = ({ text = '검색어를 입력하세요' }) => (
+  <div style={{ flex: 1, minHeight: 40, borderRadius: 13, background: 'var(--grey100)', display: 'flex', alignItems: 'center', gap: 6, padding: '0 8px 0 14px', minWidth: 0 }}>
+    <div className="tm-text-body" style={{ flex: 1, color: 'var(--text-placeholder)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{text}</div>
+    <SMCoreIconButton label="검색 실행" icon="search"/>
+  </div>
+);
+
+const SMCoreShellPreviewBar = ({ mode }) => {
+  if (mode === 'home') {
+    return (
+      <div style={{ minHeight: 56, padding: '8px 10px 8px 16px', borderBottom: '1px solid var(--grey100)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div className="tm-text-body-lg" style={{ color: 'var(--text-strong)' }}>teameet</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+          <SMCoreIconButton label="검색" icon="search"/>
+          <SMCoreIconButton label="알림" icon="bell">
+            <span style={{ position: 'absolute', top: 8, right: 8, width: 7, height: 7, borderRadius: 999, background: 'var(--red500)', border: '2px solid var(--bg)' }}/>
+          </SMCoreIconButton>
+        </div>
+      </div>
+    );
+  }
+
+  if (mode === 'list') {
+    return (
+      <div style={{ minHeight: 56, padding: '8px 10px 8px 8px', borderBottom: '1px solid var(--grey100)', display: 'flex', alignItems: 'center', gap: 1 }}>
+        <SMCoreBackButton/>
+        <SMCorePreviewSearchBox text="매치, 팀, 지역 검색"/>
+        <button aria-label="필터" style={{ width: 40, minWidth: 40, height: 40, border: 0, background: 'transparent', borderRadius: 12, display: 'grid', placeItems: 'center', color: 'var(--text-strong)', padding: 0 }}>
+          <Icon name="filter" size={21}/>
+        </button>
+      </div>
+    );
+  }
+
+  if (mode === 'detail') {
+    return (
+      <div style={{ minHeight: 56, padding: '8px 10px 8px 8px', borderBottom: '1px solid var(--grey100)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+          <SMCoreBackButton/>
+          <div className="tm-text-body-lg" style={{ color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>상세보기</div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+          <SMCoreIconButton label="공유" icon="share"/>
+          <SMCoreIconButton label="알림" icon="bell"/>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ minHeight: 56, padding: '8px 10px 8px 8px', borderBottom: '1px solid var(--grey100)', display: 'flex', alignItems: 'center', gap: 1 }}>
+      <SMCoreBackButton/>
+      <SMCorePreviewSearchBox text="검색어를 입력하세요"/>
+    </div>
+  );
+};
+
+const SMCoreShellRuleCard = ({ index, title, body, mode, meta }) => (
+  <Card pad={0} style={{ overflow: 'visible' }}>
+    <SMCoreShellPreviewBar mode={mode}/>
+    <div style={{ padding: '12px 13px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 24 }}>
+        <span style={{ minWidth: 30, height: 22, padding: '0 8px', borderRadius: 999, background: 'var(--blue50)', color: 'var(--blue500)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, lineHeight: '22px', fontWeight: 800, flexShrink: 0 }}>{String(index).padStart(2, '0')}</span>
+        <div className="tm-text-body-lg" style={{ minWidth: 0 }}>{title}</div>
+      </div>
+      <div className="tm-text-caption" style={{ marginTop: 5 }}>{body}</div>
+      <div className="tm-text-micro" style={{ marginTop: 6, color: 'var(--text-muted)' }}>{meta}</div>
+    </div>
+  </Card>
+);
+
+const SMCoreTopBackCompactOptionsMobile = () => (
+  <div style={{ width: 375, height: 812, background: 'var(--bg)', fontFamily: 'var(--font)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+    <StatusBar/>
+    <div style={{ padding: '14px 20px 10px', borderBottom: '1px solid var(--grey100)', flexShrink: 0 }}>
+      <div className="tm-text-caption">00 SM 고정안 · 상단바 디자인</div>
+      <div className="tm-text-subhead" style={{ marginTop: 3 }}>상단바와 검색 진입</div>
+      <div className="tm-text-caption" style={{ marginTop: 6 }}>모든 모바일 디자인은 이 상단바 기준을 먼저 적용한다. 화면별 필요한 요소만 남긴다.</div>
+    </div>
+    <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '12px 18px 28px', display: 'grid', gap: 8, alignContent: 'start', WebkitOverflowScrolling: 'touch' }}>
+      <SMCoreShellRuleCard index={1} title="홈 상단바" body="홈에서는 로고, 검색 아이콘, 알림 아이콘만 사용한다. 검색은 홈 전체 검색으로 진입하고, 알림 점은 새 알림이 있을 때만 표시한다." meta="적용: 홈, 마이처럼 전역 검색 진입이 필요한 루트 화면" mode="home"/>
+      <SMCoreShellRuleCard index={2} title="목록 상단바" body="매치, 팀매치, 팀 목록에서는 뒤로가기, 검색창, 필터를 바로 노출한다. 검색 아이콘은 입력창 내부 오른쪽에 둔다." meta="적용: 매치 목록, 팀매치 목록, 팀 둘러보기" mode="list"/>
+      <SMCoreShellRuleCard index={3} title="상세 상단바" body="상세보기에서는 뒤로가기, 공유, 알림만 둔다. 검색창과 필터는 상세 화면에서 제외한다." meta="뒤로가기 수치: 2안 고정, 30px 버튼 / 20px 아이콘 / 제목 gap 1" mode="detail"/>
+      <SMCoreShellRuleCard index={4} title="홈 검색 진입" body="홈에서 검색을 누르면 뒤로가기와 검색창만 남긴다. 검색어 입력, 지우기, 결과 없음, 오류 상태는 검색바 계열 보드에서 처리한다." meta="적용: 홈 검색 결과, 전체 검색, 검색 포커스 화면" mode="homeSearch"/>
+    </div>
+  </div>
+);
+
+const SMCoreFixedBottomNavMobile = ({ active = 'matches' }) => (
+  <div style={{ width: 375, height: 812, background: 'var(--bg)', fontFamily: 'var(--font)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+    <StatusBar/>
+    <div style={{ padding: '18px 20px 12px', borderBottom: '1px solid var(--grey100)', flexShrink: 0 }}>
+      <div className="tm-text-caption">00 SM 고정안 · 하단바 기준</div>
+      <div className="tm-text-heading" style={{ marginTop: 4 }}>고정 5탭</div>
+      <div className="tm-text-body" style={{ marginTop: 8 }}>하단바는 홈 / 매치 / 팀매치 / 팀 / 마이 순서로 고정한다. 이 보드는 상단바 없이 하단바 규약과 선택 상태만 확인한다.</div>
+    </div>
+    <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '16px 20px 24px', display: 'grid', gap: 12, WebkitOverflowScrolling: 'touch' }}>
+      <Card pad={16}>
+        <div className="tm-text-label">동작 규약</div>
+        <div className="tm-text-caption" style={{ marginTop: 6 }}>탭하면 눌림 피드백 뒤 기준 루트로 이동한다. 현재 탭을 다시 누르면 해당 목록의 맨 위로 이동한다. 상세, 로그인, 채팅방, 알림, 결제 같은 몰입 화면에서는 숨길 수 있다.</div>
+      </Card>
+      {SM_BOTTOM_TABS.map((tab) => (
+        <Card key={tab.id} pad={12}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <div className="tm-text-body-lg">{tab.label}</div>
+            <span className="tm-badge tm-badge-sm" style={{ background: active === tab.id ? 'var(--blue50)' : 'var(--grey50)', color: active === tab.id ? 'var(--blue500)' : 'var(--grey500)' }}>{active === tab.id ? '현재 탭' : '이동 탭'}</span>
+          </div>
+          <div className="tm-text-caption">기본 상태와 선택 상태를 같은 크기로 유지한다. 탭 순서와 라벨은 화면마다 바꾸지 않는다.</div>
+        </Card>
+      ))}
+    </div>
+    <SMBottomNav active={active}/>
+  </div>
+);
+
+const SMNotificationStateSample = ({ state }) => {
+  const isNew = state === 'new';
+  const isCount = state === 'count';
+  return (
+    <div style={{ display: 'grid', gap: 8, justifyItems: 'center' }}>
+      <button aria-label={isCount ? '알림 3개' : isNew ? '새 알림 있음' : '알림 없음'} style={{ width: 44, height: 44, border: 0, background: 'var(--bg)', borderRadius: 14, display: 'grid', placeItems: 'center', position: 'relative', color: isNew || isCount ? 'var(--text-strong)' : 'var(--grey500)' }}>
+        <Icon name="bell" size={21}/>
+        {isNew && <span style={{ position: 'absolute', top: 10, right: 10, width: 7, height: 7, borderRadius: 999, background: 'var(--red500)', border: '2px solid var(--bg)' }}/>}
+        {isCount && <span style={{ position: 'absolute', top: 5, right: 3, minWidth: 18, height: 18, padding: '0 5px', borderRadius: 999, background: 'var(--red500)', color: 'var(--static-white)', display: 'grid', placeItems: 'center', fontSize: 10, fontWeight: 800, lineHeight: '18px', border: '2px solid var(--bg)' }}>3</span>}
+      </button>
+      <div className="tm-text-micro" style={{ color: 'var(--text-muted)', textAlign: 'center' }}>{isCount ? '개수 표시' : isNew ? '새 알림' : '알림 없음'}</div>
+    </div>
+  );
+};
+
+const SMCoreNotificationMobile = () => (
+  <div style={{ width: 375, height: 812, background: 'var(--bg)', fontFamily: 'var(--font)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+    <StatusBar/>
+    <div style={{ padding: '18px 20px 12px', borderBottom: '1px solid var(--grey100)', flexShrink: 0 }}>
+      <div className="tm-text-caption">00 SM 고정안 · 알림</div>
+      <div className="tm-text-heading" style={{ marginTop: 4 }}>알림 버튼 표시 기준</div>
+      <div className="tm-text-body" style={{ marginTop: 8 }}>알림은 상단바 안의 버튼 상태로만 표시한다. 새 알림 여부와 읽지 않은 개수는 서로 다른 상태로 분리한다.</div>
+    </div>
+    <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '16px 20px 24px', display: 'grid', gap: 12, WebkitOverflowScrolling: 'touch' }}>
+      <Card pad={14}>
+        <div className="tm-text-body-lg">알림 버튼 상태</div>
+        <div className="tm-text-caption" style={{ marginTop: 6 }}>알림 버튼은 세 가지 상태로만 쓴다. 알림이 없으면 배지를 숨기고, 새 알림 존재만 알릴 때는 점, 개수를 알려야 할 때만 숫자 배지를 쓴다.</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginTop: 12, padding: 12, borderRadius: 14, background: 'var(--grey50)' }}>
+          <SMNotificationStateSample state="none"/>
+          <SMNotificationStateSample state="new"/>
+          <SMNotificationStateSample state="count"/>
+        </div>
+      </Card>
+      <Card pad={16} style={{ background: 'var(--grey50)' }}>
+        <div className="tm-text-label">동작 규약</div>
+        <div className="tm-text-caption" style={{ marginTop: 6 }}>알림 버튼을 누르면 알림 화면으로 이동한다. 새 알림 점이나 숫자 배지는 읽음 처리 API 성공 후에만 사라진다. 실패하면 기존 미읽음 상태를 유지한다.</div>
+      </Card>
+    </div>
+  </div>
+);
+
+const SM_CORE_SEARCH_ROWS = {
+  back: [
+    ['default', '검색어 없음', 'placeholder만 표시하고 입력 focus는 가능하게 둔다.', 'focus'],
+    ['typing', '입력 중', '지우기 버튼과 검색 실행 버튼을 노출한다.', 'results'],
+    ['empty', '결과 없음', '검색어는 유지하고 추천 키워드와 복구 CTA를 보여준다.', 'recover'],
+    ['error', '네트워크 오류', '오류 원인, 재시도, 마지막 검색어를 같은 화면에 남긴다.', 'retry'],
+    ['permission', '위치 권한 없음', '현재 위치 검색이 불가함을 설명하고 수동 지역 검색으로 우회한다.', 'manual'],
+    ['disabled', '라우트 준비 중', '검색창은 흐리게 표시하고 준비 중 이유를 표시한다.', 'wait'],
+  ],
+  filter: [
+    ['default', '검색 + 필터 기본', '목록 상단에서 뒤로가기, 검색창, 필터 버튼을 같이 둔다.', 'open filter'],
+    ['filter-open', '필터 열림', '필터는 sheet로 열고 검색창 값은 유지한다.', 'sheet'],
+    ['typing', '검색어 입력 중', '필터 적용값과 검색어를 동시에 유지한다.', 'sync'],
+    ['empty', '필터 결과 없음', '검색어와 필터 중 무엇 때문에 비었는지 구분한다.', 'reduce'],
+    ['error', '필터 조회 오류', '재시도와 필터 유지 여부를 보여준다.', 'retry'],
+    ['permission', '위치 필터 권한 없음', '위치 기반 필터만 막고 다른 필터는 유지한다.', 'manual'],
+  ],
+};
+
+const SMCoreSearchExceptionCard = ({ row, index, type }) => {
+  const [state, title, body, action] = row;
+  const isFilter = type === 'filter';
+  const isError = state === 'error';
+  const isOpen = state === 'filter-open';
+  const value = state === 'typing' ? (isFilter ? '풋살 · 오늘' : '강남 풋살') : state === 'empty' ? (isFilter ? '강동 · 수영' : '새벽 테니스') : '';
+  return (
+    <div style={{ padding: 12, borderRadius: 16, background: 'var(--bg)', border: '1px solid var(--grey100)', display: 'grid', gap: 10 }}>
+      <div style={{ minHeight: 46, display: 'flex', alignItems: 'center', gap: 1, opacity: state === 'disabled' ? .62 : 1 }}>
+        <SMCoreBackButton/>
+        <div style={{ flex: 1, minHeight: 44, borderRadius: 14, border: isError ? '1px solid var(--red500)' : value || isOpen ? '1px solid var(--blue500)' : '1px solid transparent', background: state === 'disabled' ? 'var(--grey50)' : isError ? 'rgba(240,68,82,.08)' : 'var(--grey100)', display: 'flex', alignItems: 'center', gap: 6, padding: '0 8px 0 14px', minWidth: 0 }}>
+          <div className="tm-text-body" style={{ flex: 1, minWidth: 0, color: value ? 'var(--text-strong)' : 'var(--text-placeholder)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{value || '검색어를 입력하세요'}</div>
+          {value && <span style={{ width: 20, height: 20, borderRadius: 999, background: 'var(--grey400)', color: 'var(--static-white)', display: 'grid', placeItems: 'center', fontSize: 13, fontWeight: 800 }}>x</span>}
+          <SMCoreIconButton label="검색 실행" icon={isError ? 'alert' : 'search'}/>
+        </div>
+        {isFilter && (
+          <button aria-label="필터" style={{ width: 40, minWidth: 40, height: 40, border: 0, background: isOpen ? 'var(--blue500)' : 'transparent', borderRadius: 12, display: 'grid', placeItems: 'center', color: isOpen ? 'var(--static-white)' : 'var(--text-strong)', padding: 0 }}>
+            <Icon name="filter" size={20}/>
+          </button>
+        )}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ minWidth: 30, height: 22, padding: '0 8px', borderRadius: 999, background: 'var(--grey50)', color: isError ? 'var(--red500)' : 'var(--blue500)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800 }}>{String(index + 1).padStart(2, '0')}</span>
+        <div className="tm-text-label" style={{ flex: 1, minWidth: 0 }}>{title}</div>
+        <span className="tm-badge tm-badge-sm" style={{ background: isFilter ? 'var(--grey50)' : 'var(--blue50)', color: isFilter ? 'var(--text-muted)' : 'var(--blue500)' }}>{state}</span>
+      </div>
+      <div className="tm-text-caption">{body}</div>
+      <div className="tm-text-micro" style={{ color: 'var(--text-muted)' }}>다음 동작: {action}</div>
+    </div>
+  );
+};
+
+const SMCoreFixedSearchBarMobile = ({ state = 'default', type = 'back' }) => (
+  <SMCoreSearchTypeExceptionMobile type={type === 'filter' ? 'filter' : 'back'}/>
+);
+
+const SMCoreSearchTypeExceptionMobile = ({ type = 'back' }) => {
+  const isBack = type === 'back';
+  const rows = SM_CORE_SEARCH_ROWS[type] || SM_CORE_SEARCH_ROWS.back;
+  return (
+    <div style={{ width: 375, height: 812, background: 'var(--bg)', fontFamily: 'var(--font)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <StatusBar/>
+      <div style={{ padding: '18px 20px 12px', borderBottom: '1px solid var(--grey100)', flexShrink: 0 }}>
+        <div className="tm-text-caption">00 SM 고정안 · 검색바 유형</div>
+        <div className="tm-text-heading" style={{ marginTop: 4 }}>{isBack ? '뒤로가기형 검색바' : '필터형 검색바'}</div>
+        <div className="tm-text-body" style={{ marginTop: 8 }}>{isBack ? '뒤로가기는 입력창 바깥 왼쪽, 돋보기는 입력창 내부 오른쪽에 둔다.' : '뒤로가기와 필터는 입력창 바깥, 돋보기는 입력창 내부 오른쪽에 둔다.'}</div>
+      </div>
+      <SMCoreShellPreviewBar mode={isBack ? 'homeSearch' : 'list'}/>
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '16px 20px 24px', display: 'grid', gap: 10, WebkitOverflowScrolling: 'touch' }}>
+        {rows.map((row, index) => <SMCoreSearchExceptionCard key={row[0]} row={row} index={index} type={type}/>)}
+      </div>
+    </div>
+  );
+};
+
+const SMCoreFixedShellActionMatrix = () => (
+  <SMRevisionPlusBoard eyebrow="00 CORE SHELL · ACTIONS" title="공통 셸 버튼 동작/예외" columns={4}>
+    {[
+      ['뒤로가기', 'back tap', 'press feedback', '이전 화면 또는 fallback route'],
+      ['검색', 'search tap', 'focused search', '모듈 검색 화면'],
+      ['알림', 'bell tap', 'unread 유지', '06 알림 목록'],
+      ['더보기', 'more tap', 'menu sheet', '공유/신고/관리'],
+      ['하단 탭', 'tab tap', 'active 이동', '모듈 root'],
+      ['필터', 'filter tap', 'sheet open', '조건 적용/초기화'],
+      ['clear', 'x tap', 'query 제거', '검색 미입력 상태'],
+      ['retry', '오류 CTA tap', 'same context retry', '실패 반복 안내'],
+    ].map(([title, trigger, feedback, next], index) => <SMRevisionPlusCard key={title} index={index + 1} title={title} trigger={trigger} feedback={feedback} next={next} state="shell"/>)}
+  </SMRevisionPlusBoard>
+);
+
+const SMCoreFixedShellResponsiveBoard = () => (
+  <SMRevisionPlusBoard eyebrow="00 CORE SHELL · RESPONSIVE" title="반응형 기준" columns={3}>
+    <SMRevisionPlusStateCard title="mobile 375" body="상단바와 하단바를 고정하고 본문은 단일 column으로 구성한다." action="mobile" tone="blue"/>
+    <SMRevisionPlusStateCard title="tablet 768" body="상단 구조는 유지하되 목록/보조 정보만 2열로 확장한다." action="tablet" tone="blue"/>
+    <SMRevisionPlusStateCard title="desktop 1280" body="하단 탭은 좌측/상단 navigation으로 승격하고 검색/상태 계약은 유지한다." action="desktop" tone="orange"/>
+  </SMRevisionPlusBoard>
+);
+
+const SM_FINAL_CORE_ORDER = ['00', '01', '02'];
+const SM_FINAL_CORE_MODULES = {
+  '00': { no: '00', name: 'SM shell', basis: '00 SM 최종본', component: SMCoreTopBackCompactOptionsMobile },
+  '01': { no: '01', name: 'Auth', basis: '01 SM 최종본', component: SMRevisionAuthSM5TermsBeforeSignup },
+  '02': { no: '02', name: 'Home', basis: '02 SM5 검색 기준', component: SMRevisionHomeSearchMobileSM5Final },
+};
+const SMFinalCoreOverviewBoard = ({ moduleId }) => {
+  if (moduleId === '01') return <SMRevisionAuthSM5TermsBeforeSignup/>;
+  if (moduleId === '02') return <SMRevisionHomeSearchMobileSM5Final/>;
+  return <SMCoreTopBackCompactOptionsMobile/>;
+};
+const SMFinalCoreFlowBoard = ({ moduleId }) => (
+  <SMRevisionPlusBoard eyebrow={`${moduleId} FINAL · FLOW`} title={`${SM_FINAL_CORE_MODULES[moduleId]?.name || 'Core'} 최종 흐름`} columns={3}>
+    <SMRevisionPlusStateCard title="mobile" body="모바일 최종 화면과 버튼/상태 계약을 먼저 고정한다." action="fixed" tone="green"/>
+    <SMRevisionPlusStateCard title="grid" body="main/state/components/assets/motion 그리드로 세부 동작을 정리한다." action="next" tone="blue"/>
+    <SMRevisionPlusStateCard title="desktop" body="모바일과 grid 확인 후 데스크톱 확장으로 이동한다." action="defer" tone="orange"/>
+  </SMRevisionPlusBoard>
+);
+const SMFinalCoreChecklistBoard = ({ moduleId }) => (
+  <SMRevisionPlusBoard eyebrow={`${moduleId} FINAL · CHECKLIST`} title={`${SM_FINAL_CORE_MODULES[moduleId]?.name || 'Core'} 완료 기준`} columns={3}>
+    <SMRevisionPlusStateCard title="원본 유지" body="기존 원본/수정안 섹션은 삭제하지 않고 비교 가능하게 둔다." action="preserve" tone="blue"/>
+    <SMRevisionPlusStateCard title="fallback 금지" body="최종본은 placeholder가 아니라 실제 화면 또는 실제 계약 보드로 렌더한다." action="real UI" tone="green"/>
+    <SMRevisionPlusStateCard title="예외 포함" body="버튼, 상황, 오류, 권한, 로딩, 비활성 상태를 함께 정리한다." action="states" tone="orange"/>
+  </SMRevisionPlusBoard>
+);
+
+
+const SMRevisionSearchBarFinal = ({ value = '', error = false, disabled = false }) => (
+  <div style={{ minHeight: 56, padding: '8px 10px 8px 8px', borderBottom: '1px solid var(--grey100)', display: 'flex', alignItems: 'center', gap: 1, background: 'var(--bg)', flexShrink: 0 }}>
+    <button aria-label="back" style={{ width: 30, minWidth: 30, height: 40, border: 0, background: 'transparent', borderRadius: 12, display: 'grid', placeItems: 'center', color: 'var(--text-strong)', padding: 0 }}>
+      <Icon name="chevL" size={20}/>
+    </button>
+    <div style={{ flex: 1, minHeight: 44, borderRadius: 14, background: disabled ? 'var(--grey50)' : 'var(--grey100)', border: error ? '1px solid var(--red500)' : value ? '1px solid var(--blue500)' : '1px solid transparent', display: 'flex', alignItems: 'center', gap: 4, padding: '0 8px 0 14px', minWidth: 0, opacity: disabled ? .58 : 1 }}>
+      <div className="tm-text-body" style={{ flex: 1, minWidth: 0, color: value ? 'var(--text-strong)' : 'var(--text-placeholder)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{value || '검색어를 입력해 주세요'}</div>
+      {value && !disabled && (
+        <button aria-label="clear search" style={{ width: 30, minWidth: 30, height: 30, border: 0, background: 'transparent', display: 'grid', placeItems: 'center', padding: 0 }}>
+          <span style={{ width: 20, height: 20, borderRadius: 999, background: 'var(--grey400)', color: 'var(--static-white)', display: 'grid', placeItems: 'center', fontSize: 14, lineHeight: '20px', fontWeight: 800 }}>x</span>
+        </button>
+      )}
+      <button aria-label="submit search" disabled={disabled} style={{ width: 34, minWidth: 34, height: 34, border: 0, background: 'transparent', borderRadius: 11, display: 'grid', placeItems: 'center', color: error ? 'var(--red500)' : 'var(--blue500)', padding: 0 }}>
+        <Icon name="search" size={19}/>
+      </button>
+    </div>
+  </div>
+);
+
+const SMRevisionHomeSearchMobileSM5Final = ({ query = '동네', noInput = false }) => (
+  <div style={{ width: 375, height: 812, background: 'var(--bg)', fontFamily: 'var(--font)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <StatusBar/>
+    <SMRevisionSearchBarFinal value={query}/>
+    <div style={{ flex: 1, overflow: 'auto', padding: '18px 20px 22px' }}>
+      <div className="tm-text-label">최근 검색</div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+        {['동네', '강남', '오늘 대기', '마감임박'].map((label, index) => <button key={label} className={`tm-chip ${index === 0 ? 'tm-chip-active' : ''}`}>{label}</button>)}
+      </div>
+      <div className="tm-text-label" style={{ marginTop: 20 }}>빠른 조건</div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
+        {[
+          ['오늘 참여 가능', '오늘 매치만 기준'],
+          ['마감임박', '24시간 이내'],
+          ['초급 환영', '레벨 필터 적용'],
+          ['팀 매치 포함', '팀매치 결과 함께 보기'],
+        ].map(([title, sub], index) => (
+          <Card key={title} pad={14} interactive style={{ background: index === 0 ? 'var(--blue50)' : 'var(--bg)' }}>
+            <div className="tm-text-label" style={{ color: index === 0 ? 'var(--blue500)' : 'var(--text-strong)' }}>{title}</div>
+            <div className="tm-text-micro" style={{ marginTop: 4, color: 'var(--text-caption)' }}>{sub}</div>
+          </Card>
+        ))}
+      </div>
+      {noInput ? (
+        <Card pad={18} style={{ marginTop: 20, background: 'var(--grey50)' }}>
+          <Badge tone="grey" size="sm">입력 전</Badge>
+          <div className="tm-text-subhead" style={{ marginTop: 10 }}>검색어를 입력하거나 조건을 선택해 주세요</div>
+          <div className="tm-text-caption" style={{ marginTop: 7, lineHeight: 1.55 }}>검색 진입 직후에는 결과 리스트를 비우고 최근 검색과 빠른 조건을 먼저 보여준다.</div>
+        </Card>
+      ) : (
+        <>
+          <div style={{ height: 1, background: 'var(--grey100)', margin: '20px 0 18px' }}/>
+          <div>
+            <div className="tm-text-label">검색 결과</div>
+            <div className="tm-text-caption" style={{ marginTop: 2 }}><span className="tab-num">23</span>개 결과 · 매치/팀매치/팀 통합 조회</div>
+          </div>
+          <div style={{ marginTop: 12 }}><SMRevisionHomeSearchResultsV2 variant="grouped"/></div>
+          <Card pad={14} style={{ marginTop: 14, background: 'var(--grey50)' }}>
+            <div className="tm-text-label">00 최종본 적용 기준</div>
+            <div className="tm-text-caption" style={{ marginTop: 6 }}>좌측 back, 값 있을 때만 회색 원형 X, 우측 blue ghost 검색 아이콘을 사용한다. 검색 결과 전체보기 CTA는 제거한다.</div>
+          </Card>
+        </>
+      )}
+    </div>
+  </div>
+);
+
+const SMRevisionHomeSearchStateMobileSM5Final = ({ state = 'empty' }) => {
+  const isError = state === 'error';
+  const isStale = state === 'stale';
+  return (
+    <div style={{ width: 375, height: 812, background: 'var(--bg)', fontFamily: 'var(--font)', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+      <StatusBar/>
+      <SMRevisionSearchBarFinal value="동네 강남" error={isError}/>
+      <div style={{ flex: 1, overflow: 'auto', padding: '18px 20px 24px' }}>
+        <div>
+          <div className="tm-text-label">검색 결과</div>
+          <div className="tm-text-caption" style={{ marginTop: 2 }}>동네 강남 · 매치/팀매치/팀 통합 조회</div>
+        </div>
+        <div style={{ marginTop: 42, textAlign: 'center', color: 'var(--text-muted)' }}>
+          <div style={{ width: 48, height: 48, borderRadius: 16, background: 'var(--grey50)', display: 'grid', placeItems: 'center', margin: '0 auto 14px', color: 'var(--grey500)' }}>
+            <Icon name={isStale ? 'clock' : 'search'} size={22}/>
+          </div>
+          <div className="tm-text-body-lg">{isStale ? '최신 검색 결과를 확인 중입니다.' : '검색 결과가 없습니다.'}</div>
+          <div className="tm-text-caption" style={{ marginTop: 6 }}>{isError ? '입력창 상태는 유지하고 하단 안내만 보여줍니다.' : '검색어를 수정하거나 다른 조건을 선택해 주세요.'}</div>
+        </div>
+      </div>
+      {isError && (
+        <div style={{ position: 'absolute', left: 20, right: 20, bottom: 22, minHeight: 48, borderRadius: 14, background: 'rgba(25,31,40,.94)', color: 'var(--static-white)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 14px', fontSize: 13, fontWeight: 700 }}>
+          새로고침이 필요합니다. 잠시 후 다시 검색해 주세요.
+        </div>
+      )}
+    </div>
+  );
+};
+
+const SMRevisionHomeSearchRulesSM5Final = () => (
+  <SMRevisionPlusBoard eyebrow="02 HOME SM5 · SEARCH CONTRACT" title="00 최종본 검색 진입 적용" sub="검색 결과 없음은 결과 영역 안에서 문구만 보여주고, 새로고침 필요 상황은 빨간 입력창 + 하단 toast로 처리한다. 위치 기반 예외는 제거한다." columns={3}>
+    <SMRevisionPlusStateCard title="진입" body="좌측 back + 검색바 조합으로 전환한다. 검색바 내부 leading search icon은 두지 않는다." action="route"/>
+    <SMRevisionPlusStateCard title="입력 전" body="placeholder는 '검색어를 입력해 주세요'. 결과 리스트는 비우고 최근 검색/빠른 조건만 보여준다." action="no input"/>
+    <SMRevisionPlusStateCard title="입력 중" body="값이 생기면 blue border와 회색 원형 X를 노출한다." action="typing"/>
+    <SMRevisionPlusStateCard title="지우기" body="X는 query만 지우고 빠른 조건은 유지한다. 빈 상태에서는 X를 노출하지 않는다." action="clear"/>
+    <SMRevisionPlusStateCard title="검색 실행" body="우측 blue ghost 검색 아이콘 또는 Enter로 실행한다. 채움형 파란 버튼은 사용하지 않는다." action="submit"/>
+    <SMRevisionPlusStateCard title="결과 없음" body="검색 결과 헤더를 유지하고 그 아래에 '검색 결과가 없습니다.' 문구만 보여준다. 조건 초기화 CTA는 두지 않는다." action="empty text"/>
+    <SMRevisionPlusStateCard title="새로고침 필요" body="입력창 red border는 유지하고 하단 toast로만 안내한다. 별도 오류 카드나 CTA는 두지 않는다." action="toast"/>
+    <SMRevisionPlusStateCard title="위치 기반 제거" body="내 주변/위치 권한 보드와 버튼 예외는 SM5 검색 결과에서 제거한다." action="removed"/>
+  </SMRevisionPlusBoard>
+);
+
+const SMRevisionHomeSM5SearchActionMatrixFinal = () => (
+  <SMRevisionPlusBoard eyebrow="02 HOME SM5 · SEARCH ACTIONS" title="00 최종 검색바 기준 버튼/예외" sub="텍스트 취소와 전체보기 CTA를 제거하고, back/X/search/chip/card/row 중심으로 동작을 정리한다." columns={4}>
+    <SMRevisionPlusCard index={1} title="뒤로가기" trigger="좌측 back tap" feedback="ghost press" next="홈 main 복귀" state="nav"/>
+    <SMRevisionPlusCard index={2} title="검색 입력" trigger="input focus/type" feedback="blue border, cursor" next="X 노출 + 검색 실행 대기" state="input"/>
+    <SMRevisionPlusCard index={3} title="X 지우기" trigger="회색 원형 X tap" feedback="query만 제거" next="미입력 페이지" state="clear"/>
+    <SMRevisionPlusCard index={4} title="검색 실행" trigger="우측 ghost search tap" feedback="pending skeleton" next="결과/empty/error/permission" state="submit"/>
+    <SMRevisionPlusCard index={5} title="빈 query" trigger="빈 상태 search/Enter" feedback="submit 차단" next="미입력 페이지 유지" state="guard" tone="orange"/>
+    <SMRevisionPlusCard index={6} title="최근 검색" trigger="recent chip tap" feedback="chip active" next="query 대체 + 결과 갱신" state="chip"/>
+    <SMRevisionPlusCard index={7} title="빠른 조건" trigger="condition card tap" feedback="selected surface" next="조건 적용 + 결과 갱신" state="filter"/>
+    <SMRevisionPlusCard index={8} title="그룹 더보기" trigger="매치/팀매치/팀 더보기 tap" feedback="group context 보존" next="해당 타입 list" state="route"/>
+    <SMRevisionPlusCard index={9} title="결과 row" trigger="row tap" feedback="row press" next="타입별 상세/목록" state="detail"/>
+    <SMRevisionPlusCard index={10} title="결과 없음" trigger="0 results" feedback="결과 헤더 + 문구만 표시" next="사용자 입력 수정 대기" state="empty"/>
+    <SMRevisionPlusCard index={11} title="새로고침 필요" trigger="network refresh required" feedback="red input + bottom toast" next="query 유지" state="toast" tone="red"/>
+    <SMRevisionPlusCard index={12} title="전체보기 제거" trigger="검색 결과 전체보기" feedback="not rendered" next="그룹 더보기 또는 row 사용" state="removed"/>
+  </SMRevisionPlusBoard>
+);
+
+const SMRevisionAuthSM5SetupHeader = ({ step, title, sub }) => (
+  <>
+    <StatusBar/>
+    <div style={{ padding: '8px 20px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
+      <button className="tm-icon-btn"><Icon name="chevL" size={20}/></button>
+      <div style={{ flex: 1, height: 4, borderRadius: 999, background: 'var(--grey100)', overflow: 'hidden' }}>
+        <div style={{ width: `${(step / 3) * 100}%`, height: '100%', background: 'var(--blue500)' }}/>
+      </div>
+      <div className="tm-text-caption" style={{ width: 34, textAlign: 'right' }}>{step}/3</div>
+    </div>
+    <div style={{ padding: '28px 24px 0' }}>
+      <div className="tm-text-heading">{title}</div>
+      <div className="tm-text-body" style={{ color: 'var(--text-muted)', marginTop: 8 }}>{sub}</div>
+    </div>
+  </>
+);
+
+const SMRevisionAuthSM5TermsBeforeSignup = () => (
+  <div style={{ width: 375, height: 812, background: 'var(--bg)', fontFamily: 'var(--font)', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+    <StatusBar/>
+    <TopNav title="약관 동의" onBack={() => {}}/>
+    <div style={{ flex: 1, padding: '24px 20px 112px', overflow: 'auto' }}>
+      <Badge tone="blue" size="sm">회원가입 전 필수</Badge>
+      <div className="tm-text-heading" style={{ marginTop: 12 }}>가입 전에 약관을 먼저 확인합니다</div>
+      <div className="tm-text-body" style={{ color: 'var(--text-muted)', marginTop: 8 }}>필수 약관을 모두 동의해야 회원가입 입력 화면으로 이동할 수 있습니다.</div>
+      <Card pad={16} style={{ marginTop: 22, background: 'var(--blue50)', borderColor: 'rgba(49,130,246,.18)' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ width: 26, height: 26, borderRadius: 13, background: 'var(--blue500)', color: 'var(--static-white)', display: 'grid', placeItems: 'center' }}><Icon name="check" size={15}/></span>
+          <span className="tm-text-body-lg">필수 약관 전체 동의</span>
+        </label>
+      </Card>
+      <div style={{ display: 'grid', gap: 10, marginTop: 12 }}>
+        {[
+          ['서비스 이용약관', '필수 · 보기'],
+          ['개인정보 처리방침', '필수 · 보기'],
+          ['위치 기반 서비스', '선택 · 나중에 설정 가능'],
+          ['마케팅 알림', '선택 · 설정에서 변경 가능'],
+        ].map(([title, meta], index) => (
+          <Card key={title} pad={15} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ width: 24, height: 24, borderRadius: 12, border: index < 2 ? 'none' : '1px solid var(--grey200)', background: index < 2 ? 'var(--blue500)' : 'var(--bg)', color: index < 2 ? 'var(--static-white)' : 'var(--grey400)', display: 'grid', placeItems: 'center' }}>
+              <Icon name="check" size={14}/>
+            </span>
+            <div style={{ flex: 1 }}>
+              <div className="tm-text-body-lg">{title}</div>
+              <div className="tm-text-caption" style={{ marginTop: 2 }}>{meta}</div>
+            </div>
+            <Icon name="chevR" size={16} color="var(--grey400)"/>
+          </Card>
+        ))}
+      </div>
+    </div>
+    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '14px 20px 22px', background: 'var(--bg)', borderTop: '1px solid var(--grey100)' }}>
+      <button className="tm-btn tm-btn-lg tm-btn-primary tm-btn-block">동의하고 회원가입하기</button>
+    </div>
+  </div>
+);
+
+const SMRevisionAuthSM5SignupCompleteGuide = () => (
+  <div style={{ width: 375, height: 812, background: 'var(--bg)', fontFamily: 'var(--font)', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+    <StatusBar/>
+    <div style={{ flex: 1, padding: '72px 24px 132px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+      <div style={{ width: 72, height: 72, borderRadius: 24, background: 'var(--blue500)', color: 'var(--static-white)', display: 'grid', placeItems: 'center', marginBottom: 24 }}>
+        <Icon name="check" size={30}/>
+      </div>
+      <div className="tm-text-heading">회원가입이 완료됐어요</div>
+      <div className="tm-text-body" style={{ marginTop: 10, color: 'var(--text-muted)' }}>이제 운동 설정을 하면 더 정확한 매치 추천을 받을 수 있습니다.</div>
+      <div style={{ display: 'grid', gap: 10, marginTop: 26 }}>
+        {[
+          ['약관 동의 완료', '필수 약관 동의가 저장되었습니다.'],
+          ['회원가입 완료', '계정 생성이 완료되었습니다. 뒤로가도 계정은 유지됩니다.'],
+        ].map(([title, body]) => (
+          <Card key={title} pad={15} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 28, height: 28, borderRadius: 14, background: 'var(--blue50)', color: 'var(--blue500)', display: 'grid', placeItems: 'center' }}><Icon name="check" size={15}/></div>
+            <div>
+              <div className="tm-text-body-lg">{title}</div>
+              <div className="tm-text-caption" style={{ marginTop: 2 }}>{body}</div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '14px 20px 22px', background: 'var(--bg)', borderTop: '1px solid var(--grey100)' }}>
+      <button className="tm-btn tm-btn-lg tm-btn-primary tm-btn-block">운동 설정 시작하기</button>
+      <button className="tm-btn tm-btn-md tm-btn-ghost tm-btn-block" style={{ marginTop: 8 }}>나중에 설정하기</button>
+    </div>
+  </div>
+);
+
+const SMRevisionAuthSM5SportStep = () => (
+  <div style={{ width: 375, height: 812, background: 'var(--bg)', fontFamily: 'var(--font)', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+    <SMRevisionAuthSM5SetupHeader step={1} title="관심 종목을 선택해 주세요" sub="선택한 종목을 기준으로 다음 실력 입력 단계가 구성됩니다."/>
+    <div style={{ flex: 1, padding: '22px 20px 112px', overflow: 'auto' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        {['축구', '풋살', '하키', '배드민턴', '농구', '테니스'].map((label, index) => (
+          <Card key={label} pad={16} style={{ minHeight: 88, borderColor: index < 4 ? 'rgba(49,130,246,.32)' : 'var(--grey100)', background: index < 4 ? 'var(--blue50)' : 'var(--bg)' }}>
+            <div className="tm-text-body-lg" style={{ color: index < 4 ? 'var(--blue500)' : 'var(--text-strong)' }}>{label}</div>
+            <div className="tm-text-caption" style={{ marginTop: 6 }}>{index < 4 ? '선택됨' : '선택 가능'}</div>
+          </Card>
+        ))}
+      </div>
+    </div>
+    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '14px 20px 22px', background: 'var(--bg)', borderTop: '1px solid var(--grey100)' }}>
+      <button className="tm-btn tm-btn-lg tm-btn-primary tm-btn-block">실력 입력하기</button>
+    </div>
+  </div>
+);
+
+const SMRevisionAuthSM5LevelStep = ({ disabled = false }) => (
+  <div style={{ width: 375, height: 812, background: 'var(--bg)', fontFamily: 'var(--font)', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+    <SMRevisionAuthSM5SetupHeader step={2} title="종목별 실력을 입력해 주세요" sub="무리 없는 매칭을 위해 종목마다 현재 실력을 선택합니다."/>
+    <div style={{ flex: 1, padding: '22px 20px 112px', overflow: 'auto' }}>
+      {['축구', '풋살', '하키', '배드민턴'].map((label, index) => (
+        <Card key={label} pad={16} style={{ marginBottom: 10, opacity: disabled && index > 0 ? .48 : 1 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+            <div>
+              <div className="tm-text-body-lg">{label}</div>
+              <div className="tm-text-caption" style={{ marginTop: 3 }}>{disabled && index > 0 ? '입력 필요' : `${['B', 'C', 'D', 'B'][index]} 레벨 선택됨`}</div>
+            </div>
+            <div style={{ display: 'flex', gap: 6 }}>{['A', 'B', 'C', 'D'].map((level) => <span key={level} className={`tm-chip ${level === ['B', 'C', 'D', 'B'][index] && !(disabled && index > 0) ? 'tm-chip-active' : ''}`}>{level}</span>)}</div>
+          </div>
+        </Card>
+      ))}
+      {disabled && <Card pad={14} style={{ background: 'rgba(254,152,0,.10)' }}><div className="tm-text-label" style={{ color: 'var(--orange500)' }}>모든 선택 종목의 실력을 입력해야 다음으로 이동할 수 있습니다.</div></Card>}
+    </div>
+    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '14px 20px 22px', background: 'var(--bg)', borderTop: '1px solid var(--grey100)' }}>
+      <button className={`tm-btn tm-btn-lg ${disabled ? 'tm-btn-neutral' : 'tm-btn-primary'} tm-btn-block`} disabled={disabled}>지역 선택하기</button>
+    </div>
+  </div>
+);
+
+const SMRevisionAuthSM5RegionStep = () => (
+  <div style={{ width: 375, height: 812, background: 'var(--bg)', fontFamily: 'var(--font)', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+    <SMRevisionAuthSM5SetupHeader step={3} title="주 활동 지역을 선택해 주세요" sub="현재 위치는 선택 사항이며, 거부해도 수동 지역 선택으로 계속할 수 있습니다."/>
+    <div style={{ flex: 1, padding: '22px 20px 112px', overflow: 'auto' }}>
+      <button className="tm-btn tm-btn-md tm-btn-neutral tm-btn-block"><Icon name="mapPin" size={17}/> 현재 위치로 찾기</button>
+      <div className="tm-text-label" style={{ marginTop: 22 }}>선택 지역</div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+        {['마포구', '강남구', '성동구', '송파구', '서초구', '용산구'].map((label, index) => <span key={label} className={`tm-chip ${index < 2 ? 'tm-chip-active' : ''}`}>{label}</span>)}
+      </div>
+      <Card pad={14} style={{ marginTop: 20, background: 'var(--grey50)' }}>
+        <div className="tm-text-label">위치 권한 예외</div>
+        <div className="tm-text-caption" style={{ marginTop: 5 }}>권한 거부 시 선택한 종목과 실력은 유지하고 수동 지역 선택으로 복구합니다.</div>
+      </Card>
+    </div>
+    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '14px 20px 22px', background: 'var(--bg)', borderTop: '1px solid var(--grey100)' }}>
+      <button className="tm-btn tm-btn-lg tm-btn-primary tm-btn-block">선택 확인하기</button>
+    </div>
+  </div>
+);
+
+const SMRevisionAuthSM6GapAudit = () => (
+  <SMRevisionPlusBoard eyebrow="01 AUTH SM6 · GAP" title="SM5 최신본 갭 점검" sub="원본 비교 보드는 최종본에서 제외하고, 실제 필요한 예외 화면과 계약만 남긴다." columns={3}>
+    {[
+      ['회원가입 전 약관', '가입 입력 전 필수 동의 gate 필요', 'SM5 반영'],
+      ['가입 완료 안내', '운동 설정 전 가입 완료 상태를 확인', 'SM5 반영'],
+      ['소셜 권한 거부', 'provider 취소/거부 복구 화면 필요', 'SM6 추가'],
+      ['소셜 이메일 누락', '직접 이메일 인증 fallback 필요', 'SM6 추가'],
+      ['차단 계정', '홈/계속하기 차단과 고객센터 경로 필요', 'SM6 추가'],
+      ['계정 충돌', '기존 계정 확인/병합 전환 필요', 'SM6 추가'],
+    ].map(([title, body, action]) => <SMRevisionPlusStateCard key={title} title={title} body={body} action={action} tone={action.includes('SM6') ? 'orange' : 'blue'}/>)}
+  </SMRevisionPlusBoard>
+);
+
+const SMRevisionAuthSM6SimpleException = ({ badge, title, body, primary, secondary, tone = 'orange' }) => (
+  <div style={{ width: 375, height: 812, background: 'var(--bg)', fontFamily: 'var(--font)', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+    <StatusBar/>
+    <TopNav title="로그인 확인" onBack={() => {}}/>
+    <div style={{ flex: 1, padding: '72px 24px 132px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+      <Badge tone={tone} size="sm">{badge}</Badge>
+      <div className="tm-text-heading" style={{ marginTop: 16 }}>{title}</div>
+      <div className="tm-text-body" style={{ marginTop: 10, color: 'var(--text-muted)', lineHeight: 1.55 }}>{body}</div>
+      <Card pad={16} style={{ marginTop: 22, background: tone === 'red' ? 'rgba(240,68,82,.08)' : 'rgba(254,152,0,.10)' }}>
+        <div className="tm-text-label">처리 기준</div>
+        <div className="tm-text-caption" style={{ marginTop: 6 }}>입력값과 온보딩 임시 선택값은 보존하고, 계정 상태를 성공처럼 처리하지 않습니다.</div>
+      </Card>
+    </div>
+    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '14px 20px 22px', background: 'var(--bg)', borderTop: '1px solid var(--grey100)' }}>
+      <button className={`tm-btn tm-btn-lg ${tone === 'red' ? 'tm-btn-danger' : 'tm-btn-primary'} tm-btn-block`}>{primary}</button>
+      {secondary && <button className="tm-btn tm-btn-md tm-btn-ghost tm-btn-block" style={{ marginTop: 8 }}>{secondary}</button>}
+    </div>
+  </div>
+);
+
+const SMRevisionAuthSM6ProviderDenied = () => <SMRevisionAuthSM6SimpleException badge="소셜 권한 거부" title="로그인을 완료하지 못했어요" body="필수 정보 제공 동의가 취소되었습니다. 계정은 생성되지 않았고, 같은 제공자 또는 다른 로그인 방법으로 다시 시도할 수 있습니다." primary="다시 로그인하기" secondary="다른 방법 선택"/>;
+const SMRevisionAuthSM6MissingEmail = () => <SMRevisionAuthSM6SimpleException badge="이메일 누락" title="확인 가능한 이메일이 필요해요" body="소셜 계정에서 검증된 이메일을 받을 수 없습니다. 이메일을 직접 입력하고 인증한 뒤 같은 온보딩 흐름을 이어갑니다." primary="이메일 직접 인증" secondary="소셜 계정 바꾸기"/>;
+const SMRevisionAuthSM6BlockedAccount = () => <SMRevisionAuthSM6SimpleException badge="계정 제한" title="현재 계정은 이용할 수 없어요" body="정지, 탈퇴 대기, 운영 제한 상태에서는 계속하기와 홈 이동을 모두 막고 고객센터 요청 경로만 제공합니다." primary="고객센터 문의" secondary="로그인으로 돌아가기" tone="red"/>;
+const SMRevisionAuthSM6AccountResolve = () => <SMRevisionAuthSM6SimpleException badge="계정 충돌" title="이미 가입된 정보가 있어요" body="같은 이메일 또는 휴대폰이 다른 인증 수단과 연결되어 있습니다. 기존 계정을 확인한 뒤 연결 또는 병합을 진행합니다." primary="기존 계정 확인" secondary="다른 방법 선택"/>;
+const SMRevisionAuthSM6LocationPermission = () => <SMRevisionAuthSM6SimpleException badge="위치 권한" title="현재 위치를 사용할 수 없어요" body="위치 권한을 거부해도 종목과 실력 입력값은 유지됩니다. 수동 지역 선택으로 온보딩을 마칠 수 있습니다." primary="수동으로 지역 선택" secondary="설정에서 권한 열기"/>;
+
+const SMRevisionAuthSM6ButtonExceptionMatrix = () => (
+  <SMRevisionPlusBoard eyebrow="01 AUTH SM6 · BUTTONS" title="모든 버튼 동작과 예외 경로" sub="각 버튼은 trigger, feedback, next, exception을 가진다. 실패를 toast만으로 끝내지 않는다." columns={4}>
+    {[
+      ['소셜 로그인', 'provider tap', 'callback loading', '성공/거부/이메일 누락/충돌/차단'],
+      ['이메일 로그인', 'submit', 'field validation', '실패 시 입력값 유지 + 재시도'],
+      ['약관 동의', 'checkbox tap', 'CTA 활성화', '필수 미동의 시 회원가입 차단'],
+      ['회원가입', 'form submit', '중복 submit lock', '성공 시 완료 안내, 실패 시 inline'],
+      ['운동 설정 시작', 'complete CTA', 'step 1/3 이동', '나중에 설정은 홈 제한 추천'],
+      ['종목 선택', 'card tap', 'selected outline', '0개면 CTA disabled'],
+      ['실력 입력', 'level chip tap', 'row selected', '누락 종목 reason row'],
+      ['현재 위치', 'permission tap', 'loading lock', '거부 시 수동 지역 선택'],
+      ['선택 확인 수정', 'edit tap', '해당 step 복귀', '선택값 보존'],
+      ['홈으로 시작', 'final CTA', 'home push', 'reduced motion fade'],
+      ['다시 시도', 'error CTA', 'same context retry', '반복 실패 시 도움말'],
+      ['뒤로가기', 'back tap', '이전 화면', 'pending 중 확인 sheet'],
+    ].map(([title, trigger, feedback, next], index) => <SMRevisionPlusCard key={title} index={index + 1} title={title} trigger={trigger} feedback={feedback} next={next} state={index > 8 ? 'recover' : 'auth'} tone={index > 8 ? 'orange' : 'blue'}/>)}
+  </SMRevisionPlusBoard>
+);
+
+const SMRevisionAuthSM6AccessibilityMatrix = () => (
+  <SMRevisionPlusBoard eyebrow="01 AUTH SM6 · STATES" title="포커스/로딩/비활성 상태 계약" columns={4}>
+    <SMRevisionPlusStateCard title="focus" body="입력 필드와 선택 chip은 blue border, cursor, helper text를 함께 보여준다." action="visible focus" tone="blue"/>
+    <SMRevisionPlusStateCard title="loading" body="provider callback, 위치 확인, 가입 제출 중에는 CTA 중복 탭을 잠근다." action="submit lock" tone="orange"/>
+    <SMRevisionPlusStateCard title="disabled" body="필수 약관, 종목 0개, 실력 누락, 지역 누락은 버튼 위 reason row와 함께 비활성화한다." action="reason" tone="orange"/>
+    <SMRevisionPlusStateCard title="error" body="입력값과 선택값을 보존하고, 오류 위치와 재시도 CTA를 같은 화면에 둔다." action="retry" tone="red"/>
+    <SMRevisionPlusStateCard title="reduced motion" body="화면 전환은 push 대신 fade만 사용하고 완료/오류 피드백은 텍스트로도 제공한다." action="motion" tone="blue"/>
+    <SMRevisionPlusStateCard title="screen reader" body="checkbox, step, 선택 개수, CTA 상태는 라벨로 읽을 수 있어야 한다." action="a11y" tone="blue"/>
+    <SMRevisionPlusStateCard title="resume" body="앱 종료 후 복귀 시 완료된 단계는 체크, 진행 단계는 이어하기로 표시한다." action="restore" tone="green"/>
+    <SMRevisionPlusStateCard title="blocked" body="차단/정지 계정은 계속하기와 홈 이동을 모두 막고 문의 경로만 제공한다." action="hard stop" tone="red"/>
+  </SMRevisionPlusBoard>
+);
+
+const SMRevisionAuthFinalChecklist = () => (
+  <SMRevisionPlusBoard eyebrow="01 AUTH SM 최종본 · 체크리스트" title="SM5 + SM6 통합 완료 기준" sub="원본 비교 보드는 제외하고 최종 화면, 동작, 상황, 예외, 접근성, 흐름만 남긴다." columns={3}>
+    {[
+      ['약관 선행', '회원가입 입력 전에 필수 약관 동의를 먼저 받는다.', 'done'],
+      ['가입 완료 안내', '운동 설정 전 약관/회원가입 완료 체크 화면을 둔다.', 'done'],
+      ['3단계 운동 설정', '종목, 실력, 지역만 1/3~3/3 스텝바로 표시한다.', 'done'],
+      ['최종 환영 체크', '약관, 회원가입, 종목, 실력, 지역을 모두 체크한다.', 'done'],
+      ['소셜 예외', '권한 거부, 이메일 누락, 차단, 충돌을 화면으로 처리한다.', 'done'],
+      ['버튼 예외', '모든 CTA의 trigger, feedback, next, exception을 정리한다.', 'done'],
+      ['상황 처리', 'loading, disabled, error, resume, blocked를 정의한다.', 'done'],
+      ['비교 제외', 'SM5/SM6의 원본 비교 복사본은 최종본에 포함하지 않는다.', 'done'],
+      ['다음 단계', 'mobile 확정 후 grid와 desktop으로 확장한다.', 'next'],
+    ].map(([title, body, action]) => <SMRevisionPlusStateCard key={title} title={title} body={body} action={action} tone={action === 'next' ? 'orange' : 'green'}/>)}
+  </SMRevisionPlusBoard>
+);
+
+const SMRevisionAuthFinalStateMatrix = () => (
+  <SMRevisionPlusBoard eyebrow="01 AUTH SM 최종본 · 상황/예외" title="상황 처리와 복구 기준" columns={4}>
+    {[
+      ['회원가입 입력 오류', '필드별 inline 오류와 입력값 보존', 'fix field', 'red'],
+      ['가입 완료', '약관/회원가입 체크 후 운동 설정 시작', 'next setup', 'green'],
+      ['종목 미선택', '종목 0개면 실력 단계 이동 차단', 'select sport', 'orange'],
+      ['실력 누락', '누락 종목 row 표시, 입력값 유지', 'complete level', 'orange'],
+      ['위치 거부', '수동 지역 선택으로 복구', 'manual region', 'orange'],
+      ['소셜 거부', '계정 생성 없음, 재시도/다른 방법', 'retry auth', 'red'],
+      ['이메일 누락', '직접 이메일 인증 fallback', 'verify email', 'orange'],
+      ['계정 충돌', '기존 계정 확인 후 병합/연결', 'resolve', 'orange'],
+      ['차단 계정', '계속하기/홈 이동 차단, 문의만 제공', 'support', 'red'],
+      ['중단 복귀', '완료 단계 체크, 진행 단계 이어하기', 'resume', 'blue'],
+      ['완료', '홈 추천과 매치 필터 시작', 'home', 'green'],
+    ].map(([title, body, action, tone]) => <SMRevisionPlusStateCard key={title} title={title} body={body} action={action} tone={tone}/>)}
+  </SMRevisionPlusBoard>
+);
+
+const SMRevisionAuthFinalFlow = () => (
+  <SMRevisionPlusBoard eyebrow="01 AUTH SM 최종본 · 흐름" title="최종 화면 전환 흐름" columns={4}>
+    {[
+      ['로그인 진입', '소셜, 이메일, 회원가입, 둘러보기 선택', 'auth entry'],
+      ['소셜 처리', '콜백 로딩 후 성공/거부/이메일 누락/충돌/차단 분기', 'SM6 exceptions'],
+      ['회원가입 전 약관', '필수 약관 동의 후 회원가입 입력 가능', 'terms gate'],
+      ['회원가입 입력', '닉네임, 이메일, 비밀번호 입력과 오류 복구', 'signup form'],
+      ['회원가입 완료 안내', '약관 동의 완료와 회원가입 완료 체크', 'complete guide'],
+      ['운동 설정 1/3', '관심 종목 선택', 'sport'],
+      ['운동 설정 2/3', '선택 종목별 실력 입력', 'level'],
+      ['운동 설정 3/3', '활동 지역 선택과 위치 권한 fallback', 'region'],
+      ['선택 확인/수정', '종목, 실력, 지역 요약과 단계별 수정', 'confirm'],
+      ['최종 환영', '약관, 회원가입, 종목, 실력, 지역 전체 체크', 'welcome'],
+      ['홈 시작', '선택 기준으로 추천과 필터 시작', 'home'],
+      ['나중에 설정', '제한 추천 홈으로 진입하고 신청 전 누락 설정 재요청', 'deferred'],
+    ].map(([title, body, action], index) => <SMRevisionPlusStateCard key={title} title={`${index + 1}. ${title}`} body={body} action={action} tone={index >= 9 ? 'green' : 'blue'}/>)}
+  </SMRevisionPlusBoard>
+);
+
+const SMRevisionAuthFinalWelcome = () => (
+  <div style={{ width: 375, height: 812, background: 'var(--bg)', fontFamily: 'var(--font)', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+    <StatusBar/>
+    <div style={{ flex: 1, padding: '42px 24px 112px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+      <div style={{ width: 72, height: 72, borderRadius: 24, background: 'var(--blue500)', color: 'var(--static-white)', display: 'grid', placeItems: 'center', marginBottom: 24 }}>
+        <Icon name="check" size={30}/>
+      </div>
+      <div className="tm-text-heading">준비가 끝났어요</div>
+      <div className="tm-text-body" style={{ marginTop: 10, color: 'var(--text-muted)' }}>약관, 회원가입, 운동 설정까지 모두 완료되었습니다.</div>
+      <div style={{ display: 'grid', gap: 10, marginTop: 24 }}>
+        {[
+          ['약관 동의 완료', '서비스 이용약관과 개인정보 처리방침 동의가 완료되었습니다.'],
+          ['회원가입 완료', '계정 생성이 완료되었습니다.'],
+          ['관심 종목 완료', '축구 · 풋살 · 하키 · 배드민턴'],
+          ['실력 입력 완료', '축구 B · 풋살 C · 하키 D · 배드민턴 B'],
+          ['활동 지역 완료', '마포구 · 강남구 · 위치 권한 선택'],
+        ].map(([title, body]) => (
+          <Card key={title} pad={14} style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <div style={{ width: 28, height: 28, borderRadius: 14, background: 'var(--blue50)', color: 'var(--blue500)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+              <Icon name="check" size={15}/>
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div className="tm-text-body-lg">{title}</div>
+              <div className="tm-text-caption" style={{ marginTop: 2 }}>{body}</div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '14px 20px 22px', background: 'var(--bg)', borderTop: '1px solid var(--grey100)' }}>
+      <button className="tm-btn tm-btn-lg tm-btn-primary tm-btn-block">홈으로 시작하기</button>
+    </div>
+  </div>
+);
+
+const SM9_CHAT_ROOMS = [
+  { title: '주말 풋살 매치', type: '개인매치', category: '개인매치', last: '오늘 14:00 경기 인원 확인 부탁드려요.', time: '방금', unread: 2, pinned: true, avatar: 'assets/mock/profile/profile-01.svg' },
+  { title: '성수 러너스 FC', type: '팀', category: '팀', last: '이번 주 훈련 장소가 변경됐어요.', time: '9분', unread: 0, pinned: true, avatar: 'assets/mock/profile/profile-02.svg' },
+  { title: '마포 배드민턴 친선전', type: '팀매치', category: '팀매치', last: '라인업 확인 후 확정 부탁드립니다.', time: '23분', unread: 4, pinned: false, avatar: 'assets/mock/profile/profile-03.svg' },
+  { title: '강남 테니스 싱글 매치', type: '개인매치', category: '개인매치', last: '코트 예약 링크 공유드렸습니다.', time: '1시간', unread: 0, pinned: false, avatar: 'assets/mock/profile/profile-04.svg' },
+  { title: '하키 입문 팀', type: '팀', category: '팀', last: '장비 대여 가능 인원을 확인 중입니다.', time: '어제', unread: 1, pinned: false, avatar: 'assets/mock/profile/profile-05.svg' },
+];
+
+const SM9_CHAT_CATEGORIES = [
+  { label: '전체', count: SM9_CHAT_ROOMS.length },
+  { label: '개인매치', count: SM9_CHAT_ROOMS.filter((room) => room.category === '개인매치').length },
+  { label: '팀매치', count: SM9_CHAT_ROOMS.filter((room) => room.category === '팀매치').length },
+  { label: '팀', count: SM9_CHAT_ROOMS.filter((room) => room.category === '팀').length },
+];
+
+const SMRevisionChatFullRowSM9 = ({ room, swiped = false }) => (
+  <div style={{ position: 'relative', minHeight: 74, overflow: 'hidden', background: 'var(--bg)' }}>
+    {swiped && (
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', justifyContent: 'flex-end', background: 'var(--grey50)' }}>
+        <button className="tm-btn tm-btn-neutral" style={{ width: 74, height: '100%', borderRadius: 0, display: 'grid', placeItems: 'center', gap: 3 }}>
+          <Icon name="pin" size={18}/>
+          <span className="tm-text-micro">고정</span>
+        </button>
+        <button className="tm-btn tm-btn-danger" style={{ width: 74, height: '100%', borderRadius: 0, display: 'grid', placeItems: 'center', gap: 3 }}>
+          <Icon name="close" size={18}/>
+          <span className="tm-text-micro" style={{ color: 'var(--static-white)' }}>나가기</span>
+        </button>
+      </div>
+    )}
+    <div className="tm-list-row" style={{ position: 'relative', transform: swiped ? 'translateX(-148px)' : 'none', transition: 'transform .18s ease', minHeight: 74, padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid var(--grey100)', background: room.unread ? 'var(--blue50)' : 'var(--bg)' }}>
+      <div style={{ width: 46, height: 46, borderRadius: 16, background: `url(${room.avatar}) center/cover, var(--grey100)`, flexShrink: 0 }}/>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+          <div className="tm-text-body-lg" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{room.title}</div>
+          {room.pinned && <Badge tone="blue" size="sm">고정</Badge>}
+        </div>
+        <div className="tm-text-caption" style={{ marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{room.type} · {room.last}</div>
+      </div>
+      <div style={{ minWidth: 34, textAlign: 'right', flexShrink: 0 }}>
+        <div className="tm-text-micro">{room.time}</div>
+        {room.unread > 0 && <div style={{ marginTop: 6, minWidth: 20, height: 20, padding: '0 6px', borderRadius: 999, background: 'var(--blue500)', color: 'var(--static-white)', display: 'inline-grid', placeItems: 'center', fontSize: 11, fontWeight: 700 }}>{room.unread}</div>}
+      </div>
+    </div>
+  </div>
+);
+
+const SMRevisionChatListMobileSM9 = ({ leaveConfirm = false }) => {
+  const pinnedRooms = SM9_CHAT_ROOMS.filter((room) => room.pinned);
+  const normalRooms = SM9_CHAT_ROOMS.filter((room) => !room.pinned);
+  return (
+    <div style={{ width: 375, height: 812, background: 'var(--bg)', fontFamily: 'var(--font)', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+      <StatusBar/>
+      <div style={{ height: 56, padding: '8px 10px 8px 8px', display: 'flex', alignItems: 'center', gap: 2, borderBottom: '1px solid var(--grey100)', flexShrink: 0 }}>
+        <button className="tm-btn tm-btn-icon tm-btn-ghost" aria-label="뒤로가기"><Icon name="chevL" size={22}/></button>
+        <div className="tm-text-body-lg">채팅</div>
+      </div>
+      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '14px 20px 10px', flexShrink: 0 }}>
+        {SM9_CHAT_CATEGORIES.map((category, index) => (
+          <HapticChip key={category.label} active={index === 0}>{category.label} {category.count}</HapticChip>
+        ))}
+      </div>
+      <div style={{ flex: 1, overflow: 'auto' }}>
+        <div className="tm-text-label" style={{ padding: '8px 20px 6px', color: 'var(--text-muted)' }}>고정 {pinnedRooms.length}</div>
+        {pinnedRooms.map((room, index) => <SMRevisionChatFullRowSM9 key={room.title} room={room} swiped={index === 0}/>)}
+        <div className="tm-text-label" style={{ padding: '18px 20px 6px', color: 'var(--text-muted)' }}>채팅방 {normalRooms.length}</div>
+        {normalRooms.map((room, index) => <SMRevisionChatFullRowSM9 key={room.title} room={room} swiped={index === 0}/>)}
+      </div>
+      {leaveConfirm && (
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(15,23,42,.28)', display: 'flex', alignItems: 'flex-end' }}>
+          <div style={{ width: '100%', padding: '18px 20px 24px', background: 'var(--bg)', borderRadius: '20px 20px 0 0', boxShadow: '0 -12px 32px rgba(15,23,42,.14)' }}>
+            <div className="tm-text-body-lg">채팅방을 나갈까요?</div>
+            <div className="tm-text-caption" style={{ marginTop: 6 }}>나가면 목록에서 사라지고, 새 메시지는 다시 초대되기 전까지 받을 수 없습니다.</div>
+            <button className="tm-btn tm-btn-lg tm-btn-danger tm-btn-block" style={{ marginTop: 16 }}>나가기</button>
+            <button className="tm-btn tm-btn-lg tm-btn-ghost tm-btn-block" style={{ marginTop: 8 }}>취소</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const SMRevisionCommunitySM9ActionMatrix = () => (
+  <SMRevisionRuleBoard title="06 커뮤니티/채팅 · SM9 동작/예외" items={[
+    { title: '홈 플로팅 진입', body: '홈의 채팅 floating button을 누르면 채팅 목록으로 진입한다. 채팅 화면은 뒤로가기와 채팅 타이틀만 가진다.' },
+    { title: '하단바 제외', body: '채팅 목록과 채팅방 상세에는 bottom nav를 렌더하지 않는다. 입력 바가 있는 상세 화면과 충돌하지 않게 한다.' },
+    { title: '카테고리 count', body: '전체, 개인매치, 팀매치, 팀 chip에는 현재 목록 기준 채팅방 수를 함께 표시한다.' },
+    { title: '한 줄 전체 폭 row', body: '각 채팅방은 카드가 아니라 화면 전체 폭의 list row를 차지하고, 구분은 얇은 divider로 처리한다.' },
+    { title: '왼쪽 슬라이드', body: 'row를 왼쪽으로 밀면 고정과 나가기 두 액션만 노출한다. 고정된 방은 고정 해제로 같은 위치를 재사용한다.' },
+    { title: '나가기 확인', body: '나가기는 즉시 삭제하지 않고 확인 sheet를 띄운다. 실패 시 목록 위치와 unread 상태를 유지한다.' },
+  ]}/>
+);
+
+const SMRevisionCommunityMobileGridSM9 = () => (
+  <SMRevisionRuleBoard title="06 커뮤니티/채팅 · SM9 mobile grid" items={[
+    { title: '상단바', body: '뒤로가기 + 채팅 문구만 노출한다. 검색, 알림, 더보기, 하단바는 제외한다.' },
+    { title: '카테고리', body: '전체 5, 개인매치 2, 팀매치 1, 팀 2처럼 06 원본 목록 기반 수량을 표시한다.' },
+    { title: '섹션', body: '고정 2개와 일반 3개를 분리해 목록 스캔을 명확히 한다.' },
+    { title: 'row interaction', body: 'tap은 채팅방 상세, swipe는 고정/나가기, unread badge tap은 별도 동작 없이 row 진입으로 통일한다.' },
+    { title: 'empty/error', body: '카테고리 필터 결과가 없으면 빈 상태 CTA는 홈 추천 매치 보기로 보낸다. 네트워크 실패는 재시도 row를 같은 위치에 둔다.' },
+    { title: 'desktop 확장 전제', body: 'mobile 확정 후 desktop에서는 좌측 채팅 목록 + 우측 상세 split view로 확장한다.' },
+  ]}/>
+);
+
+const SMRevisionCommunityFinalHomeChatEntry = () => (
+  <div style={{ width: 375, height: 812, position: 'relative', overflow: 'hidden', background: 'var(--bg)' }}>
+    <SMRevisionHomeMobileV2/>
+    <button className="tm-btn tm-btn-primary" aria-label="채팅 열기" style={{ position: 'absolute', right: 20, bottom: 92, width: 56, height: 56, borderRadius: 999, padding: 0, display: 'grid', placeItems: 'center', boxShadow: '0 12px 26px rgba(49,130,246,.28)' }}>
+      <Icon name="chat" size={22}/>
+    </button>
+  </div>
+);
+
+const SM6_SORT_OPTIONS_RESTORED = ['추천순', '마감임박', '거리순', '가격낮은순'];
+
+const SMRevisionMatchSM6TopControlsRestored = ({ mode = 'card', selected = '추천순', variant = 'A' }) => (
+  <div style={{ padding: '18px 20px 0' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: variant === 'A' ? 'minmax(0, 1fr) 44px' : '44px minmax(0, 1fr) 44px', gap: 8, alignItems: 'center' }}>
+      {variant === 'B' && <button className="tm-btn tm-btn-icon tm-btn-neutral" aria-label="필터 열기"><Icon name="filter" size={18}/></button>}
+      <div style={{ minHeight: 48, borderRadius: 12, background: 'var(--grey100)', display: 'flex', alignItems: 'center', gap: 8, padding: '0 14px', minWidth: 0, color: 'var(--text-caption)' }}>
+        <Icon name="search" size={18}/>
+        <span className="tm-text-body" style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>지역, 시간, 매치명 검색</span>
+      </div>
+      <button className="tm-btn tm-btn-icon tm-btn-primary" aria-label="검색 실행"><Icon name="search" size={19}/></button>
+    </div>
+    {variant === 'A' ? (
+      <Card pad={10} style={{ marginTop: 12, background: 'var(--grey50)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          {[['카드형', 'ㅁ', mode === 'card'], ['콤팩트', 'ㅁ|ㅁ', mode !== 'card']].map(([label, icon, active]) => (
+            <button key={label} className="tm-pressable" style={{ minHeight: 40, borderRadius: 10, background: active ? 'var(--blue500)' : 'var(--bg)', color: active ? 'var(--static-white)' : 'var(--text)', border: active ? '1px solid var(--blue500)' : '1px solid var(--grey100)', fontWeight: 700 }}>
+              <span className="tm-text-label">{icon} {label}</span>
+            </button>
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginTop: 10, paddingBottom: 2 }}>
+          {SM6_SORT_OPTIONS_RESTORED.map((label) => <button key={label} className={`tm-chip ${label === selected ? 'tm-chip-active' : ''}`}>{label}</button>)}
+        </div>
+      </Card>
+    ) : (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 12 }}>
+        <button className="tm-btn tm-btn-md tm-btn-neutral" style={{ flex: 1, justifyContent: 'space-between', padding: '0 14px' }}><span>{selected}</span><span className="tm-text-caption">정렬</span></button>
+        <button className="tm-btn tm-btn-md tm-btn-neutral" aria-label={mode === 'card' ? '콤팩트 보기로 전환' : '카드 보기로 전환'} style={{ width: 104 }}>{mode === 'card' ? 'ㅁ 카드' : 'ㅁ|ㅁ 콤팩트'}</button>
+      </div>
+    )}
+  </div>
+);
+
+const SMRevisionMatchSM6SummaryRestored = ({ variant = 'A', showSports = true }) => (
+  <div style={{ padding: variant === 'A' ? '14px 20px 0' : '12px 20px 0' }}>
+    {showSports && (
+      <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 8, overflowX: 'auto', paddingBottom: 12 }}>
+        {SPORTS.slice(0, 7).map((sport, index) => <HapticChip key={sport.id} active={index === 0} count={index === 0 ? MATCHES.length : index + 2}>{sport.label}</HapticChip>)}
+      </div>
+    )}
+    {variant === 'A' ? (
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
+        {SM3_MATCH_STATS.map(([label, value, sub]) => <Card key={label} pad={12} style={{ background: 'var(--bg)' }}><div className="tm-text-micro" style={{ color: 'var(--text-caption)' }}>{label}</div><div className="tm-text-subhead tab-num" style={{ marginTop: 4 }}>{value}</div><div className="tm-text-micro" style={{ marginTop: 2, color: 'var(--text-caption)' }}>{sub}</div></Card>)}
+      </div>
+    ) : (
+      <div style={{ minHeight: 44, borderRadius: 12, background: 'var(--grey50)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '0 12px' }}>
+        <div className="tm-text-label">서울 전체 · 마감임박</div>
+        <div className="tm-text-caption tab-num">42개 · 오늘 7 · 마감 4</div>
+      </div>
+    )}
+  </div>
+);
+
+const SMRevisionMatchListMobileSM6A = ({ mode = 'card' }) => (
+  <SMRevisionMatchSM4Shell>
+    <SMRevisionMatchSM6TopControlsRestored mode={mode} selected="추천순" variant="A"/>
+    <SMRevisionMatchSM6SummaryRestored variant="A"/>
+    <div style={{ padding: '16px 20px 24px' }}>
+      <div style={{ marginBottom: 10 }}><div className="tm-text-label">개인 매치</div><div className="tm-text-caption" style={{ marginTop: 2 }}>대안 A: 보기 선택과 정렬 chip을 같은 control panel 안에 묶어 현재 선택 상태를 명확히 보여줍니다.</div></div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>{MATCHES.slice(0, mode === 'card' ? 3 : 5).map((item, index) => mode === 'card' ? <SMRevisionMatchSM3CardItem key={item.id} item={item} index={index}/> : <SMRevisionMatchSM3CompactItem key={item.id} item={item}/>)}</div>
+    </div>
+  </SMRevisionMatchSM4Shell>
+);
+
+const SMRevisionMatchListMobileSM6B = ({ mode = 'compact' }) => (
+  <SMRevisionMatchSM4Shell>
+    <SMRevisionMatchSM6TopControlsRestored mode={mode} selected="마감임박" variant="B"/>
+    <SMRevisionMatchSM6SummaryRestored variant="B"/>
+    <div style={{ padding: '14px 20px 24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}><div><div className="tm-text-label">개인 매치</div><div className="tm-text-caption" style={{ marginTop: 2 }}>대안 B: 필터 버튼, 정렬 dropdown, 보기 버튼을 도구막대처럼 분리합니다.</div></div><Badge tone="orange" size="sm">마감 우선</Badge></div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>{MATCHES.slice(0, mode === 'card' ? 3 : 5).map((item, index) => mode === 'card' ? <SMRevisionMatchSM3CardItem key={item.id} item={item} index={index}/> : <SMRevisionMatchSM3CompactItem key={item.id} item={item}/>)}</div>
+    </div>
+  </SMRevisionMatchSM4Shell>
+);
+
+const SMRevisionMatchSM6ListRuleMatrix = () => (
+  <SMRevisionPlusBoard eyebrow="03 MATCH SM6 · LIST OPTIONS" title="전체 조회 리스트 선택/정렬 디자인 대안" columns={4}>
+    {[
+      ['대안 A 구조', '검색 아래 control panel 안에 카드/콤팩트 segmented 버튼과 정렬 chip을 같이 둔다.', '선택 상태 명확'],
+      ['대안 B 구조', '필터 icon, 정렬 dropdown, 보기 버튼을 도구막대처럼 분리한다.', 'compact toolbar'],
+      ['공통 유지', '검색, sport count selector, 요약 counter, 카드/콤팩트 목록, SM5 예외 flow는 그대로 유지한다.', 'preserve'],
+      ['다음 결정', 'mobile에서 A/B 중 하나를 고른 뒤 m03 grid main/list/components/motion으로 확장한다.', 'decision'],
+    ].map(([title, body, action], index) => <SMRevisionPlusStateCard key={title} title={`${index + 1}. ${title}`} body={body} action={action} tone={index === 3 ? 'orange' : 'blue'}/>)}
+  </SMRevisionPlusBoard>
+);
+
+const SMRevisionMatchSM7TopSearchBarRestored = ({ query = '', filterCount = 1 }) => (
+  <div style={{ minHeight: 56, padding: '8px 10px 8px 8px', borderBottom: '1px solid var(--grey100)', display: 'flex', alignItems: 'center', gap: 1, background: 'var(--bg)', flexShrink: 0 }}>
+    <button aria-label="뒤로가기" style={{ width: 30, minWidth: 30, height: 40, border: 0, background: 'transparent', borderRadius: 12, display: 'grid', placeItems: 'center', color: 'var(--text-strong)', padding: 0 }}><Icon name="chevL" size={20}/></button>
+    <div style={{ flex: 1, minHeight: 44, borderRadius: 14, background: 'var(--grey100)', display: 'flex', alignItems: 'center', gap: 6, padding: '0 8px 0 14px', minWidth: 0, border: query ? '1px solid var(--blue500)' : '1px solid transparent' }}>
+      <div className="tm-text-body" style={{ flex: 1, color: query ? 'var(--text-strong)' : 'var(--text-placeholder)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{query || '검색어를 입력해 주세요'}</div>
+      {query && <button aria-label="검색어 지우기" style={{ width: 30, minWidth: 30, height: 30, border: 0, background: 'transparent', display: 'grid', placeItems: 'center', padding: 0 }}><span style={{ width: 20, height: 20, borderRadius: 999, background: 'var(--grey400)', color: 'var(--static-white)', display: 'grid', placeItems: 'center', fontSize: 14, lineHeight: '20px', fontWeight: 800 }}>x</span></button>}
+      <button className="tm-btn tm-btn-icon tm-btn-ghost" aria-label="검색 실행" style={{ width: 34, minWidth: 34, height: 34, borderRadius: 11, color: 'var(--blue500)' }}><Icon name="search" size={19}/></button>
+    </div>
+    <button className="tm-btn tm-btn-icon tm-btn-ghost" aria-label="검색 필터" style={{ width: 40, minWidth: 40, height: 40, padding: 0, position: 'relative' }}><Icon name="filter" size={21}/>{filterCount > 0 && <span className="tab-num" style={{ position: 'absolute', top: 4, right: 2, minWidth: 16, height: 16, padding: '0 4px', borderRadius: 999, background: 'var(--blue500)', color: 'var(--static-white)', border: '2px solid var(--bg)', fontSize: 9, fontWeight: 800, lineHeight: '12px', display: 'grid', placeItems: 'center' }}>{filterCount}</span>}</button>
+  </div>
+);
+
+const SMRevisionMatchSM7ControlRowRestored = ({ mode = 'card', selected = '추천순' }) => (
+  <div style={{ padding: '14px 20px 0' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 108px', gap: 8, alignItems: 'center' }}>
+      <button className="tm-btn tm-btn-md tm-btn-neutral" style={{ justifyContent: 'space-between', padding: '0 14px', minWidth: 0 }}><span className="tm-text-label" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selected}</span><Icon name="chevD" size={16}/></button>
+      <button className="tm-btn tm-btn-md tm-btn-neutral" aria-label={mode === 'card' ? '콤팩트 보기로 전환' : '카드 보기로 전환'} style={{ padding: '0 12px' }}><span className="tm-text-label">{mode === 'card' ? '카드형' : '콤팩트'}</span></button>
+    </div>
+    <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 8, overflowX: 'auto', padding: '12px 0 10px' }}>{SPORTS.slice(0, 7).map((sport, index) => <HapticChip key={sport.id} active={index === 0} count={index === 0 ? MATCHES.length : index + 2}>{sport.label}</HapticChip>)}</div>
+  </div>
+);
+
+const SMRevisionMatchListMobileSM7 = ({ mode = 'card', query = '' }) => (
+  <SMRevisionMatchSM4Shell>
+    <SMRevisionMatchSM7TopSearchBarRestored query={query} filterCount={query ? 2 : 1}/>
+    <SMRevisionMatchSM7ControlRowRestored mode={mode} selected={query ? '마감임박' : '추천순'}/>
+    <SMRevisionMatchSM6SummaryRestored variant={mode === 'card' ? 'A' : 'B'} showSports={false}/>
+    <div style={{ padding: '14px 20px 24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}><div style={{ minWidth: 0 }}><div className="tm-text-label">개인 매치</div><div className="tm-text-caption" style={{ marginTop: 2 }}>SM7: 00 최종본의 검색바 · 필터형 상단바를 적용합니다.</div></div>{query && <Badge tone="blue" size="sm">검색 결과</Badge>}</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: mode === 'card' ? 12 : 10 }}>{MATCHES.slice(0, mode === 'card' ? 3 : 5).map((item, index) => mode === 'card' ? <SMRevisionMatchSM3CardItem key={item.id} item={item} index={index}/> : <SMRevisionMatchSM3CompactItem key={item.id} item={item}/>)}</div>
+    </div>
+  </SMRevisionMatchSM4Shell>
+);
+
+const SMRevisionMatchSM7TopSearchRules = () => (
+  <SMRevisionPlusBoard eyebrow="03 MATCH SM7 · TOP SEARCH" title="00 최종본 목록 상단바 검색 적용 기준" columns={4}>
+    {[
+      ['상단바 검색', '00 최종본의 검색바 · 필터형처럼 뒤로가기, 검색 필드, 검색 실행, 필터를 56px 상단바 안에 둔다.', 'adopt'],
+      ['검색 필드', '검색 영역 tap은 검색 집중 화면으로 진입한다. 입력값이 있으면 지우기 버튼을 노출한다.', 'focus search'],
+      ['필터 버튼', '필터는 검색과 같은 상단바에 남기고 active 조건 수를 badge로 표시한다.', 'filter sheet'],
+      ['정렬 조건', '추천순/마감임박/거리순/가격낮은순은 상단바 아래 첫 컨트롤 row의 dropdown으로 내린다.', 'sort row'],
+      ['보기 선택', '카드형/콤팩트 전환은 정렬 옆 보조 버튼으로 둔다.', 'view row'],
+      ['예외 유지', 'empty/error/permission/payment/pending 같은 SM5 예외 흐름은 변경하지 않는다.', 'keep states'],
+    ].map(([title, body, action], index) => <SMRevisionPlusStateCard key={title} title={`${index + 1}. ${title}`} body={body} action={action} tone={index >= 5 ? 'orange' : 'blue'}/>)}
+  </SMRevisionPlusBoard>
+);
+
+Object.assign(window, {
+  SMCoreTopBackCompactOptionsMobile,
+  SMCoreFixedBottomNavMobile,
+  SMCoreNotificationMobile,
+  SMCoreSearchTypeExceptionMobile,
+  SMCoreFixedSearchBarMobile,
+  SMCoreFixedShellActionMatrix,
+  SMCoreFixedShellResponsiveBoard,
+  SM_FINAL_CORE_ORDER,
+  SM_FINAL_CORE_MODULES,
+  SMFinalCoreOverviewBoard,
+  SMFinalCoreFlowBoard,
+  SMFinalCoreChecklistBoard,
+  SMRevisionAuthSM5TermsBeforeSignup,
+  SMRevisionAuthSM5SignupCompleteGuide,
+  SMRevisionAuthSM5SportStep,
+  SMRevisionAuthSM5LevelStep,
+  SMRevisionAuthSM5RegionStep,
+  SMRevisionAuthSM6GapAudit,
+  SMRevisionAuthSM6ProviderDenied,
+  SMRevisionAuthSM6MissingEmail,
+  SMRevisionAuthSM6BlockedAccount,
+  SMRevisionAuthSM6AccountResolve,
+  SMRevisionAuthSM6LocationPermission,
+  SMRevisionAuthSM6ButtonExceptionMatrix,
+  SMRevisionAuthSM6AccessibilityMatrix,
+  SMRevisionAuthFinalChecklist,
+  SMRevisionAuthFinalStateMatrix,
+  SMRevisionAuthFinalFlow,
+  SMRevisionAuthFinalWelcome,
+  SMRevisionMatchDetailEdgeMobileSM5: SMRevisionMatchDetailMobileSM3,
+  SMRevisionMatchParticipantsMobileSM5: SMRevisionMatchDetailMobileSM3,
+  SMRevisionMatchCreateGapMobileSM5: SMRevisionMatchSM4Flow,
+  SMRevisionMatchSM5ActionMatrix: SMRevisionMatchSM4ActionMatrix,
+  SMRevisionMatchSM5StateMatrix: SMRevisionMatchSM4StateMatrix,
+  SMRevisionMatchSM5Flow: SMRevisionMatchSM4Flow,
+  SMRevisionMatchListMobileSM6A,
+  SMRevisionMatchListMobileSM6B,
+  SMRevisionMatchSM6ListRuleMatrix,
+  SMRevisionMatchListMobileSM7,
+  SMRevisionMatchSM7TopSearchRules,
+  SMRevisionTeamBrowseMobileSM3: SMRevisionTeamBrowseMobileSM3Restored,
+  SMRevisionTeamBrowseSearchMobileSM3: SMRevisionTeamBrowseSearchMobileSM3Restored,
+  SMRevisionTeamBrowseJoinSheetSM3: SMRevisionTeamBrowseJoinSheetSM3Restored,
+  SMRevisionTeamBrowseMembershipStateSM3: SMRevisionTeamBrowseMembershipStateSM3Restored,
+  SMRevisionTeamBrowseSM3ActionMatrix: SMRevisionTeamBrowseSM3ActionMatrixRestored,
+  SMRevisionTeamBrowseSM3StateMatrix: SMRevisionTeamBrowseSM3StateMatrixRestored,
+  SMRevisionTeamBrowseSM3Flow: SMRevisionTeamBrowseSM3FlowRestored,
+  SMRevisionTeamBrowseMobileSM4: SMRevisionTeamBrowseMobileSM4Restored,
+  SMRevisionTeamBrowseSM4TopbarRule: SMRevisionTeamBrowseSM4TopbarRuleRestored,
+  SMRevisionCommunitySM3GapAudit: SMRevisionCommunityMobileGridSM2,
+  SMRevisionCommunitySM3ActionMatrix: SMRevisionCommunityMobileGridSM2,
+  SMRevisionCommunitySM3StateMatrix: SMRevisionCommunityMobileGridSM2,
+  SMRevisionCommunitySM3FailureMobile: SMRevisionNotificationsMobileSM2,
+  SMRevisionNotificationsRaceMobileSM3: SMRevisionNotificationsMobileSM2,
+  SMRevisionCommunityMobileGridSM3: SMRevisionCommunityMobileGridSM2,
+  SMRevisionHomeChatEntryMobileSM4: SMRevisionChatListMobileSM2,
+  SMRevisionChatListMobileSM4: SMRevisionChatListMobileSM2,
+  SMRevisionCommunitySM4ActionMatrix: SMRevisionCommunityMobileGridSM2,
+  SMRevisionCommunityMobileGridSM4: SMRevisionCommunityMobileGridSM2,
+  SMRevisionChatListMobileSM5: SMRevisionChatListMobileSM2,
+  SMRevisionCommunitySM5ActionMatrix: SMRevisionCommunityMobileGridSM2,
+  SMRevisionCommunityMobileGridSM5: SMRevisionCommunityMobileGridSM2,
+  SMRevisionCommunityMobileGridSM6: SMRevisionCommunityMobileGridSM2,
+  SMRevisionCommunityMobileGridSM7: SMRevisionCommunityMobileGridSM2,
+  SMRevisionChatListMobileSM8: SMRevisionChatListMobileSM2,
+  SMRevisionCommunitySM8ActionMatrix: SMRevisionCommunityMobileGridSM2,
+  SMRevisionCommunityMobileGridSM8: SMRevisionCommunityMobileGridSM2,
+  SMRevisionCommunityFinalHomeChatEntry,
+  SMRevisionChatFullRowSM9,
+  SMRevisionChatListMobileSM9,
+  SMRevisionCommunitySM9ActionMatrix,
+  SMRevisionCommunityMobileGridSM9,
+  SMRevisionProfileActivityHubMobileSM3: SMRevisionProfileReviewMobileSM2,
+  SMRevisionProfileEditMobileSM3: SMRevisionProfileReviewMobileSM2,
+  SMRevisionProfilePrivacyTrustMobileSM3: SMRevisionProfileStateMobileSM2,
+  SMRevisionReviewWriteStateMobileSM3: SMRevisionReviewWriteMobileSM2,
+  SMRevisionProfileSM3ActionMatrix: SMRevisionProfileReviewMobileGridSM2,
+  SMRevisionProfileSM3StateMatrix: SMRevisionProfileStateMobileSM2,
+  SMRevisionProfileSM3Flow: SMRevisionProfileReviewMobileGridSM2,
+  SMRevisionHomeSearchMobileSM4: SMRevisionHomeSearchMobileSM5Final,
+  SMRevisionHomeSearchNoInputMobileSM4: () => <SMRevisionHomeSearchMobileSM5Final query="" noInput/>,
+  SMRevisionHomeSearchStateMobileSM4B: SMRevisionHomeSearchStateMobileSM5Final,
+  SMRevisionHomeSearchRulesSM4: SMRevisionHomeSearchRulesSM5Final,
+  SMRevisionHomeSM4ActionMatrix: SMRevisionHomeSM3ActionMatrix,
+  SMRevisionHomeSM4SearchActionMatrixB: SMRevisionHomeSM5SearchActionMatrixFinal,
+  SMRevisionHomeSM4StateMatrix: SMRevisionHomeSM3StateMatrix,
+  SMRevisionHomeSM4Flow: SMRevisionHomeSM3Flow,
+  SMRevisionHomeSearchMobileSM5: SMRevisionHomeSearchMobileSM5Final,
+  SMRevisionHomeSearchNoInputMobileSM5: () => <SMRevisionHomeSearchMobileSM5Final query="" noInput/>,
+  SMRevisionHomeSearchStateMobileSM5: SMRevisionHomeSearchStateMobileSM5Final,
+  SMRevisionHomeSearchRulesSM5: SMRevisionHomeSearchRulesSM5Final,
+  SMRevisionHomeSM5SearchActionMatrix: SMRevisionHomeSM5SearchActionMatrixFinal,
+});
+
+const SMRevisionHomeSearchAssistBlockFinal = () => (
+  <>
+    <div className="tm-text-label">최근 검색</div>
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+      {['동네', '강남', '오늘 대기', '마감임박'].map((label, index) => (
+        <button key={label} className={`tm-chip ${index === 0 ? 'tm-chip-active' : ''}`}>{label}</button>
+      ))}
+    </div>
+    <div className="tm-text-label" style={{ marginTop: 20 }}>빠른 조건</div>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
+      {[
+        ['오늘 참여 가능', '오늘 매치만 기준'],
+        ['마감임박', '24시간 이내'],
+        ['초급 환영', '레벨 필터 적용'],
+        ['팀 매치 포함', '팀매치 결과 함께 보기'],
+      ].map(([title, sub], index) => (
+        <Card key={title} pad={14} interactive style={{ background: index === 0 ? 'var(--blue50)' : 'var(--bg)' }}>
+          <div className="tm-text-label" style={{ color: index === 0 ? 'var(--blue500)' : 'var(--text-strong)' }}>{title}</div>
+          <div className="tm-text-micro" style={{ marginTop: 4, color: 'var(--text-caption)' }}>{sub}</div>
+        </Card>
+      ))}
+    </div>
+  </>
+);
+
+const SMRevisionHomeSearchFinalMobile = ({ query = '동네', noInput = false }) => (
+  <div style={{ width: 375, height: 812, background: 'var(--bg)', fontFamily: 'var(--font)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <StatusBar/>
+    <SMRevisionSearchBarFinal value={query}/>
+    <div style={{ flex: 1, overflow: 'auto', padding: '18px 20px 22px' }}>
+      <SMRevisionHomeSearchAssistBlockFinal/>
+      {noInput ? (
+        <Card pad={18} style={{ marginTop: 20, background: 'var(--grey50)' }}>
+          <Badge tone="grey" size="sm">입력 전</Badge>
+          <div className="tm-text-subhead" style={{ marginTop: 10 }}>검색어를 입력하거나 조건을 선택해 주세요</div>
+          <div className="tm-text-caption" style={{ marginTop: 7, lineHeight: 1.55 }}>검색 진입 직후에는 결과 리스트를 비우고 최근 검색과 빠른 조건을 먼저 보여준다.</div>
+        </Card>
+      ) : (
+        <>
+          <div style={{ height: 1, background: 'var(--grey100)', margin: '20px 0 18px' }}/>
+          <div>
+            <div className="tm-text-label">검색 결과</div>
+            <div className="tm-text-caption" style={{ marginTop: 2 }}><span className="tab-num">23</span>개 결과 · 매치/팀매치/팀 통합 조회</div>
+          </div>
+          <div style={{ marginTop: 12 }}><SMRevisionHomeSearchResultsV2 variant="grouped"/></div>
+        </>
+      )}
+    </div>
+  </div>
+);
+
+const SMRevisionHomeSearchFinalNoInputMobile = () => (
+  <SMRevisionHomeSearchFinalMobile query="" noInput/>
+);
+
+const SMRevisionHomeSearchFinalStateMobile = ({ state = 'empty' }) => {
+  const isError = state === 'error';
+  const isStale = state === 'stale';
+  return (
+    <div style={{ width: 375, height: 812, background: 'var(--bg)', fontFamily: 'var(--font)', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+      <StatusBar/>
+      <SMRevisionSearchBarFinal value="동네 강남" error={isError}/>
+      <div style={{ flex: 1, overflow: 'auto', padding: '18px 20px 24px' }}>
+        <SMRevisionHomeSearchAssistBlockFinal/>
+        <div style={{ height: 1, background: 'var(--grey100)', margin: '20px 0 18px' }}/>
+        <div>
+          <div className="tm-text-label">검색 결과</div>
+          <div className="tm-text-caption" style={{ marginTop: 2 }}>동네 강남 · 매치/팀매치/팀 통합 조회</div>
+        </div>
+        <div style={{ marginTop: 42, textAlign: 'center', color: 'var(--text-muted)' }}>
+          <div style={{ width: 48, height: 48, borderRadius: 16, background: 'var(--grey50)', display: 'grid', placeItems: 'center', margin: '0 auto 14px', color: 'var(--grey500)' }}>
+            <Icon name={isStale ? 'clock' : 'search'} size={22}/>
+          </div>
+          <div className="tm-text-body-lg">{isStale ? '최신 검색 결과를 확인 중입니다.' : '검색 결과가 없습니다.'}</div>
+          <div className="tm-text-caption" style={{ marginTop: 6 }}>{isError ? '입력창 상태는 유지하고 하단 안내만 보여줍니다.' : '검색어를 수정하거나 다른 조건을 선택해 주세요.'}</div>
+        </div>
+      </div>
+      {isError && (
+        <div style={{ position: 'absolute', left: 20, right: 20, bottom: 22, minHeight: 48, borderRadius: 14, background: 'rgba(25,31,40,.94)', color: 'var(--static-white)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 14px', fontSize: 13, fontWeight: 700 }}>
+          새로고침이 필요합니다. 잠시 후 다시 검색해 주세요.
+        </div>
+      )}
+    </div>
+  );
+};
+
+const SMRevisionHomeSearchFinalRules = () => (
+  <SMRevisionPlusBoard eyebrow="02 HOME FINAL · SEARCH CONTRACT" title="홈 검색 최종 규약" sub="SM5 결정을 통합한 최종본. 검색 결과, 결과 없음, 오류, stale 상태 모두 최근 검색과 빠른 조건을 유지한다." columns={3}>
+    <SMRevisionPlusStateCard title="검색바" body="00 SM 최종의 back형 검색바를 사용한다. 값이 있을 때 회색 원형 X, 우측 blue ghost 검색 아이콘을 노출한다." action="fixed"/>
+    <SMRevisionPlusStateCard title="최근 검색/빠른 조건" body="정상 결과, 미입력, 결과 없음, 오류, stale 모든 상태에서 검색 보조 영역을 유지한다." action="persistent"/>
+    <SMRevisionPlusStateCard title="결과 없음" body="검색 결과 헤더 아래에 '검색 결과가 없습니다.' 문구만 보여준다. 조건 초기화 CTA와 전체보기 CTA는 없다." action="empty text"/>
+    <SMRevisionPlusStateCard title="오류" body="입력창 red border는 유지하고 하단 toast만 띄운다. 오류 카드나 재시도 CTA는 두지 않는다." action="toast"/>
+    <SMRevisionPlusStateCard title="위치 기반" body="위치 권한/내 주변 5km 예외는 홈 검색 최종본에서 제거한다." action="removed"/>
+    <SMRevisionPlusStateCard title="전환" body="결과 row와 그룹 더보기가 route entry다. 검색 결과 전체보기는 사용하지 않는다." action="route"/>
+  </SMRevisionPlusBoard>
+);
+
+const SMRevisionHomeFinalSearchActionMatrix = () => (
+  <SMRevisionPlusBoard eyebrow="02 HOME FINAL · SEARCH ACTIONS" title="홈 검색 최종 버튼/예외" sub="SM5의 버튼 결정을 최종본으로 정리한다. 최근 검색/빠른 조건은 모든 예외 상태에서 유지한다." columns={4}>
+    <SMRevisionPlusCard index={1} title="뒤로가기" trigger="좌측 back tap" feedback="ghost press" next="홈 main 복귀" state="nav"/>
+    <SMRevisionPlusCard index={2} title="검색 입력" trigger="input focus/type" feedback="blue border, cursor" next="X 노출 + 검색 실행 대기" state="input"/>
+    <SMRevisionPlusCard index={3} title="X 지우기" trigger="회색 원형 X tap" feedback="query만 제거" next="미입력 페이지, 보조 영역 유지" state="clear"/>
+    <SMRevisionPlusCard index={4} title="검색 실행" trigger="우측 ghost search tap / Enter" feedback="pending" next="결과/empty/error/stale" state="submit"/>
+    <SMRevisionPlusCard index={5} title="최근 검색" trigger="recent chip tap" feedback="chip active" next="query 대체 + 결과 갱신" state="chip"/>
+    <SMRevisionPlusCard index={6} title="빠른 조건" trigger="condition card tap" feedback="selected surface" next="조건 적용 + 결과 갱신" state="filter"/>
+    <SMRevisionPlusCard index={7} title="결과 없음" trigger="0 results" feedback="결과 헤더 + 문구만 표시" next="보조 영역에서 재선택 대기" state="empty"/>
+    <SMRevisionPlusCard index={8} title="오류 toast" trigger="refresh required" feedback="red input + bottom toast" next="query/보조 영역 유지" state="toast" tone="red"/>
+    <SMRevisionPlusCard index={9} title="stale" trigger="late response" feedback="최신 검색 확인 문구" next="마지막 query 기준 유지" state="race"/>
+    <SMRevisionPlusCard index={10} title="그룹 더보기" trigger="매치/팀매치/팀 더보기 tap" feedback="group context 보존" next="해당 타입 list" state="route"/>
+    <SMRevisionPlusCard index={11} title="결과 row" trigger="row tap" feedback="row press" next="타입별 상세/목록" state="detail"/>
+    <SMRevisionPlusCard index={12} title="제거 항목" trigger="전체보기/위치권한" feedback="not rendered" next="사용하지 않음" state="removed"/>
+  </SMRevisionPlusBoard>
+);
+
+Object.assign(window, {
+  SMRevisionHomeSearchFinalMobile,
+  SMRevisionHomeSearchFinalNoInputMobile,
+  SMRevisionHomeSearchFinalStateMobile,
+  SMRevisionHomeSearchFinalRules,
+  SMRevisionHomeFinalSearchActionMatrix,
 });
