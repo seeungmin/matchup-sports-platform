@@ -48,7 +48,7 @@ html, body { background: #f4f5f7; font-family: 'Pretendard', sans-serif; }
 <script type="text/babel" src="lib/screens-refresh3.jsx?v=20260425-fix32"></script>
 <script type="text/babel" src="lib/screens-v2main.jsx?v=20260425-fix32"></script>
 <script type="text/babel" src="lib/screens-v2main2.jsx?v=20260425-fix32"></script>
-<script type="text/babel" src="lib/screens-sm-revision.jsx?v=core00-final-restored-sm9-leave-2states-auth01-separated-team05-restored-sm4"></script>
+<script type="text/babel" src="lib/screens-sm-revision.jsx?v=core00-final-restored-sm9-leave-2states-auth01-separated-team05-sm5-search-filter"></script>
 <script type="text/babel" src="lib/screens-parity.jsx?v=20260425-fix32"></script>
 <script type="text/babel" src="lib/screens-case-matrix.jsx?v=20260425-fix32"></script>
 <script type="text/babel" src="lib/screens-readiness.jsx?v=20260425-fix32"></script>
@@ -2187,6 +2187,38 @@ function App() {
           </DCArtboard>
         </DCSection>
 
+        <DCSection id="team-browse-sm-revision-5" title="05 · 팀 둘러보기 · SM5 최종본" subtitle="SM4를 복사한 최종 비교 섹션. 00 목록 상단 검색, 03/04 검색·필터, 팀 정보 상세, 팀소개 카드 기준을 mobile-first로 확정한다.">
+          <DCArtboard id="team-browse-sm5-ref" label="SM5 copy base - existing 05 SM4" width={375} height={812}>
+            <SMRevisionTeamBrowseMobileSM4/>
+          </DCArtboard>
+          <DCArtboard id="team-browse-sm5-mobile" label="SM5 mobile - search + filters applied" width={375} height={812}>
+            <SMRevisionTeamBrowseMobileSM5/>
+          </DCArtboard>
+          <DCArtboard id="team-browse-sm5-search" label="SM5 search active" width={375} height={812}>
+            <SMRevisionTeamBrowseSearchMobileSM5/>
+          </DCArtboard>
+          <DCArtboard id="team-browse-sm5-empty" label="SM5 search empty" width={375} height={812}>
+            <SMRevisionTeamBrowseSearchMobileSM5 state="empty"/>
+          </DCArtboard>
+          <DCArtboard id="team-browse-sm5-error" label="SM5 search error" width={375} height={812}>
+            <SMRevisionTeamBrowseSearchMobileSM5 state="error"/>
+          </DCArtboard>
+          <DCArtboard id="team-browse-sm5-filter" label="SM5 filter sheet" width={375} height={812}>
+            <SMRevisionTeamBrowseFilterSheetSM5/>
+          </DCArtboard>
+          <DCArtboard id="team-browse-sm5-rules" label="SM5 search/filter rules" width={840} height={812}>
+            <SMRevisionTeamBrowseSearchFilterRulesSM5/>
+          </DCArtboard>
+          <DCArtboard id="team-browse-sm5-detail" label="SM5 detail · full team information" width={375} height={812}>
+            <SMRevisionTeamBrowseDetailSM5/>
+          </DCArtboard>
+          <DCArtboard id="team-browse-sm5-actions" label="SM5 copied action matrix" width={840} height={812}>
+            <SMRevisionTeamBrowseSM3ActionMatrix/>
+          </DCArtboard>
+          <DCArtboard id="team-browse-sm5-states" label="SM5 copied state matrix" width={840} height={812}>
+            <SMRevisionTeamBrowseSM3StateMatrix/>
+          </DCArtboard>
+        </DCSection>
         <DCSection id="community" title="06 · 커뮤니티 · 채팅 · 알림" subtitle="채팅, 알림, 피드, 매치 내 채팅 임베드를 커뮤니티 모듈로 통합">
           <DCArtboard id="community-chat-list" label="채팅 목록" width={375} height={812} data-canonical-id="m12-mb-list-list">
             <ChatListV2/>
@@ -2532,92 +2564,71 @@ function App() {
           </DCArtboard>
         </DCSection>
 
-        <DCSection id="my-profile-trust-sm-revision" title="07 · 마이 · 프로필 · 리뷰 · SM 수정안" subtitle="SM 문서의 user profile/review target을 core 비교 섹션으로 추가한다. 기존 07은 보존한다.">
-          <DCArtboard id="my-sm-ref" label="원본 비교 · 마이 홈" width={375} height={812}>
-            <MyPageV2/>
+        <DCSection id="my-profile-trust-sm-revision" title="07 · 마이 · 프로필 · 평판 · SM1 최종본" subtitle="원본 07을 복사한 비교 섹션. 기본 디자인은 유지하고 내 활동에서 레슨 기록과 결제 내역을 제외하며, 하단바는 00 SM 제안안처럼 홈과 같은 SMBottomNav 계약을 적용한다.">
+          <DCArtboard id="my-sm1" label="SM1 · 마이 홈" width={375} height={812}>
+            <SMRevisionMyPageSM1/>
           </DCArtboard>
-          <DCArtboard id="my-sm-profile-review" label="SM · 프로필/리뷰 모바일" width={375} height={812}>
-            <SMRevisionProfileReviewMobile/>
+          <DCArtboard id="my-sm1-activity" label="SM1 · 내 활동 요약" width={375} height={812}>
+            <SMRevisionMyActivitySM1/>
           </DCArtboard>
-          <DCArtboard id="my-sm-grid" label="SM · 마이/리뷰 mobile grid" width={840} height={812}>
-            <SMRevisionRuleBoard title="07 마이/프로필/리뷰 · SM mobile grid" items={[
-              { title: '상단 검색', body: 'SM 전역 규칙상 검색 버튼은 홈과 마이에서만 유지한다.' },
-              { title: '프로필', body: 'user profile은 매너, 활동, 신뢰 신호를 보여주되 verified/sample을 구분한다.' },
-              { title: '리뷰', body: 'review는 target surface이나 세부 body가 없으므로 받은 리뷰와 작성 flow를 companion board로 둔다.' },
-              { title: '다음 단계', body: '리뷰 작성은 매치/팀매치 완료 후 flow로 연결하고 상태/권한을 grid에 확장한다.' },
+          <DCArtboard id="my-sm1-matches-joined" label="SM1 · 내 매치 · 참여한 매치" width={375} height={812}>
+            <SMRevisionMyMatchesJoinedSM1/>
+          </DCArtboard>
+          <DCArtboard id="my-sm1-matches-created" label="SM1 · 내 매치 · 생성한 매치" width={375} height={812}>
+            <SMRevisionMyMatchesCreatedSM1/>
+          </DCArtboard>
+          <DCArtboard id="my-sm1-created-match-manage" label="SM1 · 생성 매치 · 참여자 관리" width={375} height={812}>
+            <SMRevisionMyCreatedMatchManageSM1/>
+          </DCArtboard>
+          <DCArtboard id="my-sm1-applicant-user-profile" label="SM1 · 신청자 유저 정보" width={375} height={812}>
+            <SMRevisionApplicantUserProfileSM1/>
+          </DCArtboard>
+          <DCArtboard id="my-sm1-match-edit" label="SM1 · 생성 매치 · 수정" width={375} height={812}>
+            <SMRevisionMyMatchEditSM1/>
+          </DCArtboard>
+          <DCArtboard id="my-sm1-team-matches" label="SM1 · 내 팀매치 · 생성 목록" width={375} height={812}>
+            <SMRevisionMyTeamMatchesSM1/>
+          </DCArtboard>
+          <DCArtboard id="my-sm1-applicant-team-profile" label="SM1 · 신청팀 정보" width={375} height={812}>
+            <SMRevisionApplicantTeamProfileSM1/>
+          </DCArtboard>
+          <DCArtboard id="my-sm1-team-match-edit" label="SM1 · 팀매치 수정" width={375} height={812}>
+            <SMRevisionMyTeamMatchEditSM1/>
+          </DCArtboard>
+          <DCArtboard id="my-sm1-teams" label="SM1 · 내 팀 리스트" width={375} height={812}>
+            <SMRevisionMyTeamsSM1/>
+          </DCArtboard>
+          <DCArtboard id="my-sm1-team-detail" label="SM1 · 팀 상세 · 채팅/정보" width={375} height={812}>
+            <SMRevisionMyTeamDetailSM1/>
+          </DCArtboard>
+          <DCArtboard id="my-sm1-team-members" label="SM1 · 팀 멤버 관리" width={375} height={812}>
+            <SMRevisionMyTeamMembersSM1/>
+          </DCArtboard>
+          <DCArtboard id="profile-edit-sm1" label="SM1 · 프로필 수정 copied" width={375} height={812}>
+            <ProfileEdit/>
+          </DCArtboard>
+          <DCArtboard id="reviews-sm1" label="SM1 · 받은 리뷰 copied" width={375} height={812}>
+            <ReviewsReceived/>
+          </DCArtboard>
+          <DCArtboard id="review-write-sm1" label="SM1 · 리뷰 작성 copied" width={375} height={812}>
+            <ReviewWrite/>
+          </DCArtboard>
+          <DCArtboard id="badges-sm1" label="SM1 · 뱃지 copied" width={375} height={812}>
+            <Badges/>
+          </DCArtboard>
+          <DCArtboard id="my-expanded-sm1" label="SM1 · 내 활동 추가 커버리지 copied" width={375} height={812}>
+            <MyExpandedCoverage/>
+          </DCArtboard>
+          <DCArtboard id="my-sm1-grid" label="SM1 · 수정 범위 grid" width={840} height={812}>
+            <SMRevisionRuleBoard title="07 마이 · SM1 최종본 mobile grid" items={[
+              { title: '원본 보존', body: '07 원본 섹션은 그대로 두고 같은 번호 아래 SM1 비교 섹션에서만 수정한다.' },
+              { title: '내 활동 메뉴', body: '내 활동에는 내 매치와 팀 매칭만 남긴다. 레슨 기록과 결제 내역 entry는 노출하지 않는다.' },
+              { title: '내 활동 화면', body: '탭은 내 매치와 팀만 유지한다. 레슨 tab과 결제 내역성 요약은 제외한다.' },
+              { title: '하단바', body: '00 SM 제안안과 동일한 SMBottomNav를 사용하고 마이 탭을 active로 둔다. 홈 SM 화면과 같은 5탭 계약이다.' },
             ]}/>
           </DCArtboard>
-        </DCSection>
-
-        <DCSection id="my-profile-trust-sm-revision-2" title="07 · 마이 · 프로필 · 리뷰 · SM2 수정안" subtitle="기존 07과 기존 07 SM 수정안은 보존하고, 같은 번호 아래에 프로필 신뢰 신호, 받은 리뷰, 리뷰 작성 companion flow, 비공개/오류 상태를 추가한다.">
-          <DCArtboard id="my-sm2-ref" label="SM2 · 복사 기준 · 기존 07 SM" width={375} height={812}>
-            <SMRevisionProfileReviewMobile/>
-          </DCArtboard>
-          <DCArtboard id="my-sm2-profile" label="SM2 · 마이/프로필 main" width={375} height={812}>
-            <SMRevisionProfileReviewMobileSM2/>
-          </DCArtboard>
-          <DCArtboard id="my-sm2-review-write" label="SM2 · 리뷰 작성" width={375} height={812}>
-            <SMRevisionReviewWriteMobileSM2/>
-          </DCArtboard>
-          <DCArtboard id="my-sm2-private" label="SM2 · 비공개 프로필" width={375} height={812}>
-            <SMRevisionProfileStateMobileSM2 state="private"/>
-          </DCArtboard>
-          <DCArtboard id="my-sm2-network" label="SM2 · 네트워크 오류" width={375} height={812}>
-            <SMRevisionProfileStateMobileSM2 state="network"/>
-          </DCArtboard>
-          <DCArtboard id="my-sm2-grid" label="SM2 · 마이/리뷰 mobile grid" width={840} height={812}>
-            <SMRevisionProfileReviewMobileGridSM2/>
-          </DCArtboard>
-        </DCSection>
-
-        <DCSection id="my-profile-trust-sm-revision-3" title="07 · 마이 · 프로필 · 리뷰 · SM3 수정안" subtitle="SM2를 복사한 비교 섹션. 원본 07 전체와 M13 grid를 대조해 프로필 수정, 내 활동, 공개 범위, 리뷰/뱃지, 모든 버튼 동작과 예외 처리를 mobile-first로 보강한다.">
-          <DCArtboard id="my-sm3-ref" label="SM3 · 복사 기준 · 기존 07 SM2 main" width={375} height={812}>
-            <SMRevisionProfileReviewMobileSM2/>
-          </DCArtboard>
-          <DCArtboard id="my-sm3-profile" label="SM3 · 마이/프로필 main copied" width={375} height={812}>
-            <SMRevisionProfileReviewMobileSM2/>
-          </DCArtboard>
-          <DCArtboard id="my-sm3-activity-hub" label="SM3 · 내 활동/메뉴 hub" width={375} height={812}>
-            <SMRevisionProfileActivityHubMobileSM3/>
-          </DCArtboard>
-          <DCArtboard id="my-sm3-profile-edit" label="SM3 · 프로필 수정" width={375} height={812}>
-            <SMRevisionProfileEditMobileSM3/>
-          </DCArtboard>
-          <DCArtboard id="my-sm3-upload-error" label="SM3 · 사진 업로드 오류" width={375} height={812}>
-            <SMRevisionProfileEditMobileSM3 state="uploadError"/>
-          </DCArtboard>
-          <DCArtboard id="my-sm3-nickname-duplicate" label="SM3 · 닉네임 중복/저장 차단" width={375} height={812}>
-            <SMRevisionProfileEditMobileSM3 state="duplicateName"/>
-          </DCArtboard>
-          <DCArtboard id="my-sm3-save-pending" label="SM3 · 저장 검수중" width={375} height={812}>
-            <SMRevisionProfileEditMobileSM3 state="pending"/>
-          </DCArtboard>
-          <DCArtboard id="my-sm3-privacy-public" label="SM3 · 공개 범위/신뢰 라벨" width={375} height={812}>
-            <SMRevisionProfilePrivacyTrustMobileSM3/>
-          </DCArtboard>
-          <DCArtboard id="my-sm3-privacy-private" label="SM3 · 비공개 프로필 copied + 보강" width={375} height={812}>
-            <SMRevisionProfilePrivacyTrustMobileSM3 state="private"/>
-          </DCArtboard>
-          <DCArtboard id="my-sm3-review-write" label="SM3 · 리뷰 작성 copied" width={375} height={812}>
-            <SMRevisionReviewWriteMobileSM2/>
-          </DCArtboard>
-          <DCArtboard id="my-sm3-review-disabled" label="SM3 · 리뷰 작성 차단" width={375} height={812}>
-            <SMRevisionReviewWriteStateMobileSM3 state="disabled"/>
-          </DCArtboard>
-          <DCArtboard id="my-sm3-review-error" label="SM3 · 리뷰 등록 실패" width={375} height={812}>
-            <SMRevisionReviewWriteStateMobileSM3 state="error"/>
-          </DCArtboard>
-          <DCArtboard id="my-sm3-network" label="SM3 · 네트워크 오류 copied" width={375} height={812}>
-            <SMRevisionProfileStateMobileSM2 state="network"/>
-          </DCArtboard>
-          <DCArtboard id="my-sm3-actions" label="SM3 · 모든 버튼 동작/예외 매트릭스" width={840} height={812}>
-            <SMRevisionProfileSM3ActionMatrix/>
-          </DCArtboard>
-          <DCArtboard id="my-sm3-states" label="SM3 · 전체 상황 처리" width={840} height={812}>
-            <SMRevisionProfileSM3StateMatrix/>
-          </DCArtboard>
-          <DCArtboard id="my-sm3-flow" label="SM3 · 마이/프로필/리뷰 흐름" width={840} height={812}>
-            <SMRevisionProfileSM3Flow/>
+          <DCArtboard id="my-sm1-management-grid" label="SM1 · 내 매치/팀 관리 grid" width={840} height={812}>
+            <SMRevisionMyManagementGridSM1/>
           </DCArtboard>
         </DCSection>
 
@@ -3765,6 +3776,7 @@ const SM_NEW_CORE_SECTIONS = [
   'team-browse-sm-revision-2',
   'team-browse-sm-revision-3',
   'team-browse-sm-revision-4',
+  'team-browse-sm-revision-5',
   'community',
   'community-sm-revision',
   'community-sm-revision-2',
@@ -3778,8 +3790,6 @@ const SM_NEW_CORE_SECTIONS = [
   'community-sm-final',
   'my-profile-trust',
   'my-profile-trust-sm-revision',
-  'my-profile-trust-sm-revision-2',
-  'my-profile-trust-sm-revision-3',
   'payments-support',
   'payments-support-sm-revision',
   'settings-states',
@@ -3834,10 +3844,10 @@ const SM_FIRST_DESIGN_PROGRESS_SECTIONS = [
   'matches-core-sm-revision-5',
   'teams-team-matches-sm-revision-4',
   'teams-team-matches-sm-create-final',
+  'team-browse-sm-revision-5',
   'team-browse-sm-revision-4',
   'community-sm-final',
-  'my-profile-trust-sm-revision-3',
-  'my-profile-trust-sm-revision-2',
+  'my-profile-trust-sm-revision',
   'payments-support-sm-revision',
   'settings-states',
   'public-marketing-sm-revision',
@@ -3851,9 +3861,10 @@ const SM_FIRST_DESIGN_COMPLETE_SECTIONS = [
   'matches-core-sm-create-final',
   'teams-team-matches-sm-revision-4',
   'teams-team-matches-sm-create-final',
+  'team-browse-sm-revision-5',
   'team-browse-sm-revision-4',
   'community-sm-final',
-  'my-profile-trust-sm-revision-3',
+  'my-profile-trust-sm-revision',
   'payments-support-sm-revision',
   'settings-states',
   'public-marketing-sm-revision',
@@ -3940,6 +3951,7 @@ function SMNewViewerGuide({ onJump, viewMode, setViewMode }) {
     ['team-browse-sm-revision-2', '05 팀 SM2'],
     ['team-browse-sm-revision-3', '05 팀 SM3'],
     ['team-browse-sm-revision-4', '05 팀 SM4'],
+    ['team-browse-sm-revision-5', '05 팀 SM5 최종'],
     ['community', '06 커뮤니티'],
     ['community-sm-revision', '06 커뮤니티 SM'],
     ['community-sm-revision-2', '06 커뮤니티 SM2'],
@@ -3952,9 +3964,7 @@ function SMNewViewerGuide({ onJump, viewMode, setViewMode }) {
     ['community-sm-revision-9', '06 커뮤니티 SM9'],
     ['community-sm-final', '06 커뮤니티 최종'],
     ['my-profile-trust', '07 마이/평판'],
-    ['my-profile-trust-sm-revision', '07 마이 SM'],
-    ['my-profile-trust-sm-revision-2', '07 마이 SM2'],
-    ['my-profile-trust-sm-revision-3', '07 마이 SM3'],
+    ['my-profile-trust-sm-revision', '07 마이 SM1 최종'],
     ['payments-support', '08 결제/분쟁'],
     ['payments-support-sm-revision', '08 결제 SM'],
     ['settings-states', '09 설정/상태'],
@@ -3987,10 +3997,9 @@ function SMNewViewerGuide({ onJump, viewMode, setViewMode }) {
     ['teams-team-matches-sm-revision-4', '04 최종본'],
     ['teams-team-matches-sm-create-final', '04-1 최종본'],
     ['team-browse-sm-revision-4', '05 SM 수정안 4'],
+    ['team-browse-sm-revision-5', '05 SM5 최종본'],
     ['community-sm-final', '06 SM 최종본'],
     ['community-sm-revision-9', '06 SM 수정안 9'],
-    ['my-profile-trust-sm-revision-3', '07 SM 수정안 3'],
-    ['my-profile-trust-sm-revision-2', '07 SM 수정안 2'],
     ['payments-support-sm-revision', '08 SM 수정안 1'],
     ['settings-states', '09'],
     ['public-marketing-sm-revision', '10 SM 수정안'],
@@ -4004,8 +4013,8 @@ function SMNewViewerGuide({ onJump, viewMode, setViewMode }) {
     ['teams-team-matches-sm-revision-4', '04 팀매치 최종'],
     ['teams-team-matches-sm-create-final', '04-1 팀매치 생성/수정 최종'],
     ['team-browse-sm-revision-4', '05 팀 SM4'],
+    ['team-browse-sm-revision-5', '05 팀 SM5 최종'],
     ['community-sm-final', '06 커뮤니티 최종'],
-    ['my-profile-trust-sm-revision-3', '07 마이 SM3'],
     ['payments-support-sm-revision', '08 결제 SM'],
     ['settings-states', '09 설정'],
     ['public-marketing-sm-revision', '10 공개 SM'],

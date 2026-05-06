@@ -5852,3 +5852,815 @@ Object.assign(window, {
   SMRevisionHomeSearchFinalRules,
   SMRevisionHomeFinalSearchActionMatrix,
 });
+
+const SMRevisionTeamBrowseSearchBarSM5 = ({ query = '', error = false, filterCount = 3 }) => (
+  <div style={{ minHeight: 56, padding: '8px 10px 8px 8px', borderBottom: '1px solid var(--grey100)', display: 'flex', alignItems: 'center', gap: 1, background: 'var(--bg)', flexShrink: 0 }}>
+    <button aria-label="뒤로가기" style={{ width: 40, minWidth: 40, height: 40, border: 0, background: 'transparent', borderRadius: 12, display: 'grid', placeItems: 'center', color: 'var(--text-strong)', padding: 0 }}>
+      <Icon name="chevL" size={20}/>
+    </button>
+    <div style={{ flex: 1, minHeight: 44, borderRadius: 14, background: 'var(--grey100)', border: error ? '1px solid var(--red500)' : query ? '1px solid var(--blue500)' : '1px solid transparent', display: 'flex', alignItems: 'center', gap: 6, padding: '0 8px 0 14px', minWidth: 0 }}>
+      <div className="tm-text-body" style={{ flex: 1, minWidth: 0, color: query ? 'var(--text-strong)' : 'var(--text-placeholder)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        {query || '팀명, 지역, 종목 검색'}
+      </div>
+      {query && (
+        <button aria-label="검색어 지우기" style={{ width: 30, minWidth: 30, height: 30, border: 0, background: 'transparent', display: 'grid', placeItems: 'center', padding: 0 }}>
+          <span style={{ width: 20, height: 20, borderRadius: 999, background: 'var(--grey400)', color: 'var(--static-white)', display: 'grid', placeItems: 'center', fontSize: 14, lineHeight: '20px', fontWeight: 800 }}>x</span>
+        </button>
+      )}
+      <button className="tm-btn tm-btn-icon tm-btn-ghost" aria-label="팀 검색 실행" style={{ width: 34, minWidth: 34, height: 34, borderRadius: 11, color: error ? 'var(--red500)' : 'var(--blue500)' }}>
+        <Icon name="search" size={19}/>
+      </button>
+    </div>
+    <button aria-label={`필터 ${filterCount}개 적용`} style={{ width: 40, minWidth: 40, height: 40, border: 0, background: 'transparent', borderRadius: 12, display: 'grid', placeItems: 'center', color: 'var(--text-strong)', padding: 0, position: 'relative' }}>
+      <Icon name="filter" size={21}/>
+      {filterCount > 0 && (
+        <span className="tab-num" style={{ position: 'absolute', top: 4, right: 3, minWidth: 17, height: 17, padding: '0 4px', borderRadius: 999, background: 'var(--blue500)', color: 'var(--static-white)', fontSize: 10, fontWeight: 800, display: 'grid', placeItems: 'center' }}>{filterCount}</span>
+      )}
+    </button>
+  </div>
+);
+
+const SMRevisionMyPageSM1 = () => (
+  <div style={{ width: 375, height: 812, background: 'var(--bg)', fontFamily: 'var(--font)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <StatusBar/>
+    <div style={{ flex: 1, overflow: 'auto', paddingBottom: 80 }}>
+      <div style={{ padding: '20px 20px 0', background: 'var(--grey50)', borderBottom: '1px solid var(--border)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
+          <div style={{ width: 64, height: 64, borderRadius: 20, background: 'linear-gradient(135deg,var(--blue500),var(--purple500))', display: 'grid', placeItems: 'center', fontSize: 28, color: 'var(--static-white)', flexShrink: 0 }}>김</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-strong)', letterSpacing: 0 }}>김정민</div>
+            <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4, fontWeight: 500 }}>@jungmin · 서울 강남구</div>
+            <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
+              {['축구', '농구'].map((t) => <span key={t} style={{ padding: '3px 10px', borderRadius: 999, background: 'var(--blue50)', color: 'var(--blue500)', fontSize: 11, fontWeight: 700 }}>{t}</span>)}
+            </div>
+          </div>
+          <button className="tm-pressable tm-break-keep" style={{ height: 34, padding: '0 14px', borderRadius: 999, background: 'var(--grey200)', border: 'none', fontSize: 12, fontWeight: 700, color: 'var(--text-strong)', cursor: 'pointer' }}>편집</button>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', borderTop: '1px solid var(--border)', paddingTop: 16, paddingBottom: 16, gap: 0 }}>
+          {[{ l: '매치', v: 87 }, { l: '팀', v: 3 }, { l: '매너', v: '4.9' }, { l: '뱃지', v: 12 }].map((k, i) => (
+            <div key={k.l} style={{ textAlign: 'center', borderRight: i < 3 ? '1px solid var(--border)' : undefined }}>
+              <div className="tab-num" style={{ fontSize: 22, fontWeight: 800, color: i === 2 ? 'var(--orange500)' : 'var(--text-strong)' }}>{k.v}</div>
+              <div style={{ fontSize: 11, color: 'var(--text-caption)', fontWeight: 500, marginTop: 2 }}>{k.l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{ margin: '16px 20px', padding: 16, borderRadius: 16, background: 'var(--grey50)', border: '1px solid var(--border)' }}>
+        <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 10 }}>이번 달 활동</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
+          <KPIStat label="경기" value={12} unit="회" delta={3} deltaLabel="회"/>
+          <KPIStat label="이동 거리" value={34} unit="km" delta={8} deltaLabel="km"/>
+          <KPIStat label="승률" value="68" unit="%"/>
+        </div>
+      </div>
+      {[
+        { section: '내 활동', items: [{ icon: 'M', t: '내 매치' }, { icon: 'T', t: '팀 매칭' }] },
+        { section: '커뮤니티', items: [{ icon: '팀', t: '내 팀' }, { icon: '리', t: '받은 리뷰' }, { icon: '배', t: '뱃지' }] },
+        { section: '설정', items: [{ icon: '알', t: '알림 설정' }, { icon: '계', t: '계정 설정' }, { icon: '?', t: '고객센터' }] },
+      ].map((sec) => (
+        <div key={sec.section} style={{ marginBottom: 8 }}>
+          <div style={{ padding: '12px 20px 4px', fontSize: 12, color: 'var(--text-caption)', fontWeight: 700, letterSpacing: .3 }}>{sec.section}</div>
+          {sec.items.map((item) => (
+            <ListItem key={item.t} leading={<div style={{ width: 32, height: 32, borderRadius: 10, background: 'var(--grey100)', display: 'grid', placeItems: 'center', fontSize: 12, fontWeight: 800, color: 'var(--text-muted)' }}>{item.icon}</div>} title={item.t} chev onClick={() => {}}/>
+          ))}
+        </div>
+      ))}
+      <div style={{ padding: '20px 20px 0' }}>
+        <button className="tm-pressable tm-break-keep" style={{ width: '100%', height: 48, borderRadius: 12, background: 'var(--red50)', border: 'none', color: 'var(--red500)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>로그아웃</button>
+      </div>
+    </div>
+    <SMBottomNav active="my"/>
+  </div>
+);
+
+const SMRevisionMyActivitySM1 = () => {
+  const history = [
+    { sport: '축', title: '상암 주말 축구', date: '2024.12.14', venue: '상암 보조구장', result: 'win' },
+    { sport: '농', title: '이태원 3on3 농구', date: '2024.12.07', venue: '이태원 농구장', result: 'lose' },
+    { sport: '테', title: '강남 테니스 복식', date: '2024.11.30', venue: '강남구민체육관', result: 'win' },
+    { sport: '배', title: '마포 배드민턴', date: '2024.11.23', venue: '마포스포츠센터', result: 'draw' },
+  ];
+  return (
+    <div style={{ width: 375, height: 812, background: 'var(--bg)', fontFamily: 'var(--font)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <StatusBar/>
+      <div style={{ padding: '12px 20px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <button className="tm-pressable tm-break-keep" style={{ width: 40, height: 40, display: 'grid', placeItems: 'center', background: 'transparent', border: 'none' }}><Icon name="chevL" size={22}/></button>
+        <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-strong)' }}>내 활동</div>
+        <div style={{ width: 40 }}/>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, padding: '16px 20px', borderBottom: '1px solid var(--grey100)' }}>
+        <KPIStat label="총 매치" value={87} unit="회" delta={3} deltaLabel="회"/>
+        <KPIStat label="승률" value="68" unit="%"/>
+        <KPIStat label="매너" value="4.9" unit="점"/>
+      </div>
+      <div style={{ display: 'flex', borderBottom: '1px solid var(--grey100)' }}>
+        {[{ id: 'matches', label: '내 매치' }, { id: 'teams', label: '팀' }].map((t, i) => (
+          <button className="tm-pressable tm-break-keep" key={t.id} style={{ flex: 1, height: 44, background: 'transparent', border: 'none', fontSize: 14, fontWeight: i === 0 ? 700 : 500, color: i === 0 ? 'var(--text-strong)' : 'var(--text-caption)', borderBottom: i === 0 ? '2px solid var(--grey900)' : 'none', cursor: 'pointer' }}>{t.label}</button>
+        ))}
+      </div>
+      <div style={{ flex: 1, overflow: 'auto', paddingBottom: 80 }}>
+        {history.map((h) => (
+          <div key={`${h.title}-${h.date}`} style={{ display: 'flex', gap: 14, padding: '14px 20px', borderBottom: '1px solid var(--grey100)', cursor: 'pointer', alignItems: 'center' }}>
+            <div style={{ width: 44, height: 44, borderRadius: 14, background: 'var(--grey100)', display: 'grid', placeItems: 'center', fontSize: 13, fontWeight: 800, flexShrink: 0, color: 'var(--text-muted)' }}>{h.sport}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-strong)' }}>{h.title}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>{h.date} · {h.venue}</div>
+            </div>
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              <div style={{ padding: '3px 10px', borderRadius: 999, background: h.result === 'win' ? 'var(--green50)' : h.result === 'lose' ? 'var(--red50)' : 'var(--grey100)', color: h.result === 'win' ? 'var(--green500)' : h.result === 'lose' ? 'var(--red500)' : 'var(--text-muted)', fontSize: 11, fontWeight: 700 }}>{h.result === 'win' ? '승' : h.result === 'lose' ? '패' : '무'}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <SMBottomNav active="my"/>
+    </div>
+  );
+};
+
+const SM1RoleBadge = ({ role }) => {
+  const map = {
+    owner: ['팀장', 'blue'],
+    admin: ['관리자', 'green'],
+    member: ['일반 멤버', 'grey'],
+  };
+  const [label, tone] = map[role] || map.member;
+  return <Badge tone={tone} size="sm">{label}</Badge>;
+};
+
+const SM1StatusPill = ({ status }) => {
+  const map = {
+    pending: ['승인중', 'orange'],
+    approved: ['승인완료', 'green'],
+    ended: ['종료', 'grey'],
+    recruiting: ['모집중', 'blue'],
+    cancelled: ['취소', 'red'],
+  };
+  const [label, tone] = map[status] || map.ended;
+  return <Badge tone={tone} size="sm">{label}</Badge>;
+};
+
+const SM1MyScreen = ({ title, children, bottom = true }) => (
+  <div style={{ width: 375, height: 812, background: 'var(--bg)', fontFamily: 'var(--font)', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+    <StatusBar/>
+    <div style={{ height: 52, padding: '6px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--grey100)', flexShrink: 0 }}>
+      <button className="tm-pressable tm-break-keep" aria-label="뒤로가기" style={{ width: 40, height: 40, display: 'grid', placeItems: 'center', background: 'transparent', border: 0 }}><Icon name="chevL" size={22}/></button>
+      <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-strong)' }}>{title}</div>
+      <div style={{ width: 40 }}/>
+    </div>
+    <div style={{ flex: 1, overflow: 'auto', paddingBottom: bottom ? 88 : 18 }}>
+      {children}
+    </div>
+    {bottom && <SMBottomNav active="my"/>}
+  </div>
+);
+
+const SMRevisionMyMatchesSM1 = ({ category = 'joined' }) => {
+  const joined = [
+    { title: '상암 주말 축구', meta: '12.14 토 · 상암 보조구장', status: 'pending' },
+    { title: '강남 테니스 복식', meta: '12.21 토 · 강남구민체육관', status: 'approved' },
+    { title: '마포 배드민턴', meta: '11.23 토 · 마포스포츠센터', status: 'ended' },
+  ];
+  const created = [
+    { title: '잠실 러닝 크루 매치', meta: '승인 대기 3명 · 승인완료 8명', status: 'recruiting' },
+    { title: '목동 풋살 친선전', meta: '취소 요청 1명 · 종료 예정', status: 'approved' },
+  ];
+  const isJoined = category === 'joined';
+  const list = isJoined ? joined : created;
+  return (
+    <SM1MyScreen title="내 매치">
+      <div style={{ padding: '14px 20px 0' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          <button className={`tm-btn tm-btn-md ${isJoined ? 'tm-btn-primary' : 'tm-btn-neutral'}`}>참여한 매치</button>
+          <button className={`tm-btn tm-btn-md ${!isJoined ? 'tm-btn-primary' : 'tm-btn-neutral'}`}>생성한 매치</button>
+        </div>
+        <div style={{ marginTop: 18 }}>
+          <div className="tm-text-label">{isJoined ? '참여한 매치' : '생성한 매치'}</div>
+          <div className="tm-text-caption" style={{ marginTop: 3 }}>
+            {isJoined ? '내가 신청한 승인중, 승인완료, 종료된 매치만 이 카테고리에서 보여준다.' : '내가 생성한 매치만 보여주고 참여자 관리와 매치 수정으로 진입한다.'}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12 }}>
+            {list.map((item) => (
+              <Card key={item.title} pad={14}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="tm-text-body-lg">{item.title}</div>
+                    <div className="tm-text-caption" style={{ marginTop: 4 }}>{item.meta}</div>
+                  </div>
+                  <SM1StatusPill status={item.status}/>
+                </div>
+                {!isJoined && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12 }}>
+                    <button className="tm-btn tm-btn-sm tm-btn-primary">참여자 관리</button>
+                    <button className="tm-btn tm-btn-sm tm-btn-neutral">매치 수정</button>
+                  </div>
+                )}
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
+    </SM1MyScreen>
+  );
+};
+
+const SMRevisionMyMatchesJoinedSM1 = () => <SMRevisionMyMatchesSM1 category="joined"/>;
+const SMRevisionMyMatchesCreatedSM1 = () => <SMRevisionMyMatchesSM1 category="created"/>;
+
+const SMRevisionMyCreatedMatchManageSM1 = () => {
+  const participants = [
+    { name: '이도윤', meta: '승인완료 · 출석 예정', status: 'approved' },
+    { name: '최민아', meta: '취소 요청 · 사유 확인 필요', status: 'cancelled' },
+  ];
+  const applicants = [
+    { name: '박서준', meta: '신청 8분 전 · 매너 4.8', status: 'pending' },
+    { name: '정하늘', meta: '신청 14분 전 · 매너 4.6', status: 'pending' },
+  ];
+  const renderUser = (user, mode) => (
+    <Card key={user.name} pad={14}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ width: 42, height: 42, borderRadius: 14, background: 'var(--grey100)', display: 'grid', placeItems: 'center', fontWeight: 800 }}>{user.name.slice(0, 1)}</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="tm-text-label">{user.name}</div>
+          <div className="tm-text-caption" style={{ marginTop: 3 }}>{user.meta}</div>
+        </div>
+        <SM1StatusPill status={user.status}/>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12 }}>
+        {mode === 'applicant' ? (
+          <>
+            <button className="tm-btn tm-btn-sm tm-btn-primary">승인</button>
+            <button className="tm-btn tm-btn-sm tm-btn-neutral">거절</button>
+          </>
+        ) : (
+          <>
+            <button className="tm-btn tm-btn-sm tm-btn-primary">유저 정보 보기</button>
+            <button className="tm-btn tm-btn-sm tm-btn-neutral">{user.status === 'cancelled' ? '취소 처리' : '승인 취소'}</button>
+          </>
+        )}
+      </div>
+      {mode === 'applicant' && <button className="tm-btn tm-btn-sm tm-btn-ghost tm-btn-block" style={{ marginTop: 8 }}>유저 정보 보기</button>}
+    </Card>
+  );
+  return (
+    <SM1MyScreen title="참여자 관리" bottom={false}>
+      <div style={{ padding: 20 }}>
+        <Card pad={16}>
+          <div className="tm-text-body-lg">잠실 러닝 크루 매치</div>
+          <div className="tm-text-caption" style={{ marginTop: 4 }}>참여중 8명 · 신청 대기 2명 · 취소 요청 1명</div>
+        </Card>
+        <div style={{ marginTop: 14 }}>
+          <div className="tm-text-label">참여중</div>
+          <div className="tm-text-caption" style={{ marginTop: 3 }}>이미 승인되어 참여 중인 유저와 취소 요청자를 관리한다.</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 10 }}>
+            {participants.map((user) => renderUser(user, 'participant'))}
+          </div>
+        </div>
+        <div style={{ marginTop: 18 }}>
+          <div className="tm-text-label">신청 대기</div>
+          <div className="tm-text-caption" style={{ marginTop: 3 }}>새로 신청한 유저는 이 그룹에서만 승인/거절한다.</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 10 }}>
+            {applicants.map((user) => renderUser(user, 'applicant'))}
+          </div>
+        </div>
+        <button className="tm-btn tm-btn-lg tm-btn-primary tm-btn-block" style={{ marginTop: 16 }}>매치 수정으로 이동</button>
+      </div>
+    </SM1MyScreen>
+  );
+};
+
+const SMRevisionMyMatchEditSM1 = () => <SMRevisionMatchEditSMFinal/>;
+
+const SMRevisionApplicantUserProfileSM1 = () => (
+  <SM1MyScreen title="유저 정보" bottom={false}>
+    <div style={{ padding: 20 }}>
+      <Card pad={16}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ width: 64, height: 64, borderRadius: 20, background: 'linear-gradient(135deg,var(--blue500),var(--purple500))', color: 'var(--static-white)', display: 'grid', placeItems: 'center', fontSize: 26, fontWeight: 900 }}>박</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="tm-text-heading">박서준</div>
+            <div className="tm-text-caption" style={{ marginTop: 5 }}>@seojoon · 서울 송파 · 풋살/러닝</div>
+            <div style={{ display: 'flex', gap: 6, marginTop: 9 }}>
+              <Badge tone="green" size="sm">verified</Badge>
+              <Badge tone="blue" size="sm">신청자</Badge>
+            </div>
+          </div>
+        </div>
+      </Card>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8, marginTop: 12 }}>
+        {[
+          ['매치', '42'],
+          ['팀', '3'],
+          ['매너', '4.8'],
+          ['뱃지', '9'],
+        ].map(([label, value]) => (
+          <Card key={label} pad={10}>
+            <div className="tab-num" style={{ fontSize: 20, fontWeight: 900, color: label === '매너' ? 'var(--orange500)' : 'var(--text-strong)', textAlign: 'center' }}>{value}</div>
+            <div className="tm-text-caption" style={{ textAlign: 'center', marginTop: 3 }}>{label}</div>
+          </Card>
+        ))}
+      </div>
+      <Card pad={16} style={{ marginTop: 12 }}>
+        <div className="tm-text-label">이번 달 활동</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginTop: 12 }}>
+          <KPIStat label="경기" value={8} unit="회" delta={2} deltaLabel="회"/>
+          <KPIStat label="출석률" value="96" unit="%"/>
+          <KPIStat label="응답" value="12" unit="분"/>
+        </div>
+      </Card>
+      <div style={{ marginTop: 12 }}>
+        <ListItem title="최근 참여 매치" sub="강남 테니스 복식 · 승인완료" trailing="4.9" chev/>
+        <ListItem title="소속 팀" sub="FC 발빠른놈들 · 강남 러너스 · 마포 배드민턴" trailing="3팀" chev/>
+        <ListItem title="받은 뱃지" sub="시간약속 · 매너플레이 · 팀워크" trailing="9개" chev/>
+      </div>
+      <Card pad={14} style={{ marginTop: 12, background: 'var(--grey50)' }}>
+        <div className="tm-text-label">승인 판단 정보</div>
+        <div className="tm-text-caption" style={{ marginTop: 5 }}>신청자 정보는 마이페이지가 아니라 공개 유저 정보 페이지로 분리한다. 매치, 팀, 매너, 뱃지, 이번 달 활동을 한 화면에서 검토한다.</div>
+      </Card>
+    </div>
+  </SM1MyScreen>
+);
+
+const SMRevisionApplicantTeamProfileSM1 = () => (
+  <SM1MyScreen title="신청팀 정보" bottom={false}>
+    <div style={{ padding: 20 }}>
+      <Card pad={16}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ width: 64, height: 64, borderRadius: 20, background: 'var(--blue50)', color: 'var(--blue500)', display: 'grid', placeItems: 'center', fontWeight: 900 }}>강동</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="tm-text-heading">강동 FC</div>
+            <div className="tm-text-caption" style={{ marginTop: 5 }}>풋살 · 서울 강동 · 31명</div>
+            <div style={{ display: 'flex', gap: 6, marginTop: 9 }}>
+              <Badge tone="green" size="sm">verified</Badge>
+              <Badge tone="orange" size="sm">팀매치 신청</Badge>
+            </div>
+          </div>
+        </div>
+      </Card>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8, marginTop: 12 }}>
+        {[
+          ['팀매치', '18'],
+          ['승률', '64%'],
+          ['매너', '4.7'],
+          ['뱃지', '6'],
+        ].map(([label, value]) => (
+          <Card key={label} pad={10}>
+            <div className="tab-num" style={{ fontSize: 20, fontWeight: 900, color: label === '매너' ? 'var(--orange500)' : 'var(--text-strong)', textAlign: 'center' }}>{value}</div>
+            <div className="tm-text-caption" style={{ textAlign: 'center', marginTop: 3 }}>{label}</div>
+          </Card>
+        ))}
+      </div>
+      <Card pad={16} style={{ marginTop: 12 }}>
+        <div className="tm-text-label">대표 정보</div>
+        <div style={{ marginTop: 10 }}>
+          <ListItem title="팀장" sub="한도윤 · 매너 4.9 · 응답 9분" trailing="보기" chev/>
+          <ListItem title="예상 라인업" sub="A-B 등급 · 선출 없음 · 6:6 가능" trailing="12명" chev/>
+        </div>
+      </Card>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12 }}>
+        <button className="tm-btn tm-btn-md tm-btn-primary">팀 신청 승인</button>
+        <button className="tm-btn tm-btn-md tm-btn-neutral">거절</button>
+      </div>
+      <Card pad={14} style={{ marginTop: 12, background: 'var(--grey50)' }}>
+        <div className="tm-text-label">팀 정보 연결</div>
+        <div className="tm-text-caption" style={{ marginTop: 5 }}>팀이 신청한 경우 신청 row에서 이 팀 정보 페이지로 이동한다. 팀 신뢰 신호와 대표자 정보를 같이 확인한 뒤 승인/거절한다.</div>
+      </Card>
+    </div>
+  </SM1MyScreen>
+);
+
+const SMRevisionMyTeamMatchesSM1 = () => (
+  <SM1MyScreen title="내 팀매치">
+    <div style={{ padding: 20 }}>
+      <div className="tm-text-label">내가 생성한 팀매치</div>
+      <div className="tm-text-caption" style={{ marginTop: 3 }}>팀매치는 내가 생성한 항목만 보여주고 수정 진입을 제공한다.</div>
+      {[
+        ['FC 발빠른놈들 vs 강동 FC', '12.29 일 · 상대팀 조율중', 'recruiting'],
+        ['목동 풋살 팀매치', '01.04 토 · 조건 확정', 'approved'],
+      ].map(([title, meta, status]) => (
+        <Card key={title} pad={14} style={{ marginTop: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ flex: 1 }}>
+              <div className="tm-text-body-lg">{title}</div>
+              <div className="tm-text-caption" style={{ marginTop: 4 }}>{meta}</div>
+            </div>
+            <SM1StatusPill status={status}/>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12 }}>
+            <button className="tm-btn tm-btn-sm tm-btn-primary">신청팀 정보</button>
+            <button className="tm-btn tm-btn-sm tm-btn-neutral">팀매치 수정</button>
+          </div>
+        </Card>
+      ))}
+    </div>
+  </SM1MyScreen>
+);
+
+const SMRevisionMyTeamMatchEditSM1 = () => <SMRevisionTeamMatchEditSMFinal/>;
+
+const SMRevisionMyTeamsSM1 = () => (
+  <SM1MyScreen title="내 팀">
+    <div style={{ padding: 20 }}>
+      {[
+        ['FC 발빠른놈들', '팀장 · 풋살 · 24명', 'owner'],
+        ['강남 러너스', '관리자 · 러닝 · 48명', 'admin'],
+        ['마포 배드민턴', '일반 멤버 · 배드민턴 · 18명', 'member'],
+      ].map(([name, meta, role]) => (
+        <Card key={name} pad={14} style={{ marginBottom: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 46, height: 46, borderRadius: 14, background: 'var(--grey100)', display: 'grid', placeItems: 'center', fontWeight: 900 }}>{name.slice(0, 2)}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="tm-text-body-lg">{name}</div>
+              <div className="tm-text-caption" style={{ marginTop: 4 }}>{meta}</div>
+            </div>
+            <SM1RoleBadge role={role}/>
+          </div>
+        </Card>
+      ))}
+    </div>
+  </SM1MyScreen>
+);
+
+const SMRevisionMyTeamDetailSM1 = () => (
+  <SM1MyScreen title="팀 정보">
+    <div style={{ padding: 20 }}>
+      <Card pad={16}>
+        <div className="tm-text-heading">FC 발빠른놈들</div>
+        <div className="tm-text-caption" style={{ marginTop: 6 }}>풋살 · 서울 강남 · 24명 · 내 역할 팀장</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 14 }}>
+          <button className="tm-btn tm-btn-md tm-btn-primary">팀 채팅으로 가기</button>
+          <button className="tm-btn tm-btn-md tm-btn-neutral">팀 정보</button>
+        </div>
+      </Card>
+      <div style={{ marginTop: 14 }}>
+        <ListItem title="멤버 관리" sub="팀장/관리자만 권한 부여와 회수가 가능" trailing="24명" chev/>
+        <ListItem title="팀매치 기록" sub="생성한 팀매치와 결과" trailing="8건" chev/>
+        <ListItem title="팀 설정" sub="소개, 활동 지역, 모집 상태" trailing="관리" chev/>
+      </div>
+    </div>
+  </SM1MyScreen>
+);
+
+const SMRevisionMyTeamMembersSM1 = () => {
+  const members = [
+    { name: '김정민', meta: '팀 생성자 · 모든 권한', role: 'owner' },
+    { name: '박서준', meta: '가입 승인/공지 관리 가능', role: 'admin' },
+    { name: '이도윤', meta: '일반 참여 권한', role: 'member' },
+  ];
+  const requests = [
+    { name: '정하늘', meta: '가입 신청 10분 전 · 풋살 · 매너 4.7', role: 'member' },
+    { name: '문태오', meta: '초대 링크 신청 · 러닝 병행', role: 'member' },
+  ];
+  const renderMember = (member) => (
+    <Card key={member.name} pad={14}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ width: 42, height: 42, borderRadius: 14, background: 'var(--grey100)', display: 'grid', placeItems: 'center', fontWeight: 800 }}>{member.name.slice(0, 1)}</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="tm-text-label">{member.name}</div>
+          <div className="tm-text-caption" style={{ marginTop: 3 }}>{member.meta}</div>
+        </div>
+        <SM1RoleBadge role={member.role}/>
+      </div>
+      {member.role !== 'owner' && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12 }}>
+          <button className="tm-btn tm-btn-sm tm-btn-primary">{member.role === 'member' ? '관리자 부여' : '권한 유지'}</button>
+          <button className="tm-btn tm-btn-sm tm-btn-neutral">{member.role === 'admin' ? '권한 회수' : '내보내기'}</button>
+        </div>
+      )}
+    </Card>
+  );
+  const renderRequest = (member) => (
+    <Card key={member.name} pad={14}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ width: 42, height: 42, borderRadius: 14, background: 'var(--grey100)', display: 'grid', placeItems: 'center', fontWeight: 800 }}>{member.name.slice(0, 1)}</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="tm-text-label">{member.name}</div>
+          <div className="tm-text-caption" style={{ marginTop: 3 }}>{member.meta}</div>
+        </div>
+        <SM1StatusPill status="pending"/>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12 }}>
+        <button className="tm-btn tm-btn-sm tm-btn-primary">가입 승인</button>
+        <button className="tm-btn tm-btn-sm tm-btn-neutral">거절</button>
+      </div>
+    </Card>
+  );
+  return (
+    <SM1MyScreen title="멤버 관리" bottom={false}>
+      <div style={{ padding: 20 }}>
+        <Card pad={16}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 52, height: 52, borderRadius: 16, background: 'var(--blue50)', color: 'var(--blue500)', display: 'grid', placeItems: 'center', fontWeight: 900 }}>FC</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="tm-text-body-lg">FC 발빠른놈들</div>
+              <div className="tm-text-caption" style={{ marginTop: 4 }}>풋살 · 서울 강남 · 24명</div>
+            </div>
+            <SM1RoleBadge role="owner"/>
+          </div>
+        </Card>
+        <Card pad={14} style={{ background: 'var(--grey50)', marginTop: 12 }}>
+          <div className="tm-text-label">권한 규칙</div>
+          <div className="tm-text-caption" style={{ marginTop: 5 }}>팀장과 관리자는 일반 멤버에게 관리자 권한을 줄 수 있고, 관리자 권한을 회수할 수 있다. 팀장 권한은 별도 위임 flow가 필요하다.</div>
+        </Card>
+        <div style={{ marginTop: 14 }}>
+          <div className="tm-text-label">팀 멤버</div>
+          <div className="tm-text-caption" style={{ marginTop: 3 }}>이미 팀에 속한 멤버의 역할과 권한을 관리한다.</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 10 }}>
+            {members.map(renderMember)}
+          </div>
+        </div>
+        <div style={{ marginTop: 18 }}>
+          <div className="tm-text-label">가입 신청</div>
+          <div className="tm-text-caption" style={{ marginTop: 3 }}>아직 팀원이 아닌 신청자는 별도 그룹에서 승인/거절한다.</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 10 }}>
+            {requests.map(renderRequest)}
+          </div>
+        </div>
+      </div>
+    </SM1MyScreen>
+  );
+};
+
+const SMRevisionMyManagementGridSM1 = () => (
+  <SMRevisionRuleBoard title="07 마이 · SM1 내 활동/팀 관리 grid" items={[
+    { title: '내 매치', body: '참여한 매치와 생성한 매치는 같은 화면에 섞지 않는다. 각 카테고리 선택 상태에서 해당 목록만 보여준다.' },
+    { title: '생성 매치 관리', body: '참여자별 승인, 거절, 승인 취소, 취소 처리 액션을 같은 화면에서 제공한다.' },
+    { title: '신청자 정보', body: '신청자 row를 누르면 마이페이지가 아닌 타 유저 정보 페이지로 이동한다. 매치, 팀, 매너, 뱃지, 이번 달 활동을 모두 보여준다.' },
+    { title: '매치 수정', body: '03의 매치 만들기/수정 최종 폼을 재사용한다. 기존 값 prefill, 변경사항 저장, 변경 취소 guard 기준을 따른다.' },
+    { title: '팀매치', body: '내가 생성한 팀매치만 보여준다. 신청팀은 팀 정보 페이지로, 수정은 4-1 SM 최종 수정 폼으로 이동한다.' },
+    { title: '내 팀', body: '가입한 팀 리스트를 먼저 보여주고 팀 선택 후 팀 채팅, 팀 정보, 멤버 관리로 진입한다.' },
+    { title: '관리 그룹 분리', body: '참여자 관리는 참여중/신청 대기, 멤버 관리는 팀 멤버/가입 신청으로 분리해 각 그룹에 맞는 액션만 노출한다.' },
+    { title: '팀 권한', body: '팀장은 최상위 권한, 관리자는 운영 권한, 일반 멤버는 참여 권한이다. 팀장/관리자는 관리자 권한 부여와 회수를 처리한다.' },
+  ]}/>
+);
+
+Object.assign(window, {
+  SMRevisionMyPageSM1,
+  SMRevisionMyActivitySM1,
+  SMRevisionMyMatchesSM1,
+  SMRevisionMyMatchesJoinedSM1,
+  SMRevisionMyMatchesCreatedSM1,
+  SMRevisionMyCreatedMatchManageSM1,
+  SMRevisionMyMatchEditSM1,
+  SMRevisionApplicantUserProfileSM1,
+  SMRevisionApplicantTeamProfileSM1,
+  SMRevisionMyTeamMatchesSM1,
+  SMRevisionMyTeamMatchEditSM1,
+  SMRevisionMyTeamsSM1,
+  SMRevisionMyTeamDetailSM1,
+  SMRevisionMyTeamMembersSM1,
+  SMRevisionMyManagementGridSM1,
+});
+
+const SMRevisionTeamBrowseShellSM5 = ({ children, query = '', error = false, filterCount = 3, toast }) => (
+  <div style={{ width: 375, height: 812, background: 'var(--bg)', fontFamily: 'var(--font)', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+    <StatusBar/>
+    <SMRevisionTeamBrowseSearchBarSM5 query={query} error={error} filterCount={filterCount}/>
+    <div style={{ flex: 1, overflow: 'auto', paddingBottom: 12 }}>
+      {children}
+    </div>
+    <SMBottomNav active="teams"/>
+    {toast && (
+      <div style={{ position: 'absolute', left: 20, right: 20, bottom: 92, minHeight: 48, borderRadius: 14, background: 'rgba(25,31,40,.94)', color: 'var(--static-white)', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '0 14px', fontSize: 13, fontWeight: 700, zIndex: 5 }}>
+        {toast}
+      </div>
+    )}
+  </div>
+);
+
+const SMRevisionTeamBrowseChipRowSM5 = () => (
+  <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 10 }}>
+    {['전체 42', '모집중 18', '내 주변', '초중급', '주 1회', '풋살'].map((label, index) => (
+      <HapticChip key={label} active={index === 0} count={index === 0 ? 42 : undefined}>{label}</HapticChip>
+    ))}
+  </div>
+);
+
+
+const SMRevisionTeamBrowseSummarySM5 = () => (
+  <div style={{ minHeight: 44, borderRadius: 12, background: 'var(--grey50)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '0 12px' }}>
+    <div className="tm-text-label">서울 전체 · 팀 둘러보기</div>
+    <div className="tm-text-caption tab-num">42팀 · 모집중 18 · 내 주변 7</div>
+  </div>
+);
+
+const SM5_TEAM_INTROS = [
+  '주 1회 정기적으로 풋살을 즐기는 동네 팀입니다. 초중급 멤버와 빠른 응답을 중요하게 봅니다.',
+  '주말 오전 복식 위주로 운영하는 배드민턴 팀입니다. 신입과 여성 멤버가 함께 뛰기 편한 분위기입니다.',
+  '3on3 하프코트 농구를 꾸준히 하는 팀입니다. 경험자 중심이지만 다음 모집 알림을 받을 수 있습니다.',
+];
+
+const SM5TeamBrowseCard = ({ team, selected = false, index = 0 }) => (
+  <Card pad={16} interactive style={{ borderColor: selected ? 'var(--blue500)' : 'var(--border)', background: selected ? 'var(--blue50)' : 'var(--bg)' }}>
+    <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+      <div style={{ width: 54, height: 54, borderRadius: 16, background: selected ? 'var(--blue500)' : 'var(--grey900)', color: 'var(--static-white)', display: 'grid', placeItems: 'center', fontWeight: 800 }}>{team.logo}</div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+          <div className="tm-text-body-lg line-clamp-2">{team.name}</div>
+          <Badge tone={team.tone} size="sm">{team.status}</Badge>
+        </div>
+        <div className="tm-text-caption" style={{ marginTop: 4 }}>{team.sport} · {team.region} · {team.members}명</div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+          {team.tags.map((tag) => <Badge key={tag} tone="grey" size="sm">{tag}</Badge>)}
+        </div>
+      </div>
+    </div>
+    <div style={{ marginTop: 14, borderRadius: 14, background: selected ? 'var(--bg)' : 'var(--grey50)', border: '1px solid var(--grey100)', padding: 12 }}>
+      <div className="tm-text-label">팀소개</div>
+      <div className="tm-text-body" style={{ marginTop: 6, color: 'var(--text-muted)', lineHeight: 1.5 }}>{SM5_TEAM_INTROS[index] || SM5_TEAM_INTROS[0]}</div>
+    </div>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--grey100)' }}>
+      <div className="tm-text-caption">{team.next}</div>
+      <SBtn size="sm" variant={team.status === '마감' || team.status === '留덇컧' ? 'neutral' : 'primary'} disabled={team.status === '마감' || team.status === '留덇컧'}>{team.status === '마감' || team.status === '留덇컧' ? '알림받기' : '팀 보기'}</SBtn>
+    </div>
+  </Card>
+);
+const SM5TeamInfoRow = ({ label, value, required = false, muted = false }) => (
+  <div style={{ display: 'grid', gridTemplateColumns: '92px 1fr', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--grey100)' }}>
+    <div className="tm-text-caption" style={{ color: required ? 'var(--text-strong)' : 'var(--text-caption)', fontWeight: required ? 800 : 600 }}>{label}{required ? '*' : ''}</div>
+    <div className="tm-text-body" style={{ color: muted ? 'var(--text-muted)' : 'var(--text-strong)', lineHeight: 1.45 }}>{value}</div>
+  </div>
+);
+
+const SM5TeamInfoChips = ({ items, activeCount = items.length }) => (
+  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+    {items.map((item, index) => (
+      <span key={item} className={`tm-chip ${index < activeCount ? 'tm-chip-active' : ''}`} style={{ minHeight: 30, padding: '0 10px' }}>{item}</span>
+    ))}
+  </div>
+);
+
+const SM5TeamImageSlot = ({ title, count = 1, max, example = false }) => (
+  <div style={{ borderRadius: 14, border: '1px solid var(--grey100)', background: 'var(--bg)', padding: 12 }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+      <div className="tm-text-label">{title}</div>
+      <Badge tone={example ? 'orange' : 'blue'} size="sm">{example ? '예시 이미지' : '기존 이미지'}</Badge>
+    </div>
+    <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+      {Array.from({ length: count }).map((_, index) => (
+        <div key={index} style={{ minWidth: 78, height: 52, borderRadius: 14, background: example ? 'var(--orange50)' : 'var(--blue50)', border: `1px solid ${example ? 'var(--orange100)' : 'var(--blue100)'}`, display: 'grid', placeItems: 'center', textAlign: 'center', color: example ? 'var(--orange500)' : 'var(--blue500)', fontSize: 11, fontWeight: 800, padding: '0 8px' }}>
+          {example ? `예시 이미지 ${index + 1}` : `업로드된 이미지 ${index + 1}`}
+        </div>
+      ))}
+      <button className="tm-btn tm-btn-sm tm-btn-neutral">추가</button>
+    </div>
+    <div className="tm-text-micro" style={{ marginTop: 8, color: 'var(--text-caption)' }}>
+      {max ? `${count}/${max} · ` : ''}선택된 파일 없음
+    </div>
+    <div className="tm-text-micro" style={{ marginTop: 4, color: 'var(--text-caption)' }}>
+      {example ? '예시 이미지는 제출 데이터에 포함되지 않아요.' : '업로드한 이미지만 저장되며, 예시 이미지는 제출 데이터에 포함되지 않아요.'}
+    </div>
+  </div>
+);
+
+const SMRevisionTeamBrowseDetailSM5 = () => (
+  <SMRevisionShell title="" back notificationNew={false} bottom={false}>
+    <div style={{ padding: '18px 20px 118px' }}>
+      <Card pad={18} style={{ background: 'var(--grey900)', color: 'var(--static-white)' }}>
+        <div style={{ width: 60, height: 60, borderRadius: 18, background: 'var(--blue500)', display: 'grid', placeItems: 'center', fontWeight: 800 }}>TT</div>
+        <div className="tm-text-heading" style={{ color: 'var(--static-white)', marginTop: 14 }}>04221553 test</div>
+        <div className="tm-text-caption" style={{ color: 'rgba(255,255,255,.72)', marginTop: 4 }}>축구 · 풋살 · 농구 · 인천 연수구 · 모집중</div>
+      </Card>
+
+      <SectionTitle title="팀 기본 정보" sub="조회 화면에서도 등록 필수값과 선택값을 빠짐없이 구분합니다."/>
+      <Card pad={16}>
+        <SM5TeamInfoRow label="팀명" value="04221553 test" required/>
+        <div style={{ padding: '10px 0', borderBottom: '1px solid var(--grey100)' }}>
+          <div className="tm-text-caption" style={{ color: 'var(--text-strong)', fontWeight: 800, marginBottom: 8 }}>종목 (복수 선택 가능)*</div>
+          <SM5TeamInfoChips items={['축구', '풋살', '농구', '배드민턴', '아이스하키', '수영', '테니스', '야구', '배구', '피겨', '쇼트트랙']} activeCount={3}/>
+          <div className="tm-text-micro" style={{ color: 'var(--blue500)', marginTop: 8 }}>3개 종목 선택됨</div>
+        </div>
+        <SM5TeamInfoRow label="팀 소개" value="04221553 test"/>
+        <SM5TeamInfoRow label="시/도" value="인천" required/>
+        <SM5TeamInfoRow label="구/군" value="연수구"/>
+        <SM5TeamInfoRow label="레벨" value="초급"/>
+        <SM5TeamInfoRow label="모집 여부" value="모집중 · 모집마감 상태 분리"/>
+      </Card>
+
+      <SectionTitle title="SNS 및 링크" sub="비공개 연락처와 외부 링크를 저장값으로 표시합니다."/>
+      <Card pad={16}>
+        <SM5TeamInfoRow label="연락처" value="비밀"/>
+        <SM5TeamInfoRow label="Instagram" value="https://instagram.com/..."/>
+        <SM5TeamInfoRow label="YouTube" value="https://youtube.com/..."/>
+        <SM5TeamInfoRow label="Kakao" value="https://open.kakao.com/..."/>
+        <SM5TeamInfoRow label="Website" value="https://example.com"/>
+        <SM5TeamInfoRow label="Shorts" value="YouTube Shorts 또는 Instagram Reels URL · 짧은 영상으로 팀 분위기를 보여줍니다."/>
+      </Card>
+
+      <SectionTitle title="이미지" sub="업로드 이미지와 예시 이미지를 시각적으로 구분합니다."/>
+      <div style={{ display: 'grid', gap: 10 }}>
+        <SM5TeamImageSlot title="로고 이미지" count={1}/>
+        <SM5TeamImageSlot title="커버 이미지" count={1}/>
+        <SM5TeamImageSlot title="추가 사진" count={3} max={10}/>
+        <SM5TeamImageSlot title="예시 이미지" count={2} example/>
+      </div>
+    </div>
+    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '14px 20px 22px', background: 'var(--bg)', borderTop: '1px solid var(--grey100)' }}>
+      <div className="tm-text-caption" style={{ marginBottom: 8 }}>예시 이미지는 제출 데이터에 포함되지 않고, 업로드한 이미지만 저장됩니다.</div>
+      <SBtn full size="lg">가입 가능 여부 확인</SBtn>
+    </div>
+  </SMRevisionShell>
+);
+const SMRevisionTeamBrowseBodySM5 = ({ state = 'results' }) => {
+  const isEmpty = state === 'empty';
+  const isError = state === 'error';
+  const teams = state === 'results' ? SM2_TEAM_BROWSE_TEAMS : SM2_TEAM_BROWSE_TEAMS.slice(0, 2);
+  return (
+    <div style={{ padding: '14px 20px 96px' }}>
+      <SMRevisionTeamBrowseChipRowSM5/>
+      {isEmpty || isError ? (
+        <EmptyState
+          title={isError ? '팀 목록을 불러오지 못했습니다.' : '조건에 맞는 팀이 없습니다.'}
+          sub={isError ? '검색어와 필터는 유지하고 다시 시도할 수 있게 합니다. 오류는 red input과 toast로도 알려줍니다.' : '검색어와 필터를 유지한 채 조건 초기화, 추천 팀 보기, 지역 넓히기를 제공합니다.'}
+          cta={isError ? '다시 시도' : '필터 초기화'}
+        />
+      ) : (
+        <>
+          <SMRevisionTeamBrowseSummarySM5/>
+          <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+            <div>
+              <div className="tm-text-label">팀 둘러보기</div>
+              <div className="tm-text-caption" style={{ marginTop: 2 }}>00 검색바 + 03/04 필터 구조를 적용한 팀 목록입니다.</div>
+            </div>
+            <Badge tone="blue" size="sm">검색/필터</Badge>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 12 }}>
+            {teams.map((team, index) => <SM5TeamBrowseCard key={team.name} team={team} selected={index === 0} index={index}/>)}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+const SMRevisionTeamBrowseMobileSM5 = () => (
+  <SMRevisionTeamBrowseShellSM5 query="" filterCount={3}>
+    <SMRevisionTeamBrowseBodySM5/>
+  </SMRevisionTeamBrowseShellSM5>
+);
+
+const SMRevisionTeamBrowseSearchMobileSM5 = ({ state = 'results' }) => (
+  <SMRevisionTeamBrowseShellSM5
+    query="강동 풋살"
+    error={state === 'error'}
+    filterCount={3}
+    toast={state === 'error' ? '새로고침이 필요합니다. 잠시 뒤 다시 검색해주세요.' : undefined}
+  >
+    <SMRevisionTeamBrowseBodySM5 state={state}/>
+  </SMRevisionTeamBrowseShellSM5>
+);
+
+const SMRevisionTeamBrowseFilterSheetSM5 = () => (
+  <SMRevisionTeamBrowseShellSM5 query="강동 동네" filterCount={3}>
+    <SMRevisionTeamBrowseBodySM5/>
+    <div style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 74, background: 'rgba(25,31,40,.18)', pointerEvents: 'none' }}/>
+    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 74, borderRadius: '24px 24px 0 0', background: 'var(--bg)', borderTop: '1px solid var(--grey100)', boxShadow: '0 -16px 32px rgba(25,31,40,.14)', padding: '10px 20px 20px' }}>
+      <div style={{ width: 42, height: 4, borderRadius: 999, background: 'var(--grey300)', margin: '0 auto 16px' }}/>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <div>
+          <div className="tm-text-subhead">필터</div>
+          <div className="tm-text-caption" style={{ marginTop: 2 }}>정렬과 팀 조건을 sheet에서 조정합니다.</div>
+        </div>
+        <button className="tm-btn tm-btn-sm tm-btn-ghost" style={{ color: 'var(--text-caption)' }}>초기화</button>
+      </div>
+      {[
+        ['정렬', ['추천순', '모집중', '매너 높은순', '최근 활동']],
+        ['팀 조건', ['초중급', '주 1회 이상', '가입 가능', '여성 환영']],
+        ['신뢰 신호', ['verified', 'estimated', 'sample 구분']],
+      ].map(([title, options], groupIndex) => (
+        <div key={title} style={{ marginTop: 18 }}>
+          <div className="tm-text-label">{title}</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+            {options.map((label, index) => <button key={label} className={`tm-chip ${index === 0 && groupIndex < 3 ? 'tm-chip-active' : ''}`}>{label}</button>)}
+          </div>
+        </div>
+      ))}
+      <div style={{ display: 'grid', gridTemplateColumns: '96px 1fr', gap: 8, marginTop: 18 }}>
+        <button className="tm-btn tm-btn-lg tm-btn-neutral">닫기</button>
+        <button className="tm-btn tm-btn-lg tm-btn-primary">적용하기</button>
+      </div>
+    </div>
+  </SMRevisionTeamBrowseShellSM5>
+);
+const SMRevisionTeamBrowseSearchFilterRulesSM5 = () => (
+  <SMRevisionPlusBoard eyebrow="05 TEAM BROWSE SM5 - SEARCH/FILTER" title="00 + 03/04 search/filter 적용 기준" columns={4}>
+    {[
+      ['00 list topbar', '05 목록은 00 최종본의 뒤로가기형 검색바와 필터 버튼을 상단에 유지한다.', 'topbar', 'blue'],
+      ['03 search pattern', '검색어 입력, X 지우기, 검색 실행, 결과 없음, 오류 toast, stale context 유지 규칙을 개인 매치와 동일하게 적용한다.', '03 search', 'blue'],
+      ['04 count summary', '전체팀, 모집중, 내 주변처럼 팀수를 보여주는 3개 요약 박스는 하나의 요약 박스로 합쳐 시각 밀도를 낮춘다.', 'one summary', 'blue'],
+      ['filter sheet', 'sheet에는 정렬, 팀 조건, 신뢰 신호를 넣고 적용/닫기 CTA를 분리한다.', 'sheet', 'orange'],
+      ['empty/error', 'empty와 error에서도 검색어, chip row, filter count를 유지하고 복구 CTA만 본문에 둔다.', 'state', 'orange'],
+      ['team intro', '팀 전체조회 카드에서는 추천 적합도, 매너, 신뢰 지표 3칸을 제거하고 팀소개 요약을 같은 위치에 둔다.', 'intro', 'green'],
+      ['navigation', '카드 tap은 팀 상세로 push하고 가입 CTA는 detail 또는 sheet에서만 확정한다.', 'route', 'blue'],
+      ['my team', 'my team shortcut destination은 아직 미정이므로 검색 필터 UI 안에 이동 affordance를 만들지 않는다.', 'blocked', 'orange'],
+    ].map(([title, body, action, tone], index) => (
+      <SMRevisionPlusStateCard key={title} title={`${index + 1}. ${title}`} body={body} action={action} tone={tone}/>
+    ))}
+  </SMRevisionPlusBoard>
+);
+Object.assign(window, {
+  SMRevisionTeamBrowseMobileSM5,
+  SMRevisionTeamBrowseSearchMobileSM5,
+  SMRevisionTeamBrowseFilterSheetSM5,
+  SMRevisionTeamBrowseDetailSM5,
+  SMRevisionTeamBrowseSearchFilterRulesSM5,
+});
