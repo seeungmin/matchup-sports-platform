@@ -36,6 +36,8 @@ sections.
   mobile screens: `홈 / 매치 / 팀매치 / 팀 / 마이`.
 - [x] Updated `prototype-system/MODULE_MAP.md` with the new comparison sections.
 - [x] Updated `INDEX.md` with the Phase 2b SM design freeze note.
+- [x] Added `docs/reference/sm-new-api-db-baseline.md` to declare the API/DB
+  planning baseline before schema or endpoint design.
 - [ ] Desktop-specific SM comparison sections.
 - [ ] Browser visual QA for the rendered prototype.
 

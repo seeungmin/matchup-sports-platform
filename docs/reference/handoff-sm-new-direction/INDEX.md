@@ -66,22 +66,26 @@ The copied baseline includes:
 
 ## Reading Order
 
-1. `HANDOFF.md`
-2. `DIRECTION.md`
-3. `0502-design-freeze-brief.md`
-4. `0502 문서화.md`
-5. `COMPARISON_WITH_2026_04_25.md`
-6. `prototype-system/README.md`
-7. `prototype-system/COMPONENT_CATALOG.md`
-8. `prototype-system/MODULE_MAP.md`
-9. `prototype-system/COMMON_FLOWS.md`
-10. `prototype-system/INTERACTIONS_AND_STATES.md`
-11. `prototype-system/PRODUCTION_HANDOFF_FIX26.md`
-12. `ARCHIVE.md`
-13. `CLEANUP_PLAN.md`
-14. `sports-platform/README.md`
-15. `sports-platform/chats/chat1.md`
-16. `sports-platform/project/Teameet Design.html`
+For SM New API/DB planning, read
+`../sm-new-api-db-baseline.md` before this pack's older handoff documents.
+
+1. `../sm-new-api-db-baseline.md`
+2. `HANDOFF.md`
+3. `DIRECTION.md`
+4. `0502-design-freeze-brief.md`
+5. `0502 문서화.md`
+6. `COMPARISON_WITH_2026_04_25.md`
+7. `prototype-system/README.md`
+8. `prototype-system/COMPONENT_CATALOG.md`
+9. `prototype-system/MODULE_MAP.md`
+10. `prototype-system/COMMON_FLOWS.md`
+11. `prototype-system/INTERACTIONS_AND_STATES.md`
+12. `prototype-system/PRODUCTION_HANDOFF_FIX26.md`
+13. `ARCHIVE.md`
+14. `CLEANUP_PLAN.md`
+15. `sports-platform/README.md`
+16. `sports-platform/chats/chat1.md`
+17. `sports-platform/project/Teameet Design.html`
 
 `HANDOFF.md` is the consolidated current handoff. `ARCHIVE.md` explains which
 older fix logs and source notes are retained as evidence rather than first-read
