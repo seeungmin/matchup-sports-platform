@@ -177,8 +177,8 @@
 - 현재 상태: baseline declaration. schema/API 확정 아님.
 - 주요 내용: 유일한 design baseline, 문서 우선순위, reference-only source, deprecated source, planning boundaries, naming conflict, API/DB design gate, 다음 문서 순서.
 - 1차 디자인 연결성: 매우 높음. `SM_FIRST_DESIGN_COMPLETE_SECTIONS` 17개를 기준으로 고정한다.
-- DB 연결성: DB v2 전 state/permission/action inventory가 필요하다고 선언한다.
-- API 연결성: final endpoint contract를 쓰기 전 `screen action inventory`, `state transition`, `permission matrix`, `ER v2`, `API surface map`, `DTO/error/status contract`가 필요하다고 명시한다.
+- DB 연결성: DB implementation 전 state/permission/action inventory가 필요하다고 선언한다.
+- API 연결성: final endpoint contract를 쓰기 전 `screen action inventory`, `state transition`, `permission matrix`, `v1 implementation ER`, `API surface map`, `DTO/error/status contract`가 필요하다고 명시한다.
 - 바로 사용 가능 여부: 구현 시작 gate로 바로 사용 가능.
 - 부족/확인 필요: 실제 API 목록, request/response, error code는 아직 없다.
 
@@ -294,7 +294,7 @@ DB draft는 API 설계로 넘어갈 수 있는 재료를 충분히 제공한다.
 - screen action inventory
 - state transition tables 확정
 - actor/permission matrix 확정
-- ER v2
+- v1 implementation ER
 - API surface map
 - DTO/error/status contract
 
@@ -318,7 +318,7 @@ DB draft는 API 설계로 넘어갈 수 있는 재료를 충분히 제공한다.
 ```text
 API status: not an endpoint contract
 현재 문서 역할: API 설계 전 gate와 고려사항 정리
-다음 필요 문서: sm-new-screen-action-inventory.md, sm-new-state-machines.md, sm-new-permission-matrix.md, sm-new-db-design-v2.md, sm-new-api-surface-map.md
+다음 필요 문서: sm-new-screen-action-inventory.md, sm-new-state-machines.md, sm-new-permission-matrix.md, sm-new-db-v1-implementation-design.md, sm-new-api-surface-map.md
 ```
 
 ## 8. 기능 구현 준비도 평가
@@ -417,7 +417,7 @@ API status: not an endpoint contract
 
 3. DB draft 과확정 위험
    - 테이블 후보가 많고 일부는 v1 scope가 불명확하다.
-   - 해결: v1 제외 후보를 명시하고 ER v2에서 줄인다.
+   - 해결: v1 제외 후보를 명시하고 v1 implementation ER에서 줄인다.
 
 4. 상태 전이 미확정
    - 결제/승인/환불/분쟁은 순서에 따라 DB와 API가 크게 달라진다.
@@ -468,7 +468,7 @@ API status: not an endpoint contract
 3. `sm-new-permission-matrix.md` 작성
    - user, host, applicant, team owner, manager, member, admin, system, provider 권한을 action별로 닫는다.
 
-4. DB v2 작성
+4. DB implementation 작성
    - 현재 table 후보를 v1/core와 candidate/deferred로 나누고 과도 분리 후보를 줄인다.
 
 5. API surface map 작성

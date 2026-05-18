@@ -14,7 +14,7 @@ Not for: Prisma migration, Nest endpoint contract, DTO finalization, frontend im
 다음 단계에서 어떤 문서를 어떤 순서로 작성해야 하는지 고정한다.
 
 현재 완료된 것은 "DB v1에서 어떤 테이블을 core로 둘지"와 "각 테이블의 목적, 상태, 권한, audit,
-API 영향"이다. 아직 완료되지 않은 것은 화면 액션 목록, 상태 전이표, 권한 매트릭스, ER v2,
+API 영향"이다. 아직 완료되지 않은 것은 화면 액션 목록, 상태 전이표, 권한 매트릭스, v1 implementation ER,
 API surface map, DTO/error/status 계약이다.
 
 ## 2. Files Considered
@@ -110,7 +110,7 @@ Total: 31/31 Done
 1. 17개 baseline section 기준 screen action inventory.
 2. 상태 전이표: `from`, `to`, trigger, actor, permission, audit, failure behavior.
 3. actor/permission matrix.
-4. state/permission 결정을 반영한 ER v2.
+4. state/permission 결정을 반영한 v1 implementation ER.
 5. 기존 route 이름이 아니라 사용자 action 기준 API surface map.
 6. DTO/error/status contract draft.
 
@@ -220,11 +220,11 @@ actor set:
 - 팀 매치 생성/수정/취소는 owner/manager 중심으로 둔다.
 - 일반 팀 member는 팀 매치 신청/승인 권한이 없다.
 
-### 5.4 `sm-new-db-design-v2.md`
+### 5.4 `sm-new-db-v1-implementation-design.md`
 
 목적:
 
-- 31개 core table을 실제 ER v2 후보로 정리한다.
+- 31개 core table을 실제 v1 implementation ER 후보로 정리한다.
 - column, type, nullable, default, FK, unique/index, audit, derived field를 implementation 직전 수준까지 구체화한다.
 
 중요한 변화:
@@ -232,7 +232,7 @@ actor set:
 - `db-erd-overview.md`와 `db-table-definition.md`의 61개 후보를 그대로 가져오지 않는다.
 - `sm-new-db-v1-table-decision-checklist.md`에서 deferred로 빠진 table은 core ER에서 제외한다.
 - `venues`는 v1 core FK가 아니라 direct place field 또는 reference-only 수준으로 둔다.
-- payment/support는 ER v2 core에서 제외하고 future module boundary만 남긴다.
+- payment/support는 v1 implementation ER core에서 제외하고 closed out-of-scope boundary만 남긴다.
 
 애매하면 물어볼 항목:
 
@@ -344,11 +344,11 @@ actor set:
 - personal match, team, team match, chat, notification, admin의 read/write/status transition 권한이 있다.
 - support/ops/owner admin 권한 차이가 있다.
 
-### Phase 4. DB Design v2
+### Phase 4. DB Implementation Design
 
 산출물:
 
-- `docs/reference/sm-new-db-design-v2.md`
+- `docs/reference/sm-new-db-v1-implementation-design.md`
 
 완료 기준:
 
@@ -386,7 +386,7 @@ actor set:
 
 이유:
 
-- DB v2와 API surface를 먼저 쓰면 화면 버튼/CTA/action이 빠질 수 있다.
+- DB implementation와 API surface를 먼저 쓰면 화면 버튼/CTA/action이 빠질 수 있다.
 - 상태 전이는 화면 action과 연결되어야 실제 product flow가 된다.
 - 권한 매트릭스도 "누가 어떤 버튼을 누를 수 있나"에서 출발해야 누락이 적다.
 

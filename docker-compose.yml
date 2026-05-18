@@ -22,6 +22,16 @@ x-app-base: &app-base
       target: /app/apps/web/node_modules
       volume:
         nocopy: true
+    - type: volume
+      source: v1_api_node_modules_v1
+      target: /app/apps/v1_api/node_modules
+      volume:
+        nocopy: true
+    - type: volume
+      source: v1_web_node_modules_v1
+      target: /app/apps/v1_web/node_modules
+      volume:
+        nocopy: true
   environment:
     TZ: Asia/Seoul
 
@@ -58,6 +68,23 @@ services:
       - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  v1_postgres:
+    image: postgres:16-alpine
+    container_name: teameet_v1_postgres_dev
+    environment:
+      POSTGRES_USER: teameet_v1_user
+      POSTGRES_PASSWORD: teameet_v1_password
+      POSTGRES_DB: teameet_v1_dev
+    expose:
+      - "5432"
+    volumes:
+      - v1_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U teameet_v1_user -d teameet_v1_dev"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -119,6 +146,16 @@ services:
         volume:
           nocopy: true
       - type: volume
+        source: v1_api_node_modules_v1
+        target: /app/apps/v1_api/node_modules
+        volume:
+          nocopy: true
+      - type: volume
+        source: v1_web_node_modules_v1
+        target: /app/apps/v1_web/node_modules
+        volume:
+          nocopy: true
+      - type: volume
         source: web_next_dir_v1
         target: /app/apps/web/.next
         volume:
@@ -138,10 +175,95 @@ services:
     ports:
       - "3003:3003"
 
+  v1_api:
+    <<: *app-base
+    container_name: teameet_v1_api_dev
+    command: sh -c "cd /app/apps/v1_api && pnpm db:generate && pnpm db:push && pnpm dev"
+    environment:
+      TZ: Asia/Seoul
+      DATABASE_URL: postgresql://teameet_v1_user:teameet_v1_password@v1_postgres:5432/teameet_v1_dev
+      JWT_SECRET: v1-dev-secret
+      API_PORT: 8121
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+    depends_on:
+      v1_postgres:
+        condition: service_healthy
+      deps:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://127.0.0.1:8121/api/v1/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))\"",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    ports:
+      - "8121:8121"
+
+  v1_web:
+    <<: *app-base
+    container_name: teameet_v1_web_dev
+    command: pnpm --filter v1_web dev
+    volumes:
+      - type: bind
+        source: .
+        target: /app
+      - type: volume
+        source: root_node_modules_v5
+        target: /app/node_modules
+        volume:
+          nocopy: true
+      - type: volume
+        source: api_node_modules_v5
+        target: /app/apps/api/node_modules
+        volume:
+          nocopy: true
+      - type: volume
+        source: web_node_modules_v5
+        target: /app/apps/web/node_modules
+        volume:
+          nocopy: true
+      - type: volume
+        source: v1_api_node_modules_v1
+        target: /app/apps/v1_api/node_modules
+        volume:
+          nocopy: true
+      - type: volume
+        source: v1_web_node_modules_v1
+        target: /app/apps/v1_web/node_modules
+        volume:
+          nocopy: true
+      - type: volume
+        source: v1_web_next_dir_v1
+        target: /app/apps/v1_web/.next
+        volume:
+          nocopy: true
+    environment:
+      TZ: Asia/Seoul
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: /api/v1
+      INTERNAL_API_ORIGIN: http://v1_api:8121
+      WATCHPACK_POLLING: "true"
+    depends_on:
+      v1_api:
+        condition: service_healthy
+      deps:
+        condition: service_completed_successfully
+    ports:
+      - "3013:3013"
+
 volumes:
   postgres_data:
+  v1_postgres_data:
   redis_data:
   root_node_modules_v5:
   api_node_modules_v5:
   web_node_modules_v5:
+  v1_api_node_modules_v1:
+  v1_web_node_modules_v1:
   web_next_dir_v1:
+  v1_web_next_dir_v1:

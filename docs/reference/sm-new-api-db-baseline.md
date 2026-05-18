@@ -118,7 +118,7 @@ API/DB design proceeds.
 
 | Concept | Existing implementation | SM New planning name |
 |---|---|---|
-| Service team | `SportTeam` model, `/teams` API | `team` domain, backed by a future explicit team model decision |
+| Service team | `SportTeam` model, `/teams` API | `team` domain, backed by `v1_teams` |
 | Personal match internal teams | `Team` model under `Match` | `match_side` or `match_assigned_team` candidate, not the service `team` |
 | Personal match participant | `MatchParticipant` | Split candidate: `match_application` and `match_participant` |
 | Team match host | `TeamMatch.hostTeamId` | Host team with owner/manager permission gate |
@@ -136,7 +136,7 @@ Do not write final endpoint contracts or migrations until these artifacts exist:
    and failure behavior.
 3. Actor/permission matrix for personal match, team, team match, payment,
    refund, dispute, chat, notification, and admin.
-4. Entity relationship v2 that incorporates the state and permission decisions.
+4. V1 implementation ER that incorporates the state and permission decisions.
 5. API surface map by user action, not by existing route names.
 6. DTO and error/status contract draft, including idempotency and partial
    failure rules for transactional/admin mutations.
@@ -151,7 +151,7 @@ Create the next planning documents in this order:
 1. `sm-new-screen-action-inventory.md`
 2. `sm-new-state-machines.md`
 3. `sm-new-permission-matrix.md`
-4. `sm-new-db-design-v2.md`
+4. `sm-new-db-v1-implementation-design.md`
 5. `sm-new-api-surface-map.md`
 
 Keep them in `docs/reference/` until SM New is promoted from planning baseline

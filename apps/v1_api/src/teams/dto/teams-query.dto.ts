@@ -1,0 +1,46 @@
+import { Type } from 'class-transformer';
+import { IsIn, IsInt, IsOptional, IsString, IsUUID, Max, MaxLength, Min } from 'class-validator';
+
+export class TeamsQueryDto {
+  @IsOptional()
+  @IsString()
+  cursor?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(50)
+  limit?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  query?: string;
+
+  @IsOptional()
+  @IsUUID()
+  sportId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  regionId?: string;
+
+  @IsOptional()
+  @IsIn(['approval_required', 'closed'])
+  joinPolicy?: 'approval_required' | 'closed';
+
+  @IsOptional()
+  @IsIn(['recommended', 'latest', 'member_count', 'trust'])
+  sort?: 'recommended' | 'latest' | 'member_count' | 'trust';
+
+  @IsOptional()
+  @IsIn(['card', 'compact'])
+  view?: 'card' | 'compact';
+}
+
+export class MyTeamsQueryDto {
+  @IsOptional()
+  @IsIn(['manage_team', 'create_team_match', 'apply_team_match'])
+  permission?: 'manage_team' | 'create_team_match' | 'apply_team_match';
+}

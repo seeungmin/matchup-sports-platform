@@ -7,6 +7,8 @@ SHELL := /bin/bash
 ROOT_DIR := $(shell pwd)
 API_DIR  := $(ROOT_DIR)/apps/api
 WEB_DIR  := $(ROOT_DIR)/apps/web
+V1_API_DIR := $(ROOT_DIR)/apps/v1_api
+V1_WEB_DIR := $(ROOT_DIR)/apps/v1_web
 DEPLOY_DIR := $(ROOT_DIR)/deploy
 ENV_FILE := $(ROOT_DIR)/.env
 ENV_EXAMPLE := $(ROOT_DIR)/.env.example
@@ -166,6 +168,18 @@ dev-api: ## Start API container only (with Docker dependencies)
 dev-web: ## Start Web container only (with Docker dependencies)
 	@$(DOCKER_DEV) up --build deps web
 
+.PHONY: dev-v1
+dev-v1: ## Start v1 dev stack only (v1_postgres + v1_api + v1_web)
+	@$(DOCKER_DEV) up --build deps v1_postgres v1_api v1_web
+
+.PHONY: dev-v1-api
+dev-v1-api: ## Start v1 API container only (with v1 Docker dependencies)
+	@$(DOCKER_DEV) up --build deps v1_postgres v1_api
+
+.PHONY: dev-v1-web
+dev-v1-web: ## Start v1 Web container only (with v1 Docker dependencies)
+	@$(DOCKER_DEV) up --build deps v1_postgres v1_api v1_web
+
 .PHONY: dev-stop
 dev-stop: stop ## Alias for stop
 
@@ -229,6 +243,28 @@ db-studio: ## Open Prisma Studio (exposes port 5555 only while running)
 db-shell: ## Open psql shell inside postgres container
 	@$(DOCKER_DEV) exec postgres psql -U teameet_user -d teameet_dev
 
+.PHONY: v1-db-migrate
+v1-db-migrate: ## Run prisma migrate dev inside the v1_api container
+	@$(DOCKER_DEV) run --rm v1_api sh -c "cd /app/apps/v1_api && pnpm db:migrate"
+
+.PHONY: v1-db-push
+v1-db-push: ## Run prisma db push inside the v1_api container
+	@$(DOCKER_DEV) run --rm v1_api sh -c "cd /app/apps/v1_api && pnpm db:push"
+
+.PHONY: v1-db-seed
+v1-db-seed: ## Insert v1 seed data inside the v1_api container
+	@$(DOCKER_DEV) run --rm v1_api sh -c "cd /app/apps/v1_api && pnpm db:generate && pnpm db:seed"
+
+.PHONY: v1-db-studio
+v1-db-studio: ## Open v1 Prisma Studio (exposes port 5556 only while running)
+	@echo "V1 Prisma Studio will be available at http://localhost:5556"
+	@$(DOCKER_DEV) run --rm -p 127.0.0.1:5556:5555 v1_api \
+		sh -c "cd /app/apps/v1_api && pnpm exec prisma studio --browser none --hostname 0.0.0.0 --port 5555"
+
+.PHONY: v1-db-shell
+v1-db-shell: ## Open psql shell inside v1_postgres container
+	@$(DOCKER_DEV) exec v1_postgres psql -U teameet_v1_user -d teameet_v1_dev
+
 .PHONY: redis-shell
 redis-shell: ## Open redis-cli inside redis container
 	@$(DOCKER_DEV) exec redis redis-cli
@@ -246,6 +282,11 @@ db-reset: ## DESTRUCTIVE: reset DB, re-migrate, re-seed everything (base + mocks
 test: ## Run all tests (backend + frontend)
 	@pnpm --filter api test
 	@pnpm --filter web test
+
+.PHONY: test-v1
+test-v1: ## Run v1 backend + frontend tests
+	@pnpm --filter v1_api test
+	@pnpm --filter v1_web test
 
 .PHONY: autoqa
 autoqa: ## Run repo-local autoqa operator (background unavailable -> foreground fallback)

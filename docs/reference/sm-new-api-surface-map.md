@@ -13,7 +13,7 @@ Not for: implemented endpoint contract, DTO finalization, Swagger source
 
 이 문서는 기존 `apps/api` route를 복사하지 않고, SM New 1차 디자인 완료의 사용자 action 기준으로
 필요한 API surface를 정리한다. 실제 endpoint path는 구현 전 state machine, permission matrix,
-DB design v2가 완료된 뒤 확정한다.
+DB implementation design가 완료된 뒤 확정한다.
 
 ## 2. Global Contract Draft
 
@@ -298,7 +298,7 @@ Notes:
 
 ## 11. Deferred Surfaces
 
-| Surface | v1 decision | Future trigger |
+| Surface | v1 decision | Current v1 exclusion |
 |---|---|---|
 | Payments | 제외 | 사용자 유입 후 실제 결제 도입 결정 |
 | Payment attempts | 제외 | payment provider 연동 시 |

@@ -1,10 +1,10 @@
 # Task 82 -- SM New Full Rebuild Plan
 
 Owner: codex
-Status: Planning
+Status: Implementation in progress
 Priority: P0
 Target: both
-Mode: CODE-ready planning
+Mode: CODE
 
 ## 1. Purpose
 
@@ -16,9 +16,42 @@ SM New는 기존 Teameet 프론트엔드/백엔드를 부분 수정하는 작업
 
 - 기존 저장소를 버리지 않는다.
 - 기존 `apps/web`, `apps/api`의 구현은 참조 자료로만 본다.
-- SM New는 같은 모노레포 안에서 새 product slice로 병행 구축한다.
+- SM New planning 결과물은 같은 모노레포 안에서 `apps/v1_api`, `apps/v1_web` 신규 앱으로 병행 구축한다.
+- v1은 기존 DB가 아니라 신규 DB를 사용한다.
 - 기존 서비스 코드를 바로 삭제하거나 대량 치환하지 않는다.
 - SM New v1이 기능/검증 기준을 통과한 뒤 cutover 여부를 결정한다.
+
+## 1.1 Current Decision Summary
+
+As of 2026-05-18, the working direction is locked to v1-only feature
+completion. Do not plan or implement a v2 path in this task.
+
+Confirmed decisions:
+
+- `SM New` remains the planning codename only.
+- Implementation names use `v1`.
+- V1 is built in the same monorepo, not a new repository.
+- V1 uses new apps:
+  - `apps/v1_api`
+  - `apps/v1_web`
+- V1 uses a new DB:
+  - local dev DB name: `teameet_v1_dev`
+  - Docker service: `v1_postgres`
+- V1 DB objects still use explicit `v1_` names:
+  - tables: `v1_*`
+  - Prisma models: `V1*`
+- Existing `apps/api`, `apps/web`, and the existing DB are not deleted or
+  directly replaced during v1 feature development.
+- Existing app and v1 app should keep the same general Docker/domain/runtime
+  structure, with v1-specific service names and ports while running in
+  parallel.
+- Design implementation uses `Team Design > 1차 디자인 완료` as the visual
+  baseline.
+- Delivery order is:
+
+```text
+Prisma/data model -> API features -> frontend contract -> design binding -> QA/cutover review
+```
 
 ## 2. Source Of Truth
 
@@ -40,25 +73,73 @@ SM New 구현 기준 문서는 아래 순서를 따른다.
 
 ### Recommended Path
 
-Use an in-repo parallel rebuild.
+Use an in-repo parallel rebuild with new apps and a new database. `SM New` is
+the planning codename in reference documents; implementation naming should use
+`v1`.
 
 ```text
 Existing product:
-apps/web/src/app/(main)/*
-apps/api/src/{matches,teams,team-matches,...}
-/api/v1/*
+apps/web
+apps/api
+existing dev/prod DB
 
-SM New product:
-apps/web/src/app/(sm-new)/*
-apps/web/src/components/sm-new/*
-apps/web/src/hooks/sm-new/*
-apps/web/src/types/sm-new.ts
-apps/api/src/sm-new/*
-/api/v1/sm-new/*
+New v1 product:
+apps/v1_web
+apps/v1_api
+new v1 dev/prod DB
 ```
 
 The existing app remains runnable while SM New is built. This protects the
-current codebase from a long broken transition and allows side-by-side QA.
+current codebase and current data from a long broken transition and allows
+side-by-side QA.
+
+### Runtime Boundary
+
+Recommended local runtime:
+
+```text
+Existing web: http://localhost:3003
+Existing api: http://localhost:8111/api/v1
+
+v1 web: http://localhost:3013
+v1 api: http://localhost:8121/api/v1
+v1 DB: teameet_v1_dev
+```
+
+The v1 API can use `/api/v1/*` inside `apps/v1_api` because it runs as a
+separate server. Do not mount v1 under existing `apps/api` as
+`/api/v1/sm-new/*` unless this decision is explicitly reversed.
+
+### Database Boundary
+
+Use a new database for v1 instead of adding prefixed tables to the existing
+database.
+
+```text
+Existing DB: teameet_dev / current production DB
+v1 DB:       teameet_v1_dev / v1 production candidate DB
+```
+
+V1 table names must use a `v1_` prefix even though the database itself is
+isolated. This keeps every newly added database object visibly tied to the v1
+runtime.
+
+```text
+Tables: v1_users, v1_matches, v1_teams, ...
+Prisma models: V1User, V1Match, V1Team, ...
+```
+
+Prisma schema and migrations live under `apps/v1_api`.
+
+```text
+apps/v1_api/prisma/schema.prisma
+apps/v1_api/prisma/migrations/
+apps/v1_api/prisma/seed.ts
+```
+
+Initial v1 development should not share old auth/user tables. Create v1 users,
+auth identities, profiles, and seed accounts in the v1 DB. Existing user/data
+migration becomes a cutover task, not a v1 feature-development blocker.
 
 ### Why Not A Fresh Repository
 
@@ -75,6 +156,19 @@ window. Current domain names also conflict with SM New planning names:
 - Existing `SportTeam` means service team.
 - SM New should use clear names like `team`, `match_application`,
   `match_participant`, and `match_side`.
+
+### Why Not Same-App Slice
+
+The earlier candidate was to add `apps/api/src/sm-new/**` and
+`apps/web/src/app/(sm-new)/**`. That is no longer the recommended path.
+
+Reasons:
+
+- Existing Prisma models and DB tables already contain conflicting concepts.
+- Existing frontend hooks/components carry old API assumptions.
+- New DB development is cleaner when the Prisma schema belongs to a new API app.
+- V1 completion is faster if old runtime regressions are kept out of the
+  critical path.
 
 ## 4. Scope For SM New v1
 
@@ -185,19 +279,25 @@ test-only/no-real-transaction copy.
 - Tournament feature set
 - Advanced AI matching beyond deterministic recommendations
 
-Deferred domains may remain in the old app until SM New v2 planning.
+Deferred domains remain outside the current v1 completion target.
 
 ## 5. Backend Plan
 
-### Module Boundary
+### App Boundary
 
-Create a new Nest module:
+Create a new Nest app:
 
 ```text
-apps/api/src/sm-new/
-  sm-new.module.ts
+apps/v1_api/
+  prisma/
+    schema.prisma
+    seed.ts
+  src/
+    main.ts
+    app.module.ts
   common/
   auth/
+  onboarding/
   home/
   notices/
   matches/
@@ -205,16 +305,19 @@ apps/api/src/sm-new/
   team-matches/
   chat/
   notifications/
+  profile/
   admin/
 ```
 
-All SM New controllers should be mounted under:
+All v1 controllers should be mounted under:
 
 ```text
-/api/v1/sm-new
+/api/v1
 ```
 
-Existing controllers under `/api/v1` remain unchanged during the rebuild.
+Existing controllers in `apps/api` remain unchanged during the rebuild. The
+port/app boundary keeps existing `/api/v1/*` and new v1 `/api/v1/*` from
+colliding.
 
 ### API Contract
 
@@ -224,7 +327,7 @@ Use the same global success envelope:
 { status: "success", data, timestamp }
 ```
 
-Use a stricter error shape in SM New services and filters where possible:
+Use a stricter error shape in v1 services and filters where possible:
 
 ```text
 { status: "error", statusCode, code, message, details?, timestamp }
@@ -259,8 +362,9 @@ RATE_LIMITED
 
 ### DB Direction
 
-Do not edit the existing Prisma schema as a first step. First produce a concrete
-SM New Prisma design document from the table decision checklist.
+Do not edit the existing `apps/api/prisma/schema.prisma` for v1 feature work.
+First produce a concrete v1 Prisma design document from the table decision
+checklist, then implement it under `apps/v1_api/prisma/schema.prisma`.
 
 Required DB design outputs before migration:
 
@@ -271,36 +375,38 @@ Required DB design outputs before migration:
 - Audit/status-change policy
 - Index and unique constraint list
 - Seed/mock data plan
-- Migration strategy against the current dev DB
+- Migration strategy for the new v1 DB
+- Explicit post-v1-completion data handling stance for existing production data
 
 Candidate v1 table families:
 
 ```text
 identity:
-users, auth_identities, user_profiles, user_onboarding_progress
+v1_users, v1_auth_identities, v1_user_profiles, v1_user_onboarding_progress
 
 terms/master:
-terms_documents, user_terms_consents, sports, sport_levels, regions, notices
+v1_terms_documents, v1_user_terms_consents, v1_sports, v1_sport_levels,
+v1_regions, v1_notices
 
 preference/home:
-user_sport_preferences, user_regions, user_reputation_summaries
+v1_user_sport_preferences, v1_user_regions, v1_user_reputation_summaries
 
 personal match:
-matches, match_applications, match_participants
+v1_matches, v1_match_applications, v1_match_participants
 
 team:
-teams, team_profiles, team_memberships, team_join_applications,
-team_trust_scores
+v1_teams, v1_team_profiles, v1_team_memberships, v1_team_join_applications,
+v1_team_trust_scores
 
 team match:
-team_matches, team_match_applications
+v1_team_matches, v1_team_match_applications
 
 chat/notification:
-chat_rooms, chat_room_participants, chat_messages, notifications,
-notification_preferences
+v1_chat_rooms, v1_chat_room_participants, v1_chat_messages, v1_notifications,
+v1_notification_preferences
 
 admin/audit:
-admin_users, admin_action_logs, status_change_logs
+v1_admin_users, v1_admin_action_logs, v1_status_change_logs
 ```
 
 Payment/support tables are deferred for v1.
@@ -309,15 +415,16 @@ Payment/support tables are deferred for v1.
 
 Reuse cautiously:
 
-- `PrismaModule`
-- `RedisModule`
-- auth token issuing/verification primitives
+- Nest app bootstrap patterns
 - global validation/filter/interceptor patterns
+- auth token issuing/verification primitives
+- Redis/socket infrastructure patterns if useful
 - upload static serving
-- notification socket infrastructure if it does not leak old contracts
+- test helper conventions
 
 Do not blindly reuse:
 
+- old `PrismaModule` tied to the existing datasource
 - old `matches` state model
 - old `SportTeam`/`Team` naming
 - old payment participant binding
@@ -326,12 +433,64 @@ Do not blindly reuse:
 
 ## 6. Frontend Plan
 
-### Route Boundary
+### App Boundary
 
-Create an SM New route group:
+Create a new Next app:
 
 ```text
-apps/web/src/app/(sm-new)/
+apps/v1_web/
+  src/
+    app/
+      layout.tsx
+      page.tsx
+      home/page.tsx
+      matches/page.tsx
+      matches/new/page.tsx
+      matches/[id]/page.tsx
+      matches/[id]/edit/page.tsx
+      team-matches/page.tsx
+      team-matches/new/page.tsx
+      team-matches/[id]/page.tsx
+      team-matches/[id]/edit/page.tsx
+      teams/page.tsx
+      teams/new/page.tsx
+      teams/[id]/page.tsx
+      teams/[id]/edit/page.tsx
+      teams/[id]/members/page.tsx
+      my/page.tsx
+      notifications/page.tsx
+      chat/[id]/page.tsx
+      onboarding/page.tsx
+      admin/page.tsx
+    components/
+    hooks/
+    types/
+    lib/
+```
+
+Candidate public entry:
+
+```text
+/home
+/matches
+/team-matches
+/teams
+/my
+```
+
+These routes live on the v1 web server, for example
+`http://localhost:3013/home`. After cutover, these can become the production
+routes on the main domain.
+
+Do not add the v1 app as an `(sm-new)` route group under existing `apps/web`
+unless this decision is explicitly reversed.
+
+### Route Boundary
+
+The v1 web route map starts as:
+
+```text
+apps/v1_web/src/app/
   layout.tsx
   home/page.tsx
   matches/page.tsx
@@ -353,24 +512,12 @@ apps/web/src/app/(sm-new)/
   onboarding/page.tsx
 ```
 
-Candidate public entry:
-
-```text
-/sm-new/home
-/sm-new/matches
-/sm-new/team-matches
-/sm-new/teams
-/sm-new/my
-```
-
-After cutover, these can become the production routes.
-
 ### UI Boundary
 
-Create SM-specific UI under:
+Create v1-specific UI under:
 
 ```text
-apps/web/src/components/sm-new/
+apps/v1_web/src/components/
 ```
 
 Use existing shared primitives only when they fit the SM design language without
@@ -380,30 +527,30 @@ data assumptions.
 Suggested component groups:
 
 ```text
-components/sm-new/shell/
-components/sm-new/home/
-components/sm-new/matches/
-components/sm-new/teams/
-components/sm-new/team-matches/
-components/sm-new/chat/
-components/sm-new/notifications/
-components/sm-new/forms/
-components/sm-new/primitives/
+components/shell/
+components/home/
+components/matches/
+components/teams/
+components/team-matches/
+components/chat/
+components/notifications/
+components/forms/
+components/primitives/
 ```
 
 ### API Hooks
 
-Create a clean SM API integration surface:
+Create a clean v1 API integration surface:
 
 ```text
-apps/web/src/hooks/sm-new/
-  use-sm-auth.ts
-  use-sm-home.ts
-  use-sm-matches.ts
-  use-sm-teams.ts
-  use-sm-team-matches.ts
-  use-sm-chat.ts
-  use-sm-notifications.ts
+apps/v1_web/src/hooks/
+  use-auth.ts
+  use-home.ts
+  use-matches.ts
+  use-teams.ts
+  use-team-matches.ts
+  use-chat.ts
+  use-notifications.ts
   query-keys.ts
   shared.ts
 ```
@@ -411,7 +558,7 @@ apps/web/src/hooks/sm-new/
 Types should start in:
 
 ```text
-apps/web/src/types/sm-new.ts
+apps/v1_web/src/types/api.ts
 ```
 
 Move to per-domain files only when the type file becomes difficult to maintain.
@@ -429,34 +576,37 @@ Move to per-domain files only when the type file becomes difficult to maintain.
 
 ### Phase A -- Parallel Prototype Runtime
 
-- Build SM New behind `/sm-new/*`.
-- Old routes remain unchanged.
-- Seed/mock data can be SM-specific.
-- QA compares SM design reference to `/sm-new/*`.
+- Build v1 in `apps/v1_api` and `apps/v1_web`.
+- Existing `apps/api`, `apps/web`, existing routes, and existing DB remain
+  unchanged.
+- Seed/mock data can be v1-specific.
+- QA compares SM design reference to v1 web routes on the v1 server.
 
 ### Phase B -- API Contract Lock
 
-- Freeze `/api/v1/sm-new` endpoints.
-- Add API integration docs under `docs/api/sm-new/`.
+- Freeze `apps/v1_api` `/api/v1/*` endpoints.
+- Add API integration docs under `docs/api/v1/` with a note that `sm-new` is
+  the planning codename in reference files.
 - Add backend integration tests for state transitions and permissions.
-- Add MSW handlers for SM frontend tests.
+- Add MSW handlers for v1 frontend tests.
 
 ### Phase C -- Product Cutover Candidate
 
 - Decide whether `/home`, `/matches`, `/team-matches`, `/teams`, `/my` should
-  redirect to SM New routes.
-- Keep admin and deferred domains on the old app unless v2 replaces them.
+  be served by v1 web or redirected from the existing web app.
+- Keep admin and out-of-scope domains on the old app unless a separate
+  post-v1 completion decision changes that.
 - Run route smoke, focused E2E, and visual audit.
 
 ### Phase D -- Old Code Retirement
 
-Only after SM New production routes are stable:
+Only after v1 production candidate routes are stable:
 
 - remove unused old pages
 - remove old hooks/types
 - retire old backend controllers
 - migrate or archive old docs
-- simplify Prisma models if data migration is complete
+- plan existing DB to v1 DB migration/backfill or archive posture
 
 ## 8. Implementation Waves
 
@@ -470,7 +620,7 @@ API design freeze
 -> Prisma migration and seed
 -> backend API implementation
 -> frontend contract layer
--> SM design binding
+-> v1 design binding
 -> integrated QA
 -> cutover or continue parallel runtime
 ```
@@ -483,10 +633,10 @@ stage on verbal agreement only.
 | 0. Scope lock | What exactly is v1? | v1 inclusion/defer list | No ambiguous feature remains in "maybe" state |
 | 1. API freeze | What does the frontend call? | endpoint/DTO/error contract | Every screen action has API/deferred/no-op outcome |
 | 2. DB freeze | What data supports the API? | ERD, table spec, enum/state/audit plan | Every endpoint field and mutation maps to data |
-| 3. Prisma | Can the schema run? | migration, generated client, seed/fixture data | migration and seed pass locally |
-| 4. Backend | Does the API behave correctly? | `apps/api/src/sm-new/**` | integration tests cover state/permission/error cases |
+| 3. App scaffold + Prisma | Can the new apps and schema run? | `apps/v1_api`, `apps/v1_web`, migration, generated client, seed/fixture data | v1 app scaffold builds and v1 migration/seed pass locally |
+| 4. Backend | Does the API behave correctly? | `apps/v1_api/src/**` | integration tests cover state/permission/error cases |
 | 5. Frontend contract | Can UI consume API safely? | types, hooks, MSW, query keys | hooks cover loading/error/empty/success/mutation states |
-| 6. Design binding | Does the SM UI work with real data? | `(sm-new)` routes wired to hooks | primary user journeys use SM API, not hardcoded data |
+| 6. Design binding | Does the v1 UI work with real data? | `apps/v1_web/src/app/**` routes wired to hooks | primary user journeys use v1 API, not hardcoded data |
 | 7. QA/cutover | Is it releasable or still parallel? | scenario/E2E/visual/cutover report | cutover decision has blocker and rollback list |
 
 ### Stage 0 -- Scope Lock
@@ -506,9 +656,8 @@ Work:
 
 - Divide all design sections into `v1`, `v1-shell-only`, `deferred`, and
   `removed`.
-- Decide whether v1 runtime starts at `/sm-new/home` or a feature-flagged
-  hidden route.
-- Decide which old auth/session behavior can be reused.
+- Runtime starts as a separate v1 web app on its own local port.
+- Old auth/session tables are not shared for initial v1 development.
 - Decide whether payment/support/admin are disabled, read-only, or excluded.
 - Decide whether admin minimum is required before cutover.
 
@@ -520,11 +669,12 @@ Artifacts:
 
 Done when:
 
-- [ ] Every baseline section is marked v1/deferred/removed.
-- [ ] Every deferred section has user-facing copy/disabled-state direction.
-- [ ] Payment/support stance is explicit.
-- [ ] Admin minimum stance is explicit.
-- [ ] First runtime route strategy is explicit.
+- [x] Every baseline section is marked v1/deferred/removed.
+- [x] Every deferred section has user-facing copy/disabled-state direction.
+- [x] Payment/support stance is explicit.
+- [x] Admin minimum stance is explicit.
+- [x] First runtime route strategy is explicit: `apps/v1_web` on the v1 web server.
+- [x] Initial DB strategy is explicit: new v1 DB, no existing DB table reuse.
 
 Risks:
 
@@ -543,9 +693,9 @@ Status: v1 contract complete
 Progress: 84/84 Done
 ```
 
-The later `docs/api/sm-new/**` files are still useful as implementation-facing
-domain docs, but they should be generated from this frozen reference contract
-instead of reopening endpoint decisions.
+The later `docs/api/v1/**` files should be implementation-facing domain docs
+generated from this frozen reference contract instead of reopening endpoint
+decisions.
 
 Purpose:
 
@@ -608,7 +758,7 @@ Required API design outputs:
 Suggested document layout:
 
 ```text
-docs/api/sm-new/
+docs/api/v1/
   README.md
   global-contract.md
   errors-and-validation.md
@@ -671,6 +821,7 @@ Inputs:
 - Stage 1 API contract
 - `docs/reference/sm-new-db-v1-table-decision-checklist.md`
 - Existing `apps/api/prisma/schema.prisma` as reference-only evidence
+- New v1 DB strategy: `apps/v1_api/prisma/schema.prisma`
 
 Work:
 
@@ -679,7 +830,8 @@ Work:
   - API response field -> table/computed/deferred source
   - mutation -> write set
   - state transition -> enum and audit row
-- Decide new-table vs in-place migration strategy.
+- Implement v1 in a new database. Existing table reuse is out of scope for
+  initial v1 feature development.
 - Resolve naming collisions:
   - service team vs personal match side
   - application vs participant
@@ -700,14 +852,14 @@ Required DB outputs:
 - Status/audit log rules.
 - Seed and mock data plan.
 - Migration strategy:
-  - coexist with current tables
-  - migrate current tables in place
-  - or introduce new tables and later cut over
+  - create and migrate the new v1 DB
+  - seed v1 dev/test data
+  - document v1 completion post-decision data handling separately
 
 Recommended DB document layout:
 
 ```text
-docs/reference/sm-new-db-design-v2.md
+docs/reference/sm-new-db-v1-implementation-design.md
 
 Sections:
 1. Naming decisions
@@ -725,17 +877,17 @@ Sections:
 
 DB design checklist:
 
-- [ ] Every API response field has a source: table, computed, external, mock, or deferred.
-- [ ] Every API mutation has a write set.
-- [ ] Every lifecycle transition maps to enum/state columns and audit rows.
-- [ ] Every permission check has enough table data to evaluate it.
-- [ ] Every common list filter has supporting indexes.
-- [ ] Every uniqueness rule is enforced in DB where possible.
-- [ ] Payment/support tables remain deferred unless v1 scope changes.
-- [ ] Existing table reuse decisions are explicit.
-- [ ] Data migration requirement is explicit.
-- [ ] Seed data ownership is explicit.
-- [ ] Dev-only mock fields do not leak into production contract.
+- [x] Every API response field has a source: table, computed, external, mock, or deferred.
+- [x] Every API mutation has a write set.
+- [x] Every lifecycle transition maps to enum/state columns and audit rows.
+- [x] Every permission check has enough table data to evaluate it.
+- [x] Every common list filter has supporting indexes.
+- [x] Every uniqueness rule is enforced in DB where possible.
+- [x] Payment/support tables remain deferred unless v1 scope changes.
+- [x] Existing table reuse decisions are explicit: no existing DB table reuse for initial v1.
+- [x] Post-v1-completion data handling requirement is explicit.
+- [x] Seed data ownership is explicit.
+- [x] Dev-only mock fields do not leak into production contract.
 
 Done when:
 
@@ -760,14 +912,20 @@ local runtime.
 Inputs:
 
 - Stage 2 DB design
-- Current Prisma schema and migration history
-- Existing seed/mock conventions
+- New `apps/v1_api/prisma/schema.prisma`
+- Existing seed/mock conventions as reference-only evidence
 
 Tasks:
 
-- Add or modify Prisma models.
-- Generate migration.
-- Add seed data for master tables:
+- [x] Scaffold `apps/v1_api`.
+- [x] Scaffold `apps/v1_web`.
+- [x] Add isolated v1 Postgres service and Docker runtime wiring.
+- [x] Add initial v1 Prisma runtime check model under
+  `apps/v1_api/prisma/schema.prisma`.
+- [x] Verify `make dev-v1` starts `v1_postgres`, `v1_api`, and `v1_web`.
+- [x] Add full v1 Prisma models under `apps/v1_api/prisma/schema.prisma`.
+- [x] Generate migration after the full v1 schema is implemented.
+- [x] Add seed data for master tables:
   - sports
   - sport levels
   - regions
@@ -776,8 +934,8 @@ Tasks:
   - test teams
   - test matches
   - test team matches
-- Add fixture factories for integration tests.
-- Keep old seed paths intact unless the migration requires shared changes.
+- [ ] Add fixture factories for integration tests.
+- [x] Keep old seed paths intact. V1 seed data lives under `apps/v1_api`.
 
 Implementation order:
 
@@ -794,23 +952,23 @@ Implementation order:
 
 Validation:
 
-- `pnpm --filter api db:generate`
-- `pnpm --filter api exec prisma migrate dev`
-- `pnpm --filter api db:seed:mocks`
+- `pnpm --filter v1_api db:generate`
+- `pnpm --filter v1_api exec prisma migrate dev`
+- `pnpm --filter v1_api db:seed`
 - Targeted DB smoke through Prisma service or integration test.
 
 Done when:
 
 - Prisma client generates.
-- Migration applies to a clean dev DB.
-- Migration applies or has a documented path for the current dev DB.
+- Migration applies to a clean v1 dev DB.
+- Existing dev DB is not touched by v1 migrations.
 - Seed/mock data creates enough records for all v1 screens.
 - Fixture factories can create isolated test data.
 
 Risks:
 
-- Existing dev DB drift can produce false negatives.
-- Broad `include: true` in backend code can touch old missing columns.
+- Docker/env wiring for the second DB can block local startup.
+- Accidentally importing existing `apps/api` Prisma code can reintroduce old DB coupling.
 - Seed scripts must avoid destructive full reset unless explicitly requested.
 
 ### Stage 4 -- Backend API Implementation
@@ -819,7 +977,7 @@ Build backend by vertical slices, but shared SM New common code comes first.
 
 Purpose:
 
-Implement the frozen `/api/v1/sm-new/*` API with state, permission, validation,
+Implement the frozen v1 `/api/v1/*` API with state, permission, validation,
 and error behavior matching the contract.
 
 Inputs:
@@ -830,7 +988,7 @@ Inputs:
 
 Backend order:
 
-1. `sm-new/common`
+1. `common`
    - DTO utilities
    - pagination helpers
    - error codes
@@ -853,7 +1011,7 @@ DTO -> controller route -> service read/write -> permission gate
 
 Backend acceptance per domain:
 
-- Controller route exists under `/api/v1/sm-new`.
+- Controller route exists under `apps/v1_api` `/api/v1`.
 - DTO validation rejects non-contract fields.
 - Service does not depend on old domain state assumptions.
 - Integration tests cover:
@@ -882,8 +1040,8 @@ Backend test matrix per stateful domain:
 Done when:
 
 - API tests pass for completed domains.
-- Swagger or generated docs do not contradict `docs/api/sm-new/**`.
-- Live `localhost:8111/api/v1/sm-new/*` smoke works when dev stack is running.
+- Swagger or generated docs do not contradict the frozen v1 reference contract.
+- Live `localhost:8121/api/v1/*` smoke works when v1 dev stack is running.
 - Frontend developers can implement hooks from stable response shapes.
 
 Risks:
@@ -894,7 +1052,7 @@ Risks:
 
 ### Stage 5 -- Frontend Contract Layer
 
-Do not wire screens directly to raw axios calls. Create the SM New frontend
+Do not wire screens directly to raw axios calls. Create the v1 frontend
 contract layer before UI binding.
 
 Purpose:
@@ -909,29 +1067,29 @@ Inputs:
 
 Tasks:
 
-- Add `apps/web/src/types/sm-new.ts`.
-- Add `apps/web/src/hooks/sm-new/query-keys.ts`.
-- Add per-domain hooks under `apps/web/src/hooks/sm-new/`.
-- Add MSW handlers under `apps/web/src/test/msw` for SM New routes.
+- Add `apps/v1_web/src/types/api.ts`.
+- Add `apps/v1_web/src/hooks/query-keys.ts`.
+- Add per-domain hooks under `apps/v1_web/src/hooks/`.
+- Add MSW handlers for v1 routes.
 - Add frontend tests for hook behavior where state is non-trivial.
 
 Suggested hook files:
 
 ```text
-apps/web/src/hooks/sm-new/
+apps/v1_web/src/hooks/
   index.ts
   query-keys.ts
   shared.ts
-  use-sm-auth.ts
-  use-sm-onboarding.ts
-  use-sm-home.ts
-  use-sm-matches.ts
-  use-sm-teams.ts
-  use-sm-team-matches.ts
-  use-sm-chat.ts
-  use-sm-notifications.ts
-  use-sm-my.ts
-  use-sm-admin.ts
+  use-auth.ts
+  use-onboarding.ts
+  use-home.ts
+  use-matches.ts
+  use-teams.ts
+  use-team-matches.ts
+  use-chat.ts
+  use-notifications.ts
+  use-my.ts
+  use-admin.ts
 ```
 
 Contract layer checklist:
@@ -956,7 +1114,7 @@ Done when:
 Risks:
 
 - Letting screens build query strings directly will recreate stale filter bugs.
-- Sharing old API types will hide mismatches until late UI integration.
+- Importing old API types will hide mismatches until late UI integration.
 
 ### Stage 6 -- Design Screen Binding
 
@@ -964,7 +1122,7 @@ Once hooks are stable, wire the SM design routes.
 
 Purpose:
 
-Attach the SM New design screens to the frontend contract layer and preserve
+Attach the v1 design screens to the frontend contract layer and preserve
 the design intent while replacing static data with real API state.
 
 Inputs:
@@ -975,7 +1133,7 @@ Inputs:
 
 Binding order:
 
-1. `(sm-new)/layout.tsx` shell and 5-tab navigation.
+1. `apps/v1_web/src/app/layout.tsx` shell and 5-tab navigation.
 2. onboarding/auth-aware entry.
 3. home and notice surfaces.
 4. matches list/detail/create/manage.
@@ -988,7 +1146,7 @@ Binding rules:
 
 - Screen layout may use temporary mock states, but primary data paths must use hooks.
 - Keep design placeholder copy only where API state is explicitly deferred.
-- Do not silently fall back to old app data if SM New API fails.
+- Do not silently fall back to old app data if the v1 API fails.
 - Do not show payment, refund, or dispute success flows as real in v1.
 - Do not import old domain cards if they assume old API shapes.
 
@@ -1005,7 +1163,7 @@ Per-screen binding checklist:
 
 Done when:
 
-- Primary user journeys work against SM New API or MSW with matching contract.
+- Primary user journeys work against the v1 API or MSW with matching contract.
 - No production candidate route depends on hardcoded primary data.
 - Design comparison gaps are tracked as explicit follow-ups.
 
@@ -1021,7 +1179,7 @@ QA runs after each vertical slice and again before cutover.
 
 Purpose:
 
-Decide whether SM New remains parallel, replaces selected routes, or becomes
+Decide whether v1 remains parallel, replaces selected routes, or becomes
 the production app shell.
 
 Inputs:
@@ -1035,7 +1193,7 @@ Required checks:
 
 - API integration tests for each completed domain.
 - Web unit tests for hooks and critical UI state helpers.
-- Route smoke for every `(sm-new)` route.
+- Route smoke for every v1 web route.
 - Scenario checklist update under `docs/scenarios/`.
 - Focused E2E for:
   - signup/onboarding
@@ -1059,9 +1217,9 @@ Cutover options:
 
 | Option | Meaning | Use when |
 |---|---|---|
-| Parallel only | Keep `/sm-new/*` hidden or internal | v1 is not complete enough |
-| Partial route cutover | Redirect selected routes like `/matches` to SM New | core flow is stable but admin/deferred domains remain old |
-| Full app shell cutover | Replace logged-in main shell with SM New | home/matches/teams/team-matches/my all pass QA |
+| Parallel only | Keep `apps/v1_web` internal on a separate host/port | v1 is not complete enough |
+| Partial route cutover | Route selected production paths like `/matches` to v1 web | core flow is stable but admin/deferred domains remain old |
+| Full app shell cutover | Replace logged-in main shell with v1 web | home/matches/teams/team-matches/my all pass QA |
 | New repo extraction | Move SM New elsewhere | only if monorepo constraints become blocking |
 
 Done when:
@@ -1084,21 +1242,21 @@ Use this board as the live stage tracker.
 
 | Stage | Status | Owner | Blocking artifact |
 |---|---|---|---|
-| 0. Scope lock | Mostly Done | product/dev | runtime route strategy remains |
+| 0. Scope lock | Done | product/dev | v1-only scope, deferred stance, runtime route strategy |
 | 1. API freeze | Done | product/dev | `docs/reference/sm-new-api-v1-contract-checklist.md` |
-| 2. DB freeze | Next | backend/data | `sm-new-state-machines.md`, `sm-new-permission-matrix.md`, `sm-new-db-design-v2.md` |
-| 3. Prisma | Pending | backend/data | migration + seed |
-| 4. Backend | Pending | backend | `/api/v1/sm-new/*` |
-| 5. Frontend contract | Pending | frontend/data | hooks/types/MSW |
-| 6. Design binding | Pending | frontend/ui | `(sm-new)` routes |
+| 2. DB freeze | Done | backend/data | v1 state/permission/DB implementation docs closed |
+| 3. App scaffold + Prisma | Mostly Done | backend/data + frontend | full v1 Prisma model/seed/migration applied; fixture factories pending |
+| 4. Backend | Pending | backend | `apps/v1_api` `/api/v1/*` |
+| 5. Frontend contract | Pending | frontend/data | `apps/v1_web` hooks/types/MSW |
+| 6. Design binding | Pending | frontend/ui | `apps/v1_web` routes |
 | 7. QA/cutover | Pending | QA/dev | scenario/E2E/visual report |
 
 ### Wave 0 -- Contract Freeze
 
 - [x] Confirm v1 product scope.
-- [ ] Create SM New state machines.
-- [ ] Create SM New permission matrix.
-- [ ] Convert DB table checklist into final ERD/design.
+- [x] Create SM New state machines.
+- [x] Create SM New permission matrix.
+- [x] Convert DB table checklist into final ERD/design.
 - [x] Convert API surface map into endpoint contract.
 
 Deliverables:
@@ -1108,36 +1266,43 @@ Deliverables:
 - `docs/reference/sm-new-api-v1-contract-checklist.md`
 - `docs/reference/sm-new-state-machines.md`
 - `docs/reference/sm-new-permission-matrix.md`
-- `docs/reference/sm-new-db-design-v2.md`
-- `docs/api/sm-new/global-contract.md`
-- `docs/api/sm-new/domains/*.md`
+- `docs/reference/sm-new-db-v1-implementation-design.md`
+- `docs/api/v1/global-contract.md`
+- `docs/api/v1/domains/*.md`
 
 ### Wave 1 -- Backend Foundation
 
-- Add `SmNewModule`.
-- Add common DTOs, pagination, error codes, guards.
-- Add master data reads: sports, sport levels, regions, notices.
-- Add auth/me and onboarding summary reads/writes.
-- Add seed data for SM New masters.
+- [x] Scaffold `apps/v1_api`.
+- [x] Add v1 DB connection and Docker runtime.
+- [x] Add initial Prisma runtime check schema.
+- [x] Add full v1 Prisma schema.
+- [x] Add seed draft.
+- [x] Add committed migration.
+- [ ] Add common DTOs, pagination, error codes, guards.
+- [x] Add master data reads: sports, sport levels, regions, notices.
+- [x] Add auth/me and onboarding summary reads/writes.
+- [x] Add seed data for v1 masters.
 
 Validation:
 
 - API unit tests
 - integration tests for auth/onboarding/master reads
-- `pnpm --filter api test`
+- `pnpm --filter v1_api test`
 
 ### Wave 2 -- Frontend Shell
 
-- Add `(sm-new)` layout.
-- Add 5-tab mobile shell.
-- Add route placeholders for v1 flows.
-- Add SM API client hooks and shared query keys.
-- Add auth/session hydration for SM routes.
+- [x] Scaffold `apps/v1_web`.
+- [x] Add root layout.
+- [ ] Add 5-tab mobile shell.
+- [x] Add route placeholders for v1 flows.
+- [x] Add initial v1 API health check integration.
+- [ ] Add v1 API client hooks and shared query keys.
+- [ ] Add auth/session hydration for v1 routes.
 
 Validation:
 
-- `pnpm --filter web test`
-- route smoke for `/sm-new/home`, `/sm-new/matches`, `/sm-new/teams`
+- `pnpm --filter v1_web test`
+- route smoke for `/home`, `/matches`, `/teams` on the v1 web server
 
 ### Wave 3 -- Personal Match Vertical Slice
 
@@ -1209,7 +1374,7 @@ Exit criteria:
 
 ### Wave 8 -- Cutover Review
 
-- Compare SM New routes to design reference.
+- Compare v1 routes to design reference.
 - Run smoke/E2E/visual audit.
 - Decide route redirect or production replacement plan.
 - Create old-code retirement task if cutover passes.
@@ -1220,34 +1385,38 @@ Shared contract files must be edited before page/component parallel work.
 
 Sequential first:
 
-- `apps/api/src/sm-new/**/dto`
-- `apps/api/src/sm-new/common`
-- `apps/web/src/types/sm-new.ts`
-- `apps/web/src/hooks/sm-new/**`
-- `docs/api/sm-new/**`
+- `apps/v1_api/prisma/schema.prisma`
+- `apps/v1_api/src/**/dto`
+- `apps/v1_api/src/common`
+- `apps/v1_web/src/types/api.ts`
+- `apps/v1_web/src/hooks/**`
+- `docs/api/v1/**`
 
 Parallel after shared contracts are stable:
 
-- `apps/web/src/app/(sm-new)/matches/**`
-- `apps/web/src/app/(sm-new)/teams/**`
-- `apps/web/src/app/(sm-new)/team-matches/**`
-- `apps/web/src/components/sm-new/{matches,teams,team-matches}/**`
-- `apps/api/src/sm-new/{matches,teams,team-matches}/**`
+- `apps/v1_web/src/app/matches/**`
+- `apps/v1_web/src/app/teams/**`
+- `apps/v1_web/src/app/team-matches/**`
+- `apps/v1_web/src/components/{matches,teams,team-matches}/**`
+- `apps/v1_api/src/{matches,teams,team-matches}/**`
 
 Forbidden during initial waves:
 
 - delete existing `(main)` routes
 - delete existing domain controllers
-- rewrite existing Prisma models without migration plan
+- rewrite existing Prisma models
+- run v1 migrations against the existing DB
 - reuse old `Team` naming without clarification
-- wire SM New routes to old payment flows
+- wire v1 routes to old payment flows
 
 ## 10. Acceptance Criteria
 
-- SM New implementation can run alongside the existing app.
-- `/api/v1/sm-new/*` is isolated from existing `/api/v1/*` route contracts.
-- SM New frontend routes do not import old domain components that assume old API shapes.
-- SM New DB design is approved before any Prisma migration.
+- V1 implementation can run alongside the existing app.
+- `apps/v1_api` `/api/v1/*` is isolated from existing `apps/api` `/api/v1/*`.
+- `apps/v1_web` routes do not import old domain components that assume old API shapes.
+- V1 DB design is approved before any v1 Prisma migration.
+- V1 migrations run against only the new v1 DB.
+- V1 tables use `v1_` names and Prisma models use `V1*` names.
 - Personal match, team, and team match flows have explicit state transition tests.
 - Mutation APIs handle permission, duplicate request, stale state, and idempotency.
 - Trust/payment/admin surfaces do not present mock or deferred data as real operational truth.
@@ -1255,34 +1424,163 @@ Forbidden during initial waves:
 
 ## 11. Immediate Next Steps
 
-- [ ] Create `docs/reference/sm-new-state-machines.md`.
-- [ ] Create `docs/reference/sm-new-permission-matrix.md`.
-- [ ] Create `docs/reference/sm-new-db-design-v2.md`.
-- [ ] Optionally publish frozen reference contract into `docs/api/sm-new/**`.
-- [ ] Decide whether the first runtime route is `/sm-new/home` or hidden behind a feature flag.
-- [ ] Start Wave 1 only after state machines and permission matrix are complete.
+- [x] Create `docs/reference/sm-new-state-machines.md`.
+- [x] Create `docs/reference/sm-new-permission-matrix.md`.
+- [x] Create `docs/reference/sm-new-db-v1-implementation-design.md`.
+- [ ] Publish frozen reference contract into `docs/api/v1/**`.
+- [x] Use new v1 DB instead of extending the existing DB.
+- [x] Use new app folders: `apps/v1_api`, `apps/v1_web`.
+- [x] Use v1 runtime routes on the new web app, not `/sm-new/*` under existing `apps/web`.
+- [x] Add workspace/package/docker planning for `apps/v1_api`, `apps/v1_web`, and v1 DB.
+- [x] State machines, permission matrix, and DB implementation design are closed for v1.
+- [x] Start v1 runtime scaffold and verify it boots with Docker.
+- [x] Implement full v1 Prisma schema from `sm-new-db-v1-implementation-design.md`.
+- [x] Add v1 seed data draft.
+- [x] Add v1 initial Prisma migration SQL.
+- [x] Run v1 migration and seed against the Docker v1 DB.
+- [ ] Add fixture factories.
+- [x] Implement v1 master data and notice read endpoints.
+- [ ] Implement v1 API common layer beyond the existing envelope/filter scaffold.
+- [x] Implement v1 auth/me and onboarding endpoints.
+- [ ] Build v1 frontend API contract layer before binding design screens.
+
+## 11.1 Verified Runtime Baseline
+
+The v1 runtime baseline has been verified by running `make dev-v1`.
+
+Observed local services:
+
+```text
+v1 web: http://localhost:3013
+v1 api: http://localhost:8121/api/v1
+v1 DB: teameet_v1_dev inside v1_postgres
+```
+
+Observed successful startup:
+
+- Docker images built for `deps`, `v1_api`, and `v1_web`.
+- Volumes created for v1 Postgres, v1 API node_modules, v1 Web node_modules,
+  and v1 Web `.next`.
+- `teameet_v1_postgres_dev` initialized and accepted connections.
+- `apps/v1_api` ran Prisma generate and `prisma db push` against
+  `teameet_v1_dev`.
+- Nest v1 API started and exposed `/api/v1/health`.
+- Next v1 web started on `http://localhost:3013`.
+
+This confirms that the parallel v1 app/DB/Docker structure is usable before
+full v1 feature development begins.
 
 ## 12. Progress Snapshot
 
+- [x] Latest main was pulled successfully after stashing pre-existing local changes.
 - [x] Repository analysis completed at a high level.
-- [x] Rebuild strategy selected: in-repo parallel product slice.
+- [x] Rebuild strategy selected: new DB + new in-repo apps `apps/v1_api`, `apps/v1_web`.
+- [x] V1-only direction confirmed; v2 is not part of the current plan.
 - [x] Existing SM New planning docs identified.
 - [x] Implementation waves drafted.
+- [x] Design baseline confirmed: `Team Design > 1차 디자인 완료` in
+  `docs/reference/handoff-sm-new-direction/sports-platform/project/Teameet Design.html`.
 - [x] Screen action inventory drafted: `docs/reference/sm-new-screen-action-inventory.md`.
 - [x] API surface map drafted: `docs/reference/sm-new-api-surface-map.md`.
 - [x] API v1 contract frozen: `docs/reference/sm-new-api-v1-contract-checklist.md` (`84/84 Done`).
-- [ ] State machines drafted.
-- [ ] Permission matrix drafted.
-- [ ] DB design v2 drafted.
+- [x] State machines drafted and closed for v1.
+- [x] Permission matrix drafted and closed for v1.
+- [x] DB implementation design drafted and closed for v1.
 - [x] API contract docs drafted as reference checklist.
-- [ ] API contract optionally published to `docs/api/sm-new/**`.
-- [ ] Runtime implementation started.
+- [ ] API contract published to `docs/api/v1/**`.
+- [x] Runtime implementation started with `apps/v1_api`, `apps/v1_web`, and `v1_postgres` scaffold.
+- [x] `apps/v1_api` currently has health/common/Prisma runtime scaffold.
+- [x] `apps/v1_api/prisma/schema.prisma` currently uses `V1RuntimeCheck`
+  mapped to `v1_runtime_checks`.
+- [x] `apps/v1_api/prisma/schema.prisma` now includes the closed v1 relational
+  model with `V1*` Prisma models and `v1_*` table maps.
+- [x] `apps/v1_api/prisma/seed.ts` now contains idempotent v1 seed data for
+  runtime check, sports, levels, regions, terms, notices, users, teams,
+  matches, team matches, linked chat, notifications, and admin.
+- [x] `apps/v1_api/prisma/migrations/20260518000000_v1_initial_schema/migration.sql`
+  now contains the initial v1 schema SQL plus the chat-room one-target check
+  constraint.
+- [x] `apps/v1_api/src/master/**` now exposes `GET /api/v1/master/sports`
+  and `GET /api/v1/master/regions`.
+- [x] `apps/v1_api/src/notices/**` now exposes `GET /api/v1/notices` and
+  `GET /api/v1/notices/:noticeId` for published public notices.
+- [x] `apps/v1_api/src/auth/**` now exposes `GET /api/v1/auth/me` using the
+  temporary v1 development auth headers `x-v1-user-id` or `x-v1-user-email`.
+- [x] `apps/v1_api/src/onboarding/**` now exposes `GET /api/v1/onboarding`,
+  `PATCH /api/v1/onboarding/preferences`, `POST /api/v1/onboarding/complete`,
+  and `POST /api/v1/onboarding/defer`.
+- [x] `apps/v1_api/src/home/**` now exposes `GET /api/v1/home` and
+  `GET /api/v1/home/recommendations` with optional v1 development auth.
+- [x] `apps/v1_api/src/matches/**` now exposes `GET /api/v1/matches`,
+  `GET /api/v1/matches/:matchId`, and
+  `GET /api/v1/matches/:matchId/application-eligibility`.
+- [x] `apps/v1_api/src/matches/**` now also exposes `POST /api/v1/matches`,
+  `GET /api/v1/matches/:matchId/edit`, `PATCH /api/v1/matches/:matchId`,
+  and `POST /api/v1/matches/:matchId/cancel`.
+- [x] `apps/v1_api/src/matches/**` now also exposes personal match
+  application APIs for apply/list/withdraw/approve/reject.
+- [x] `apps/v1_api/src/teams/**` now exposes team browse/detail/profile,
+  create/manage, and join application APIs.
+- [x] `apps/v1_api/src/team-matches/**` now exposes team match browse/manage
+  and team match application APIs.
+- [x] `apps/v1_api/src/chat/**` now exposes linked chat room, message, member
+  state, and leave APIs.
+- [x] `apps/v1_api/src/notifications/**` now exposes notification list,
+  read/read-all, and preference APIs.
+- [x] `apps/v1_api/src/profile/**` now exposes my profile, public profile,
+  settings, logout no-op, and withdrawal request APIs.
+- [x] `apps/v1_api/src/admin/**` now exposes minimum admin/audit APIs for
+  admin me, overview, entity status changes, action logs, and status logs.
+- [x] `v1_matches.region_id` was corrected to nullable to match the create/edit
+  API contract; migration `20260518001000_v1_nullable_match_region` was added.
+- [x] `apps/v1_web` currently has root/home placeholder routes and v1 health
+  integration.
+- [x] `apps/v1_web` now binds the Team Design first-complete mobile surfaces
+  to v1 routes for home, search, notices, matches, team matches, teams, my,
+  notifications, and chat.
+- [x] Search now has an interactive input route with back, clear, submit,
+  recent search, quick condition, results, empty, error, and stale states.
+- [x] First-pass screen-state/step routes are exposed for match filters,
+  match create steps, team-match filters, team-match create steps, team search
+  states, my match/team subpages, notifications read state, chat list/room, and
+  notice detail.
+- [x] Shared dev infra now includes v1 Docker services, v1 Makefile targets,
+  package scripts, and Turborepo env wiring.
+- [x] Local v1 runtime was verified with `make dev-v1`.
+- [x] Full v1 Prisma model implementation drafted and Prisma Client generation verified.
+- [x] Prisma schema validation passed with a dummy PostgreSQL `DATABASE_URL`.
+- [x] `pnpm --filter v1_api exec tsc --noEmit --pretty false` passed.
+- [x] `pnpm --filter v1_api test` passed.
+- [x] After master/notice API additions, `pnpm --filter v1_api exec tsc --noEmit --pretty false` passed.
+- [x] After master/notice API additions, `pnpm --filter v1_api test` passed.
+- [x] After auth/onboarding API additions, `pnpm --filter v1_api exec tsc --noEmit --pretty false` passed.
+- [x] After auth/onboarding API additions, `pnpm --filter v1_api test` passed.
+- [x] After home API additions, `pnpm --filter v1_api exec tsc --noEmit --pretty false` passed.
+- [x] After home API additions, `pnpm --filter v1_api test` passed.
+- [x] After matches read API additions, `pnpm --filter v1_api exec tsc --noEmit --pretty false` passed.
+- [x] After matches read API additions, `pnpm --filter v1_api test` passed.
+- [x] After matches create/edit/cancel additions, `pnpm --filter v1_api db:generate` passed.
+- [x] After matches create/edit/cancel additions, `pnpm --filter v1_api exec tsc --noEmit --pretty false` passed.
+- [x] After matches create/edit/cancel additions, `pnpm --filter v1_api test` passed.
+- [x] After personal match application, teams, team matches, chat,
+  notifications, profile/settings, and admin minimum API additions,
+  `pnpm --filter v1_api build` passed.
+- [x] After personal match application, teams, team matches, chat,
+  notifications, profile/settings, and admin minimum API additions,
+  `pnpm --filter v1_api test` passed with 13 suites and 74 tests.
+- [x] Docker v1 DB migration/seed was verified from the user's terminal.
+- [x] User confirmed v1 health/master/notice endpoints render correctly after seed.
+- [ ] V1 domain API implementation is in progress; payment/support are still
+  deferred and frontend contract handoff is still pending.
+- [ ] V1 frontend contract/hooks/MSW are pending.
+- [ ] V1 design screen binding is pending.
+- [ ] Scenario/E2E/visual/cutover report is pending.
 
 ## 13. Ambiguity Log
 
-- Final SM New production route cutover path is not decided.
-- Whether old auth storage should be shared with SM New routes is not decided.
-- Whether SM New tables should coexist with old tables or migrate old tables in place is not decided.
-- First runtime route strategy is not decided: `/sm-new/home` vs hidden feature flag.
+- Final v1 production route cutover path is not decided.
+- Old auth storage is not shared for initial v1 development; v1 completion post-decision data handling remains undecided.
+- V1 uses a new DB for initial development; existing-data migration/backfill is outside current v1 completion and remains a separate post-completion decision.
+- First runtime route strategy is decided: separate `apps/v1_web` routes on the v1 web server.
 - Admin v1 minimum API surface is now frozen, but implementation priority within Wave 7 can still be adjusted.
 - Payment/support is deferred and API-disabled in v1; final UI disabled/read-only copy still needs design binding review.

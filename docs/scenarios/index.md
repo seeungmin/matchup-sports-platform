@@ -61,6 +61,7 @@
 - [ ] [09-payment-review-badge.md](./09-payment-review-badge.md) - implemented surfaces exist, verification pending
 - [ ] [10-profile-settings-admin.md](./10-profile-settings-admin.md) - partial: admin smoke spec exists, dashboard/users/payments/reviews honest-data runtime is verified, `SET-001` server sync is implemented but live protected-route smoke is blocked by current dev runtime instability
 - [ ] [11-team-and-venue-hubs.md](./11-team-and-venue-hubs.md) - partial: team/venue hub aggregate payload, flat-list affiliation context, tournaments surface, route/API smoke are verified; owner/admin interactive browser smoke remains follow-up
+- [ ] [12-v1-sm-new-e2e-scenarios.md](./12-v1-sm-new-e2e-scenarios.md) - drafted: SM New v1 1차 디자인 완료 + API/DB 설계 기준 E2E 시나리오 매트릭스. Playwright 구현은 v1 route/hook binding 이후 진행
 
 ## Recommended Execution Order
 

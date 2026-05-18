@@ -1,0 +1,45 @@
+import { Logger, ValidationPipe } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import * as compression from 'compression';
+import { AppModule } from './app.module';
+import { AllExceptionsFilter } from './common/filters/http-exception.filter';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+
+async function bootstrap() {
+  const logger = new Logger('V1Bootstrap');
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  app.set('trust proxy', 1);
+  app.use(compression());
+  app.setGlobalPrefix('api/v1');
+  app.enableCors({
+    origin: process.env.NODE_ENV === 'production' ? process.env.FRONTEND_URL : true,
+    credentials: true,
+  });
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+      transformOptions: { enableImplicitConversion: true },
+    }),
+  );
+  app.useGlobalFilters(new AllExceptionsFilter());
+  app.useGlobalInterceptors(new TransformInterceptor());
+
+  const config = new DocumentBuilder()
+    .setTitle('Teameet V1 API')
+    .setDescription('Teameet v1 isolated API')
+    .setVersion('1.0')
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('docs', app, document);
+
+  const port = Number(process.env.API_PORT || '8121');
+  await app.listen(port, '0.0.0.0');
+  logger.log(`Teameet V1 API running on http://localhost:${port}`);
+}
+
+bootstrap();

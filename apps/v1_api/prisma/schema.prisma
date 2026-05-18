@@ -1,0 +1,886 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum V1AccountStatus {
+  active
+  suspended
+  blocked
+  withdrawal_pending
+  deleted
+}
+
+enum V1OnboardingStatus {
+  not_started
+  terms_done
+  signup_done
+  sport_done
+  level_done
+  region_done
+  completed
+  deferred
+}
+
+enum V1AuthProvider {
+  kakao
+  naver
+  email
+}
+
+enum V1AuthIdentityStatus {
+  active
+  unlinked
+  blocked
+}
+
+enum V1TermsDocumentStatus {
+  draft
+  published
+  archived
+}
+
+enum V1TermsKind {
+  terms
+  privacy
+  marketing
+}
+
+enum V1NoticeAudience {
+  public
+  users
+  admins
+}
+
+enum V1NoticeStatus {
+  draft
+  published
+  archived
+}
+
+enum V1TrustState {
+  verified
+  estimated
+  sample
+  none
+}
+
+enum V1MatchStatus {
+  recruiting
+  closed
+  cancelled
+  completed
+  archived
+}
+
+enum V1MatchApplicationStatus {
+  requested
+  approved
+  rejected
+  withdrawn
+  cancelled_by_host
+  expired
+}
+
+enum V1MatchParticipantRole {
+  host
+  participant
+}
+
+enum V1MatchParticipantStatus {
+  active
+  removed
+  cancelled
+  no_show
+  completed
+}
+
+enum V1TeamStatus {
+  active
+  suspended
+  archived
+}
+
+enum V1TeamJoinPolicy {
+  approval_required
+  closed
+}
+
+enum V1TeamMembershipRole {
+  owner
+  manager
+  member
+}
+
+enum V1TeamMembershipStatus {
+  active
+  removed
+  left
+}
+
+enum V1TeamJoinApplicationStatus {
+  requested
+  approved
+  rejected
+  withdrawn
+  expired
+}
+
+enum V1TeamMatchStatus {
+  recruiting
+  matched
+  cancelled
+  completed
+  archived
+}
+
+enum V1TeamMatchApplicationStatus {
+  requested
+  approved
+  rejected
+  withdrawn
+  expired
+}
+
+enum V1ChatRoomStatus {
+  active
+  archived
+}
+
+enum V1ChatParticipantStatus {
+  active
+  left
+}
+
+enum V1ChatMessageStatus {
+  sent
+  hidden
+  deleted
+}
+
+enum V1NotificationTargetType {
+  match
+  team
+  team_match
+  chat
+  notice
+  system
+}
+
+enum V1AdminRole {
+  owner
+  ops
+  support
+}
+
+enum V1AdminStatus {
+  active
+  suspended
+  revoked
+}
+
+enum V1StatusActorType {
+  user
+  admin
+  system
+}
+
+model V1RuntimeCheck {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("v1_runtime_checks")
+}
+
+model V1User {
+  id               String             @id @default(uuid())
+  email            String             @unique
+  phone            String?            @unique
+  accountStatus    V1AccountStatus    @default(active) @map("account_status")
+  onboardingStatus V1OnboardingStatus @default(not_started) @map("onboarding_status")
+  lastLoginAt      DateTime?          @map("last_login_at")
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
+  deletedAt        DateTime?          @map("deleted_at")
+
+  authIdentities         V1AuthIdentity[]
+  profile                V1UserProfile?
+  onboardingProgress     V1UserOnboardingProgress?
+  termsConsents          V1UserTermsConsent[]
+  sportPreferences       V1UserSportPreference[]
+  regions                V1UserRegion[]
+  reputationSummary      V1UserReputationSummary?
+  hostedMatches          V1Match[]                 @relation("V1MatchHost")
+  matchApplications      V1MatchApplication[]      @relation("V1MatchApplicant")
+  reviewedApplications   V1MatchApplication[]      @relation("V1MatchApplicationReviewer")
+  matchParticipants      V1MatchParticipant[]
+  ownedTeams             V1Team[]                  @relation("V1TeamOwner")
+  teamMemberships        V1TeamMembership[]        @relation("V1TeamMember")
+  removedTeamMemberships V1TeamMembership[]        @relation("V1TeamMembershipRemover")
+  teamJoinApplications   V1TeamJoinApplication[]   @relation("V1TeamJoinApplicant")
+  reviewedTeamJoins      V1TeamJoinApplication[]   @relation("V1TeamJoinReviewer")
+  createdTeamMatches     V1TeamMatch[]             @relation("V1TeamMatchCreator")
+  teamMatchApplications  V1TeamMatchApplication[]  @relation("V1TeamMatchApplicantUser")
+  reviewedTeamMatches    V1TeamMatchApplication[]  @relation("V1TeamMatchReviewer")
+  chatParticipations     V1ChatRoomParticipant[]
+  chatMessages           V1ChatMessage[]           @relation("V1ChatMessageSender")
+  notifications          V1Notification[]
+  notificationPreference V1NotificationPreference?
+  adminUser              V1AdminUser?              @relation("V1AdminUserAccount")
+  grantedAdmins          V1AdminUser[]             @relation("V1AdminGrantor")
+  statusLogs             V1StatusChangeLog[]       @relation("V1StatusActorUser")
+
+  @@index([accountStatus])
+  @@index([onboardingStatus])
+  @@index([createdAt])
+  @@map("v1_users")
+}
+
+model V1AuthIdentity {
+  id              String               @id @default(uuid())
+  userId          String               @map("user_id")
+  provider        V1AuthProvider
+  providerUserKey String               @map("provider_user_key")
+  email           String?
+  passwordHash    String?              @map("password_hash")
+  status          V1AuthIdentityStatus @default(active)
+  lastLoginAt     DateTime?            @map("last_login_at")
+  unlinkedAt      DateTime?            @map("unlinked_at")
+  createdAt       DateTime             @default(now()) @map("created_at")
+  updatedAt       DateTime             @updatedAt @map("updated_at")
+
+  user V1User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserKey])
+  @@index([userId])
+  @@index([status])
+  @@map("v1_auth_identities")
+}
+
+model V1UserProfile {
+  id              String    @id @default(uuid())
+  userId          String    @unique @map("user_id")
+  nickname        String
+  profileImageUrl String?   @map("profile_image_url")
+  bio             String?
+  visibility      String    @default("public")
+  displayName     String?   @map("display_name")
+  displayRegion   String?   @map("display_region")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
+
+  user V1User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([nickname])
+  @@map("v1_user_profiles")
+}
+
+model V1UserOnboardingProgress {
+  id          String    @id @default(uuid())
+  userId      String    @unique @map("user_id")
+  currentStep String    @default("terms") @map("current_step")
+  draftJson   Json?     @map("draft_json")
+  completedAt DateTime? @map("completed_at")
+  deferredAt  DateTime? @map("deferred_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  user V1User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("v1_user_onboarding_progress")
+}
+
+model V1TermsDocument {
+  id          String                @id @default(uuid())
+  kind        V1TermsKind
+  version     String
+  title       String
+  content     String
+  status      V1TermsDocumentStatus @default(draft)
+  isRequired  Boolean               @default(true) @map("is_required")
+  publishedAt DateTime?             @map("published_at")
+  archivedAt  DateTime?             @map("archived_at")
+  createdAt   DateTime              @default(now()) @map("created_at")
+  updatedAt   DateTime              @updatedAt @map("updated_at")
+
+  consents V1UserTermsConsent[]
+
+  @@unique([kind, version])
+  @@index([status])
+  @@index([createdAt])
+  @@map("v1_terms_documents")
+}
+
+model V1UserTermsConsent {
+  id              String    @id @default(uuid())
+  userId          String    @map("user_id")
+  termsDocumentId String    @map("terms_document_id")
+  acceptedAt      DateTime  @default(now()) @map("accepted_at")
+  revokedAt       DateTime? @map("revoked_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  user          V1User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  termsDocument V1TermsDocument @relation(fields: [termsDocumentId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, termsDocumentId])
+  @@index([termsDocumentId])
+  @@map("v1_user_terms_consents")
+}
+
+model V1Sport {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  name      String
+  isActive  Boolean  @default(true) @map("is_active")
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  levels          V1SportLevel[]
+  userPreferences V1UserSportPreference[]
+  matches         V1Match[]
+  teams           V1Team[]
+  teamMatches     V1TeamMatch[]
+
+  @@index([isActive, sortOrder])
+  @@map("v1_sports")
+}
+
+model V1SportLevel {
+  id          String   @id @default(uuid())
+  sportId     String   @map("sport_id")
+  code        String
+  name        String
+  description String?
+  sortOrder   Int      @default(0) @map("sort_order")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  sport           V1Sport                 @relation(fields: [sportId], references: [id], onDelete: Cascade)
+  userPreferences V1UserSportPreference[]
+
+  @@unique([sportId, code])
+  @@index([sportId, isActive, sortOrder])
+  @@map("v1_sport_levels")
+}
+
+model V1Region {
+  id        String   @id @default(uuid())
+  parentId  String?  @map("parent_id")
+  code      String   @unique
+  name      String
+  level     Int
+  isActive  Boolean  @default(true) @map("is_active")
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  parent      V1Region?      @relation("V1RegionTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children    V1Region[]     @relation("V1RegionTree")
+  userRegions V1UserRegion[]
+  matches     V1Match[]
+  teams       V1Team[]
+  teamMatches V1TeamMatch[]
+
+  @@index([parentId])
+  @@index([level, isActive, sortOrder])
+  @@map("v1_regions")
+}
+
+model V1Notice {
+  id          String           @id @default(uuid())
+  audience    V1NoticeAudience @default(public)
+  title       String
+  body        String
+  status      V1NoticeStatus   @default(draft)
+  publishedAt DateTime?        @map("published_at")
+  archivedAt  DateTime?        @map("archived_at")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  @@index([audience, status, publishedAt])
+  @@index([createdAt])
+  @@map("v1_notices")
+}
+
+model V1UserSportPreference {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  sportId      String   @map("sport_id")
+  sportLevelId String?  @map("sport_level_id")
+  isPrimary    Boolean  @default(false) @map("is_primary")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user       V1User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sport      V1Sport       @relation(fields: [sportId], references: [id], onDelete: Restrict)
+  sportLevel V1SportLevel? @relation(fields: [sportLevelId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, sportId])
+  @@index([sportId])
+  @@index([sportLevelId])
+  @@map("v1_user_sport_preferences")
+}
+
+model V1UserRegion {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  regionId  String   @map("region_id")
+  isPrimary Boolean  @default(false) @map("is_primary")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user   V1User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  region V1Region @relation(fields: [regionId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, regionId])
+  @@index([regionId])
+  @@map("v1_user_regions")
+}
+
+model V1UserReputationSummary {
+  id           String       @id @default(uuid())
+  userId       String       @unique @map("user_id")
+  trustState   V1TrustState @default(sample) @map("trust_state")
+  mannerScore  Decimal?     @map("manner_score") @db.Decimal(4, 2)
+  reviewCount  Int          @default(0) @map("review_count")
+  sourceLabel  String?      @map("source_label")
+  calculatedAt DateTime?    @map("calculated_at")
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  user V1User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([trustState])
+  @@map("v1_user_reputation_summaries")
+}
+
+model V1Match {
+  id              String        @id @default(uuid())
+  hostUserId      String        @map("host_user_id")
+  sportId         String        @map("sport_id")
+  regionId        String?       @map("region_id")
+  title           String
+  description     String?
+  imageUrl        String?       @map("image_url")
+  placeName       String        @map("place_name")
+  placeAddress    String?       @map("place_address")
+  startAt         DateTime      @map("start_at")
+  endAt           DateTime?     @map("end_at")
+  maxParticipants Int           @map("max_participants")
+  levelNote       String?       @map("level_note")
+  genderRule      String?       @map("gender_rule")
+  costNote        String?       @map("cost_note")
+  status          V1MatchStatus @default(recruiting)
+  cancelledAt     DateTime?     @map("cancelled_at")
+  completedAt     DateTime?     @map("completed_at")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+  deletedAt       DateTime?     @map("deleted_at")
+
+  hostUser     V1User               @relation("V1MatchHost", fields: [hostUserId], references: [id], onDelete: Restrict)
+  sport        V1Sport              @relation(fields: [sportId], references: [id], onDelete: Restrict)
+  region       V1Region?            @relation(fields: [regionId], references: [id], onDelete: Restrict)
+  applications V1MatchApplication[]
+  participants V1MatchParticipant[]
+  chatRoom     V1ChatRoom?
+
+  @@index([hostUserId])
+  @@index([sportId, regionId, status, startAt])
+  @@index([status])
+  @@index([startAt])
+  @@index([createdAt])
+  @@map("v1_matches")
+}
+
+model V1MatchApplication {
+  id               String                   @id @default(uuid())
+  matchId          String                   @map("match_id")
+  applicantUserId  String                   @map("applicant_user_id")
+  status           V1MatchApplicationStatus @default(requested)
+  message          String?
+  reviewedByUserId String?                  @map("reviewed_by_user_id")
+  reviewedAt       DateTime?                @map("reviewed_at")
+  withdrawnAt      DateTime?                @map("withdrawn_at")
+  createdAt        DateTime                 @default(now()) @map("created_at")
+  updatedAt        DateTime                 @updatedAt @map("updated_at")
+
+  match          V1Match             @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  applicantUser  V1User              @relation("V1MatchApplicant", fields: [applicantUserId], references: [id], onDelete: Restrict)
+  reviewedByUser V1User?             @relation("V1MatchApplicationReviewer", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+  participant    V1MatchParticipant?
+
+  @@unique([matchId, applicantUserId])
+  @@index([applicantUserId, status])
+  @@index([status])
+  @@index([createdAt])
+  @@map("v1_match_applications")
+}
+
+model V1MatchParticipant {
+  id            String                   @id @default(uuid())
+  matchId       String                   @map("match_id")
+  userId        String                   @map("user_id")
+  applicationId String?                  @unique @map("application_id")
+  role          V1MatchParticipantRole   @default(participant)
+  status        V1MatchParticipantStatus @default(active)
+  approvedAt    DateTime?                @map("approved_at")
+  cancelledAt   DateTime?                @map("cancelled_at")
+  completedAt   DateTime?                @map("completed_at")
+  createdAt     DateTime                 @default(now()) @map("created_at")
+  updatedAt     DateTime                 @updatedAt @map("updated_at")
+
+  match       V1Match             @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  user        V1User              @relation(fields: [userId], references: [id], onDelete: Restrict)
+  application V1MatchApplication? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+
+  @@unique([matchId, userId])
+  @@index([userId, status])
+  @@index([role, status])
+  @@map("v1_match_participants")
+}
+
+model V1Team {
+  id           String           @id @default(uuid())
+  ownerUserId  String           @map("owner_user_id")
+  sportId      String           @map("sport_id")
+  regionId     String           @map("region_id")
+  name         String
+  status       V1TeamStatus     @default(active)
+  joinPolicy   V1TeamJoinPolicy @default(approval_required) @map("join_policy")
+  memberCount  Int              @default(1) @map("member_count")
+  managerCount Int              @default(0) @map("manager_count")
+  createdAt    DateTime         @default(now()) @map("created_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
+  deletedAt    DateTime?        @map("deleted_at")
+
+  ownerUser             V1User                   @relation("V1TeamOwner", fields: [ownerUserId], references: [id], onDelete: Restrict)
+  sport                 V1Sport                  @relation(fields: [sportId], references: [id], onDelete: Restrict)
+  region                V1Region                 @relation(fields: [regionId], references: [id], onDelete: Restrict)
+  profile               V1TeamProfile?
+  memberships           V1TeamMembership[]
+  joinApplications      V1TeamJoinApplication[]
+  trustScore            V1TeamTrustScore?
+  hostedTeamMatches     V1TeamMatch[]            @relation("V1HostTeamMatches")
+  approvedTeamMatches   V1TeamMatch[]            @relation("V1ApprovedApplicantTeam")
+  teamMatchApplications V1TeamMatchApplication[] @relation("V1TeamMatchApplicantTeam")
+
+  @@index([ownerUserId])
+  @@index([sportId, regionId, status])
+  @@index([status])
+  @@index([createdAt])
+  @@map("v1_teams")
+}
+
+model V1TeamProfile {
+  id            String    @id @default(uuid())
+  teamId        String    @unique @map("team_id")
+  logoUrl       String?   @map("logo_url")
+  coverImageUrl String?   @map("cover_image_url")
+  description   String?
+  activityNote  String?   @map("activity_note")
+  skillNote     String?   @map("skill_note")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at")
+
+  team V1Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@map("v1_team_profiles")
+}
+
+model V1TeamMembership {
+  id              String                 @id @default(uuid())
+  teamId          String                 @map("team_id")
+  userId          String                 @map("user_id")
+  role            V1TeamMembershipRole   @default(member)
+  status          V1TeamMembershipStatus @default(active)
+  joinedAt        DateTime?              @map("joined_at")
+  leftAt          DateTime?              @map("left_at")
+  removedByUserId String?                @map("removed_by_user_id")
+  createdAt       DateTime               @default(now()) @map("created_at")
+  updatedAt       DateTime               @updatedAt @map("updated_at")
+
+  team          V1Team  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user          V1User  @relation("V1TeamMember", fields: [userId], references: [id], onDelete: Restrict)
+  removedByUser V1User? @relation("V1TeamMembershipRemover", fields: [removedByUserId], references: [id], onDelete: SetNull)
+
+  @@unique([teamId, userId])
+  @@index([userId, status])
+  @@index([teamId, role, status])
+  @@map("v1_team_memberships")
+}
+
+model V1TeamJoinApplication {
+  id               String                      @id @default(uuid())
+  teamId           String                      @map("team_id")
+  applicantUserId  String                      @map("applicant_user_id")
+  status           V1TeamJoinApplicationStatus @default(requested)
+  message          String?
+  reviewedByUserId String?                     @map("reviewed_by_user_id")
+  reviewedAt       DateTime?                   @map("reviewed_at")
+  withdrawnAt      DateTime?                   @map("withdrawn_at")
+  createdAt        DateTime                    @default(now()) @map("created_at")
+  updatedAt        DateTime                    @updatedAt @map("updated_at")
+
+  team           V1Team  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  applicantUser  V1User  @relation("V1TeamJoinApplicant", fields: [applicantUserId], references: [id], onDelete: Restrict)
+  reviewedByUser V1User? @relation("V1TeamJoinReviewer", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+
+  @@unique([teamId, applicantUserId])
+  @@index([applicantUserId, status])
+  @@index([status])
+  @@index([createdAt])
+  @@map("v1_team_join_applications")
+}
+
+model V1TeamTrustScore {
+  id           String       @id @default(uuid())
+  teamId       String       @unique @map("team_id")
+  trustState   V1TrustState @default(sample) @map("trust_state")
+  mannerScore  Decimal?     @map("manner_score") @db.Decimal(4, 2)
+  matchCount   Int          @default(0) @map("match_count")
+  sourceLabel  String?      @map("source_label")
+  calculatedAt DateTime?    @map("calculated_at")
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  team V1Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([trustState])
+  @@map("v1_team_trust_scores")
+}
+
+model V1TeamMatch {
+  id                      String            @id @default(uuid())
+  hostTeamId              String            @map("host_team_id")
+  createdByUserId         String            @map("created_by_user_id")
+  sportId                 String            @map("sport_id")
+  regionId                String            @map("region_id")
+  title                   String
+  description             String?
+  imageUrl                String?           @map("image_url")
+  placeName               String            @map("place_name")
+  placeAddress            String?           @map("place_address")
+  startAt                 DateTime          @map("start_at")
+  endAt                   DateTime?         @map("end_at")
+  formatNote              String?           @map("format_note")
+  genderRule              String?           @map("gender_rule")
+  costNote                String?           @map("cost_note")
+  status                  V1TeamMatchStatus @default(recruiting)
+  approvedApplicantTeamId String?           @map("approved_applicant_team_id")
+  cancelledAt             DateTime?         @map("cancelled_at")
+  completedAt             DateTime?         @map("completed_at")
+  createdAt               DateTime          @default(now()) @map("created_at")
+  updatedAt               DateTime          @updatedAt @map("updated_at")
+  deletedAt               DateTime?         @map("deleted_at")
+
+  hostTeam              V1Team                   @relation("V1HostTeamMatches", fields: [hostTeamId], references: [id], onDelete: Restrict)
+  createdByUser         V1User                   @relation("V1TeamMatchCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  sport                 V1Sport                  @relation(fields: [sportId], references: [id], onDelete: Restrict)
+  region                V1Region                 @relation(fields: [regionId], references: [id], onDelete: Restrict)
+  approvedApplicantTeam V1Team?                  @relation("V1ApprovedApplicantTeam", fields: [approvedApplicantTeamId], references: [id], onDelete: SetNull)
+  applications          V1TeamMatchApplication[]
+  chatRoom              V1ChatRoom?
+
+  @@index([hostTeamId])
+  @@index([createdByUserId])
+  @@index([sportId, regionId, status, startAt])
+  @@index([approvedApplicantTeamId])
+  @@index([status])
+  @@index([startAt])
+  @@index([createdAt])
+  @@map("v1_team_matches")
+}
+
+model V1TeamMatchApplication {
+  id               String                       @id @default(uuid())
+  teamMatchId      String                       @map("team_match_id")
+  applicantTeamId  String                       @map("applicant_team_id")
+  appliedByUserId  String                       @map("applied_by_user_id")
+  status           V1TeamMatchApplicationStatus @default(requested)
+  message          String?
+  reviewedByUserId String?                      @map("reviewed_by_user_id")
+  reviewedAt       DateTime?                    @map("reviewed_at")
+  withdrawnAt      DateTime?                    @map("withdrawn_at")
+  createdAt        DateTime                     @default(now()) @map("created_at")
+  updatedAt        DateTime                     @updatedAt @map("updated_at")
+
+  teamMatch      V1TeamMatch @relation(fields: [teamMatchId], references: [id], onDelete: Cascade)
+  applicantTeam  V1Team      @relation("V1TeamMatchApplicantTeam", fields: [applicantTeamId], references: [id], onDelete: Restrict)
+  appliedByUser  V1User      @relation("V1TeamMatchApplicantUser", fields: [appliedByUserId], references: [id], onDelete: Restrict)
+  reviewedByUser V1User?     @relation("V1TeamMatchReviewer", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+
+  @@unique([teamMatchId, applicantTeamId])
+  @@index([applicantTeamId, status])
+  @@index([appliedByUserId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("v1_team_match_applications")
+}
+
+model V1ChatRoom {
+  id            String           @id @default(uuid())
+  matchId       String?          @unique @map("match_id")
+  teamMatchId   String?          @unique @map("team_match_id")
+  status        V1ChatRoomStatus @default(active)
+  lastMessageAt DateTime?        @map("last_message_at")
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+
+  match        V1Match?                @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  teamMatch    V1TeamMatch?            @relation(fields: [teamMatchId], references: [id], onDelete: Cascade)
+  participants V1ChatRoomParticipant[]
+  messages     V1ChatMessage[]
+
+  @@index([status])
+  @@index([lastMessageAt])
+  @@index([createdAt])
+  @@map("v1_chat_rooms")
+}
+
+model V1ChatRoomParticipant {
+  id                String                  @id @default(uuid())
+  chatRoomId        String                  @map("chat_room_id")
+  userId            String                  @map("user_id")
+  status            V1ChatParticipantStatus @default(active)
+  pinnedAt          DateTime?               @map("pinned_at")
+  lastReadMessageId String?                 @map("last_read_message_id")
+  leftAt            DateTime?               @map("left_at")
+  createdAt         DateTime                @default(now()) @map("created_at")
+  updatedAt         DateTime                @updatedAt @map("updated_at")
+
+  chatRoom        V1ChatRoom     @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  user            V1User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+  lastReadMessage V1ChatMessage? @relation("V1LastReadMessage", fields: [lastReadMessageId], references: [id], onDelete: SetNull)
+
+  @@unique([chatRoomId, userId])
+  @@index([userId, status])
+  @@index([lastReadMessageId])
+  @@map("v1_chat_room_participants")
+}
+
+model V1ChatMessage {
+  id           String              @id @default(uuid())
+  chatRoomId   String              @map("chat_room_id")
+  senderUserId String              @map("sender_user_id")
+  body         String
+  status       V1ChatMessageStatus @default(sent)
+  sentAt       DateTime            @default(now()) @map("sent_at")
+  hiddenAt     DateTime?           @map("hidden_at")
+  deletedAt    DateTime?           @map("deleted_at")
+  createdAt    DateTime            @default(now()) @map("created_at")
+  updatedAt    DateTime            @updatedAt @map("updated_at")
+
+  chatRoom           V1ChatRoom              @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  senderUser         V1User                  @relation("V1ChatMessageSender", fields: [senderUserId], references: [id], onDelete: Restrict)
+  readByParticipants V1ChatRoomParticipant[] @relation("V1LastReadMessage")
+
+  @@index([chatRoomId, sentAt])
+  @@index([senderUserId])
+  @@index([status])
+  @@map("v1_chat_messages")
+}
+
+model V1Notification {
+  id              String                   @id @default(uuid())
+  recipientUserId String                   @map("recipient_user_id")
+  targetType      V1NotificationTargetType @map("target_type")
+  targetId        String?                  @map("target_id")
+  title           String
+  body            String?
+  deepLink        String?                  @map("deep_link")
+  readAt          DateTime?                @map("read_at")
+  createdAt       DateTime                 @default(now()) @map("created_at")
+  updatedAt       DateTime                 @updatedAt @map("updated_at")
+
+  recipientUser V1User @relation(fields: [recipientUserId], references: [id], onDelete: Cascade)
+
+  @@index([recipientUserId, readAt, createdAt])
+  @@index([targetType, targetId, createdAt])
+  @@map("v1_notifications")
+}
+
+model V1NotificationPreference {
+  id               String   @id @default(uuid())
+  userId           String   @unique @map("user_id")
+  importantEnabled Boolean  @default(true) @map("important_enabled")
+  activityEnabled  Boolean  @default(true) @map("activity_enabled")
+  marketingEnabled Boolean  @default(false) @map("marketing_enabled")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  user V1User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("v1_notification_preferences")
+}
+
+model V1AdminUser {
+  id                   String        @id @default(uuid())
+  userId               String        @unique @map("user_id")
+  adminRole            V1AdminRole   @map("admin_role")
+  status               V1AdminStatus @default(active)
+  grantedByAdminUserId String?       @map("granted_by_admin_user_id")
+  grantedAt            DateTime      @default(now()) @map("granted_at")
+  revokedAt            DateTime?     @map("revoked_at")
+  createdAt            DateTime      @default(now()) @map("created_at")
+  updatedAt            DateTime      @updatedAt @map("updated_at")
+
+  user               V1User              @relation("V1AdminUserAccount", fields: [userId], references: [id], onDelete: Cascade)
+  grantedByAdminUser V1User?             @relation("V1AdminGrantor", fields: [grantedByAdminUserId], references: [id], onDelete: SetNull)
+  actionLogs         V1AdminActionLog[]
+  statusLogs         V1StatusChangeLog[] @relation("V1StatusAdminActor")
+
+  @@index([adminRole, status])
+  @@index([grantedByAdminUserId])
+  @@map("v1_admin_users")
+}
+
+model V1AdminActionLog {
+  id          String   @id @default(uuid())
+  adminUserId String   @map("admin_user_id")
+  action      String
+  targetType  String   @map("target_type")
+  targetId    String   @map("target_id")
+  reason      String?
+  beforeJson  Json?    @map("before_json")
+  afterJson   Json?    @map("after_json")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  adminUser V1AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Restrict)
+
+  @@index([adminUserId, createdAt])
+  @@index([targetType, targetId, createdAt])
+  @@map("v1_admin_action_logs")
+}
+
+model V1StatusChangeLog {
+  id          String            @id @default(uuid())
+  targetType  String            @map("target_type")
+  targetId    String            @map("target_id")
+  fromStatus  String?           @map("from_status")
+  toStatus    String            @map("to_status")
+  actorType   V1StatusActorType @map("actor_type")
+  actorUserId String?           @map("actor_user_id")
+  adminUserId String?           @map("admin_user_id")
+  reason      String?
+  createdAt   DateTime          @default(now()) @map("created_at")
+
+  actorUser V1User?      @relation("V1StatusActorUser", fields: [actorUserId], references: [id], onDelete: SetNull)
+  adminUser V1AdminUser? @relation("V1StatusAdminActor", fields: [adminUserId], references: [id], onDelete: SetNull)
+
+  @@index([targetType, targetId, createdAt])
+  @@index([actorUserId])
+  @@index([adminUserId])
+  @@map("v1_status_change_logs")
+}

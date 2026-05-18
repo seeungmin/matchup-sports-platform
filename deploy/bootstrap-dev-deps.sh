@@ -25,4 +25,10 @@ sync_dir /opt/deps/apps/api/node_modules /app/apps/api/node_modules
 echo "[deps] syncing web node_modules"
 sync_dir /opt/deps/apps/web/node_modules /app/apps/web/node_modules
 
+echo "[deps] syncing v1_api node_modules"
+sync_dir /opt/deps/apps/v1_api/node_modules /app/apps/v1_api/node_modules
+
+echo "[deps] syncing v1_web node_modules"
+sync_dir /opt/deps/apps/v1_web/node_modules /app/apps/v1_web/node_modules
+
 echo "[deps] bootstrap complete"
