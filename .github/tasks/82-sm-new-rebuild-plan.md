@@ -1246,10 +1246,87 @@ Use this board as the live stage tracker.
 | 1. API freeze | Done | product/dev | `docs/reference/sm-new-api-v1-contract-checklist.md` |
 | 2. DB freeze | Done | backend/data | v1 state/permission/DB implementation docs closed |
 | 3. App scaffold + Prisma | Mostly Done | backend/data + frontend | full v1 Prisma model/seed/migration applied; fixture factories pending |
-| 4. Backend | Pending | backend | `apps/v1_api` `/api/v1/*` |
+| 4. Backend | Partial | backend | v1 domain routes implemented; integration/state/idempotency/docs still pending |
 | 5. Frontend contract | Pending | frontend/data | `apps/v1_web` hooks/types/MSW |
-| 6. Design binding | Pending | frontend/ui | `apps/v1_web` routes |
+| 6. Design binding | Partial | frontend/ui | route/design scaffold exists; real API hook binding pending |
 | 7. QA/cutover | Pending | QA/dev | scenario/E2E/visual report |
+
+### Current V1 Completion Map
+
+Last reviewed: 2026-05-18 after commit
+`ada655c feat: add v1 app baseline and API domains`.
+
+What is done:
+
+- V1 direction is fixed: new in-repo apps `apps/v1_api` and `apps/v1_web`,
+  isolated v1 DB, no direct replacement of existing `apps/api` or `apps/web`.
+- V1 data design is closed enough for implementation:
+  - Prisma schema, migrations, seed, and v1 Docker/runtime wiring exist.
+  - v1 tables use `v1_*` names and Prisma models use `V1*` names.
+- V1 API 1st-pass domain implementation exists for:
+  - health, master, notices
+  - auth and onboarding
+  - home and recommendations
+  - personal matches, create/edit/cancel, applications
+  - teams, memberships, join applications
+  - team matches, create/edit/cancel, applications
+  - linked chat
+  - notifications and notification preferences
+  - profile/settings/logout no-op/withdrawal request
+  - admin minimum/audit
+- V1 web has route/design scaffold for the first-complete design surfaces:
+  home, search, notices, matches, team matches, teams, my, notifications, and
+  chat.
+- V1 scenario matrix draft exists at
+  `docs/scenarios/12-v1-sm-new-e2e-scenarios.md`.
+- Latest verification:
+  - `pnpm --filter v1_api build` passed.
+  - `pnpm --filter v1_api test` passed with 13 suites and 74 tests.
+  - `pnpm --filter v1_web test` passed with 1 test.
+  - `pnpm --filter v1_web build` passed when run outside the sandbox.
+
+What is currently in progress:
+
+- Backend is in a "domain routes implemented, hardening pending" state.
+  Treat the API as ready for contract documentation and frontend hook handoff,
+  not as final release-complete.
+- Frontend is in a route/design scaffold state. Screens exist as v1 surfaces,
+  but the API contract layer and real data binding are not built yet.
+- Documentation is in transition:
+  reference docs and task status exist, but the implementation-facing
+  `docs/api/v1/**` contract has not been published.
+
+What remains for v1 completion:
+
+- Publish `docs/api/v1/**` from the frozen reference contract and current
+  controller/DTO/service evidence.
+- Build the v1 frontend contract layer before screen binding:
+  `apps/v1_web/src/types/api.ts`, API client, domain hooks, query keys, and
+  MSW handlers.
+- Bind v1 web screens to hooks and remove primary hardcoded/mock data from
+  production-candidate journeys.
+- Add v1 API fixture factories and integration/state-machine tests for the
+  stateful domains.
+- Centralize common API helpers where service logic is now repeated:
+  pagination, error codes, permission checks, and idempotency/conflict handling.
+- Run live smoke against `make dev-v1` for API and web:
+  `localhost:8121/api/v1/*` and `localhost:3013` core routes.
+- Convert the scenario matrix into Playwright specs after route/hook binding is
+  stable.
+- Verify deferred honesty for payment/support and minimum admin copy: no fake
+  payment, refund, support, or admin success states.
+- Produce the cutover review only after API docs, frontend binding, integration
+  tests, live smoke, and scenario/E2E evidence are in place.
+
+Recommended near-term sequence:
+
+1. `docs/api/v1/**` publication.
+2. v1 frontend `types/api.ts` + API client + hooks/query keys/MSW.
+3. Bind core screens to hooks: home, notices, matches, teams, team matches,
+   notifications, chat, my/profile.
+4. Add fixture factories and integration tests for matches/teams/team matches.
+5. Add live `make dev-v1` smoke checklist and execute it.
+6. Start Playwright specs from the v1 scenario matrix.
 
 ### Wave 0 -- Contract Freeze
 
@@ -1570,11 +1647,73 @@ full v1 feature development begins.
   `pnpm --filter v1_api test` passed with 13 suites and 74 tests.
 - [x] Docker v1 DB migration/seed was verified from the user's terminal.
 - [x] User confirmed v1 health/master/notice endpoints render correctly after seed.
-- [ ] V1 domain API implementation is in progress; payment/support are still
-  deferred and frontend contract handoff is still pending.
+- [ ] V1 domain API implementation is partially complete: main v1 API domains
+  are implemented, while integration/state/idempotency coverage and
+  `docs/api/v1/**` publication are still pending. Payment/support remain
+  deferred by scope.
 - [ ] V1 frontend contract/hooks/MSW are pending.
 - [ ] V1 design screen binding is pending.
 - [ ] Scenario/E2E/visual/cutover report is pending.
+
+## 12.1 Post-Commit Inspection -- 2026-05-18
+
+Baseline commit:
+
+```text
+ada655c feat: add v1 app baseline and API domains
+```
+
+Inspection result:
+
+- [x] Worktree was clean immediately after the baseline commit.
+- [x] `apps/v1_api` contains the v1 Nest app, Prisma schema, migrations, seed,
+  common envelope/filter scaffold, auth guards, and implemented controllers for
+  health, master, notices, auth, onboarding, home, matches, teams, team matches,
+  chat, notifications, profile, and admin minimum/audit.
+- [x] `apps/v1_web` contains the v1 Next app scaffold and route/design
+  surfaces for home, search, notices, matches, team matches, teams, my,
+  notifications, and chat.
+- [x] `docs/scenarios/12-v1-sm-new-e2e-scenarios.md` exists as the v1 E2E
+  scenario matrix draft and is linked from `docs/scenarios/index.md`.
+- [x] `pnpm --filter v1_api build` passed.
+- [x] `pnpm --filter v1_api test` passed with 13 suites and 74 tests.
+- [x] `pnpm --filter v1_web test` passed with 1 test.
+- [x] `pnpm --filter v1_web build` passed when run outside the sandbox after
+  sandboxed Turbopack failed on process/port binding during CSS processing.
+
+Important gaps found during inspection:
+
+- [ ] `docs/api/v1/**` has not been published yet; only the reference checklist
+  and planning documents are present.
+- [ ] `apps/v1_web/src/hooks` and `apps/v1_web/src/types` are still empty, so
+  frontend contract hooks, shared API types, query keys, and MSW handlers remain
+  the next blocking layer.
+- [ ] `apps/v1_api/test` does not exist yet. Current v1 API tests are
+  controller/unit tests under `src/**/*.spec.ts`, not integration/state-machine
+  tests.
+- [ ] Fixture factories for integration tests are not implemented.
+- [ ] Common API layer is still incomplete beyond the current envelope/filter
+  scaffold: pagination helpers, standard error codes, permission helpers, and
+  idempotency helpers still need to be centralized.
+- [ ] Full live smoke for `localhost:8121/api/v1/*` and v1 web route smoke on
+  `localhost:3013` has not been rerun after the baseline commit.
+- [ ] Payment/support remain intentionally deferred; frontend copy must still
+  prevent fake payment/refund/support success states.
+
+Recommended next execution order:
+
+1. Publish `docs/api/v1/**` from the frozen reference contract and current
+   controller/DTO evidence.
+2. Add v1 frontend contract layer: `types/api.ts`, API client, domain hooks,
+   query keys, and MSW fixtures.
+3. Add v1 API fixture factories and integration/state-machine tests for
+   matches, teams, team matches, chat/notifications, profile, and admin audit.
+4. Centralize pagination/error/permission/idempotency helpers where repeated
+   service logic now exists.
+5. Run live v1 smoke against `make dev-v1`: health, master/notices,
+   auth/onboarding, each domain list/detail/mutation, and v1 web core routes.
+6. Convert the scenario matrix into Playwright specs after route/hook binding is
+   stable.
 
 ## 13. Ambiguity Log
 
