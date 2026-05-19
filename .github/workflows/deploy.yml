@@ -76,9 +76,6 @@ jobs:
       - name: Generate Prisma client
         run: cd apps/api && pnpm prisma generate
 
-      - name: Generate V1 Prisma client
-        run: cd apps/v1_api && pnpm prisma generate
-
       - name: Lint (all packages)
         run: pnpm lint
 
@@ -93,17 +90,6 @@ jobs:
         run: |
           pnpm --filter api test & pid1=$!
           pnpm --filter web test & pid2=$!
-          pnpm --filter v1_api test & pid3=$!
-          pnpm --filter v1_web test & pid4=$!
-          wait $pid1 || exit 1
-          wait $pid2 || exit 1
-          wait $pid3 || exit 1
-          wait $pid4 || exit 1
-
-      - name: V1 build checks (parallel)
-        run: |
-          pnpm --filter v1_api build & pid1=$!
-          pnpm --filter v1_web build & pid2=$!
           wait $pid1 || exit 1
           wait $pid2 || exit 1
 
@@ -112,6 +98,23 @@ jobs:
 
       - name: Integration tests
         run: pnpm --filter api test:integration
+
+      - name: Generate V1 Prisma client
+        run: cd apps/v1_api && pnpm prisma generate
+
+      - name: V1 unit tests (parallel)
+        run: |
+          pnpm --filter v1_api test & pid1=$!
+          pnpm --filter v1_web test & pid2=$!
+          wait $pid1 || exit 1
+          wait $pid2 || exit 1
+
+      - name: V1 build checks (parallel)
+        run: |
+          pnpm --filter v1_api build & pid1=$!
+          pnpm --filter v1_web build & pid2=$!
+          wait $pid1 || exit 1
+          wait $pid2 || exit 1
 
   # ── Deploy job: runs on push to main or manual dispatch, after tests pass ──
   deploy:
