@@ -129,9 +129,16 @@ sudo docker build \
   --build-arg NEXT_PUBLIC_TOSS_CLIENT_KEY="${TOSS_CLIENT_KEY:-}" \
   --build-arg INTERNAL_API_ORIGIN="${INTERNAL_API_ORIGIN:-http://api:8100}" \
   -t teameet-web .
+sudo docker build -f deploy/Dockerfile.v1-api -t teameet-v1-api .
+sudo docker build \
+  -f deploy/Dockerfile.v1-web \
+  --build-arg NEXT_PUBLIC_API_URL=/v1/api/v1 \
+  --build-arg INTERNAL_API_ORIGIN="${V1_INTERNAL_API_ORIGIN:-http://v1_api:8121}" \
+  --build-arg NEXT_PUBLIC_BASE_PATH=/v1 \
+  -t teameet-v1-web .
 
 cd deploy
-$COMPOSE -f docker-compose.prod.yml up -d postgres redis
+$COMPOSE -f docker-compose.prod.yml up -d postgres redis v1_postgres
 
 # 8. DB 초기화 대기
 echo "⏳ DB 초기화 대기 중..."
@@ -149,7 +156,20 @@ done
 
 # 9. DB bootstrap / migrate deploy
 echo "🗄️ DB bootstrap 적용..."
+for i in $(seq 1 30); do
+  if $COMPOSE -f docker-compose.prod.yml exec -T v1_postgres pg_isready -U "${V1_DB_USER:-teameet_v1}" -d "${V1_DB_NAME:-teameet_v1}" >/dev/null 2>&1; then
+    echo "v1_postgres ready"
+    break
+  fi
+  if [ "$i" -eq 30 ]; then
+    echo "v1_postgres did not become ready in time"
+    exit 1
+  fi
+  sleep 2
+done
+
 $COMPOSE -f docker-compose.prod.yml run --rm --no-deps -T api npx ts-node prisma/bootstrap-deploy-db.ts
+$COMPOSE -f docker-compose.prod.yml run --rm --no-deps -T v1_api sh -c "cd /app/apps/v1_api && ./node_modules/.bin/prisma migrate deploy"
 
 # 10. 전체 스택 시작
 echo "🚀 애플리케이션 스택 시작..."
@@ -187,6 +207,8 @@ echo ""
 echo "🏥 헬스체크..."
 sleep 3
 if curl -fsS http://localhost:8100/api/v1/health | jq -e '.data.checks.db == true and .data.checks.redis == true' > /dev/null 2>&1 && \
+   curl -fsS http://localhost:8121/api/v1/health | jq -e '.data.checks.db == true' > /dev/null 2>&1 && \
+   curl -fsS http://localhost/v1/landing > /dev/null 2>&1 && \
    curl -fsSI http://localhost/api/v1/health | grep -qE '^HTTP/[0-9.]+ 301'; then
   echo "✅ API 서버 정상"
 else

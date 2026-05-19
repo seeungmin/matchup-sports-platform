@@ -13,12 +13,12 @@ else
   COMPOSE="sudo docker-compose"
 fi
 
-echo "[INFO] Stopping api, web, nginx containers..."
-${COMPOSE} -f docker-compose.prod.yml --env-file .env stop api web nginx 2>/dev/null || true
-${COMPOSE} -f docker-compose.prod.yml --env-file .env rm -f api web nginx 2>/dev/null || true
+echo "[INFO] Stopping api, web, v1_api, v1_web, nginx containers..."
+${COMPOSE} -f docker-compose.prod.yml --env-file .env stop api web v1_api v1_web nginx 2>/dev/null || true
+${COMPOSE} -f docker-compose.prod.yml --env-file .env rm -f api web v1_api v1_web nginx 2>/dev/null || true
 
-echo "[INFO] Ensuring postgres and redis are running..."
-${COMPOSE} -f docker-compose.prod.yml --env-file .env up -d postgres redis
+echo "[INFO] Ensuring postgres, v1_postgres and redis are running..."
+${COMPOSE} -f docker-compose.prod.yml --env-file .env up -d postgres redis v1_postgres
 
 echo "[INFO] Waiting for postgres healthy..."
 for i in $(seq 1 30); do
@@ -33,11 +33,25 @@ for i in $(seq 1 30); do
   sleep 2
 done
 
-echo "[INFO] Recreating api, web, nginx only (keeping postgres/redis running)..."
+echo "[INFO] Waiting for v1_postgres healthy..."
+for i in $(seq 1 30); do
+  if sudo docker exec teameet_v1_postgres pg_isready -U "${V1_DB_USER:-teameet_v1}" -d "${V1_DB_NAME:-teameet_v1}" >/dev/null 2>&1; then
+    echo "[INFO] v1_postgres ready (attempt $i)"
+    break
+  fi
+  if [ "$i" -eq 30 ]; then
+    echo "[ERROR] v1_postgres not ready after 60s"
+    exit 1
+  fi
+  sleep 2
+done
+
+echo "[INFO] Recreating api, v1_api, web, v1_web, nginx only (keeping postgres/redis running)..."
 ${COMPOSE} -f docker-compose.prod.yml --env-file .env up -d --force-recreate --no-deps api
-echo "[INFO] Waiting for API to be ready before starting web..."
+${COMPOSE} -f docker-compose.prod.yml --env-file .env up -d --force-recreate --no-deps v1_api
+echo "[INFO] Waiting for APIs to be ready before starting web..."
 sleep 5
-${COMPOSE} -f docker-compose.prod.yml --env-file .env up -d --force-recreate --no-deps web nginx
+${COMPOSE} -f docker-compose.prod.yml --env-file .env up -d --force-recreate --no-deps web v1_web nginx
 
 echo "[INFO] Waiting for teameet_api health..."
 for i in $(seq 1 45); do
@@ -59,6 +73,21 @@ for i in $(seq 1 45); do
   sleep 2
 done
 
+echo "[INFO] Waiting for teameet_v1_api health..."
+for i in $(seq 1 45); do
+  if curl -fsS http://localhost:8121/api/v1/health | \
+      jq -e '.data.checks.db == true' >/dev/null 2>&1; then
+    echo "[INFO] teameet_v1_api is healthy (attempt $i)"
+    break
+  fi
+  if [ "$i" -eq 45 ]; then
+    echo "[ERROR] teameet_v1_api failed health check after 90s"
+    sudo docker ps -a --filter name=teameet_v1_api --format 'table {{.Status}}\t{{.Ports}}' || true
+    sudo docker logs teameet_v1_api --tail 60 2>&1 || true
+  fi
+  sleep 2
+done
+
 echo "[INFO] Waiting for teameet_web routing..."
 for i in $(seq 1 45); do
   if curl -fsS http://localhost:3000/api/v1/health >/dev/null 2>&1 && \
@@ -69,6 +98,19 @@ for i in $(seq 1 45); do
   if [ "$i" -eq 45 ]; then
     echo "[ERROR] teameet_web failed routing check"
     sudo docker logs teameet_web --tail 60 2>&1 || true
+  fi
+  sleep 2
+done
+
+echo "[INFO] Waiting for teameet_v1_web routing..."
+for i in $(seq 1 45); do
+  if curl -fsS http://localhost:3013/v1/landing >/dev/null 2>&1; then
+    echo "[INFO] teameet_v1_web routing is healthy (attempt $i)"
+    break
+  fi
+  if [ "$i" -eq 45 ]; then
+    echo "[ERROR] teameet_v1_web failed routing check"
+    sudo docker logs teameet_v1_web --tail 60 2>&1 || true
   fi
   sleep 2
 done

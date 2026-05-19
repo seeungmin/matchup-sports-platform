@@ -76,6 +76,9 @@ jobs:
       - name: Generate Prisma client
         run: cd apps/api && pnpm prisma generate
 
+      - name: Generate V1 Prisma client
+        run: cd apps/v1_api && pnpm prisma generate
+
       - name: Lint (all packages)
         run: pnpm lint
 
@@ -90,6 +93,17 @@ jobs:
         run: |
           pnpm --filter api test & pid1=$!
           pnpm --filter web test & pid2=$!
+          pnpm --filter v1_api test & pid3=$!
+          pnpm --filter v1_web test & pid4=$!
+          wait $pid1 || exit 1
+          wait $pid2 || exit 1
+          wait $pid3 || exit 1
+          wait $pid4 || exit 1
+
+      - name: V1 build checks (parallel)
+        run: |
+          pnpm --filter v1_api build & pid1=$!
+          pnpm --filter v1_web build & pid2=$!
           wait $pid1 || exit 1
           wait $pid2 || exit 1
 
@@ -133,7 +147,7 @@ jobs:
             ./ ec2-user@${{ secrets.EC2_HOST }}:~/teameet/
 
       - name: Build and deploy
-        timeout-minutes: 20
+        timeout-minutes: 35
         env:
           RESET_DB: ${{ inputs.reset_db }}
           RUN_SEED: ${{ inputs.run_seed }}
@@ -237,6 +251,7 @@ jobs:
           done
 
           WEB_INTERNAL_API_ORIGIN="${INTERNAL_API_ORIGIN:-http://api:8100}"
+          V1_WEB_INTERNAL_API_ORIGIN="${V1_INTERNAL_API_ORIGIN:-http://v1_api:8121}"
 
           # ── Pre-build disk cleanup ────────────────────────────────────────
           # Prevent ERR_PNPM_ENOSPC during the docker build step by evicting
@@ -261,6 +276,13 @@ jobs:
             --build-arg NEXT_PUBLIC_TOSS_CLIENT_KEY="${TOSS_CLIENT_KEY:-}" \
             --build-arg INTERNAL_API_ORIGIN="${WEB_INTERNAL_API_ORIGIN}" \
             -t teameet-web .
+          sudo docker build --no-cache -f deploy/Dockerfile.v1-api -t teameet-v1-api .
+          sudo docker build --no-cache \
+            -f deploy/Dockerfile.v1-web \
+            --build-arg NEXT_PUBLIC_API_URL=/v1/api/v1 \
+            --build-arg INTERNAL_API_ORIGIN="${V1_WEB_INTERNAL_API_ORIGIN}" \
+            --build-arg NEXT_PUBLIC_BASE_PATH=/v1 \
+            -t teameet-v1-web .
 
           cd deploy
 
@@ -268,7 +290,7 @@ jobs:
           # network prune above may have removed the deploy_default network.
           # Start DB services first so the migration container can reach them.
           echo "[INFO] Starting database services..."
-          ${COMPOSE} -f docker-compose.prod.yml --env-file .env up -d postgres redis
+          ${COMPOSE} -f docker-compose.prod.yml --env-file .env up -d postgres redis v1_postgres
 
           echo "[INFO] Waiting for postgres to be healthy..."
           for i in $(seq 1 30); do
@@ -291,14 +313,31 @@ jobs:
           # the existing migrations as applied. Non-empty databases still use
           # migrate deploy, and a non-empty DB without migration history fails
           # closed instead of auto-resolving unknown drift.
+          echo "[INFO] Waiting for v1_postgres to be healthy..."
+          for i in $(seq 1 30); do
+            if ${COMPOSE} -f docker-compose.prod.yml --env-file .env exec -T v1_postgres \
+                pg_isready -U "${V1_DB_USER:-teameet_v1}" -d "${V1_DB_NAME:-teameet_v1}" >/dev/null 2>&1; then
+              echo "[INFO] v1_postgres is ready (attempt $i)"
+              break
+            fi
+            if [ "$i" -eq 30 ]; then
+              echo "[ERROR] v1_postgres did not become healthy in time"
+              exit 1
+            fi
+            sleep 2
+          done
+
           echo "[INFO] Bootstrapping deploy database..."
           ${COMPOSE} -f docker-compose.prod.yml --env-file .env \
             run --rm --no-deps -T api sh -c "cd /app/apps/api && ./node_modules/.bin/ts-node prisma/bootstrap-deploy-db.ts"
+          echo "[INFO] Applying v1 deploy database migrations..."
+          ${COMPOSE} -f docker-compose.prod.yml --env-file .env \
+            run --rm --no-deps -T v1_api sh -c "cd /app/apps/v1_api && ./node_modules/.bin/prisma migrate deploy"
           echo "[INFO] Build phase complete."
           EOF
 
       - name: Restart containers
-        timeout-minutes: 10
+        timeout-minutes: 15
         run: |
           ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=20 ec2 \
             "RESET_DB='${{ inputs.reset_db }}' RUN_SEED='${{ inputs.run_seed }}' bash ~/teameet/deploy/restart-containers.sh"
@@ -308,7 +347,12 @@ jobs:
           for i in $(seq 1 12); do
             if ssh ec2 'curl -fsS http://localhost:8100/api/v1/health | \
                         jq -e ".data.checks.db == true and .data.checks.redis == true" > /dev/null 2>&1 && \
+                        curl -fsS http://localhost:8121/api/v1/health | \
+                        jq -e ".data.checks.db == true" > /dev/null 2>&1 && \
                         curl -fsS http://localhost/landing > /dev/null 2>&1 && \
+                        curl -fsS http://localhost/v1/landing > /dev/null 2>&1 && \
+                        curl -fsSI http://localhost/v1/api/v1/health | \
+                        grep -qE "^HTTP/[0-9.]+ 301" && \
                         curl -fsSI http://localhost/api/v1/health | \
                         grep -qE "^HTTP/[0-9.]+ 301"'; then
               echo "Deploy OK"

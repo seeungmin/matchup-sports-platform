@@ -44,6 +44,32 @@ services:
         limits:
           memory: 256M
 
+  v1_postgres:
+    image: postgres:16-alpine
+    container_name: teameet_v1_postgres
+    restart: always
+    command: >
+      postgres
+      -c shared_buffers=128MB
+      -c effective_cache_size=384MB
+      -c max_connections=100
+      -c work_mem=4MB
+    environment:
+      POSTGRES_USER: ${V1_DB_USER:-teameet_v1}
+      POSTGRES_PASSWORD: ${V1_DB_PASSWORD:-${DB_PASSWORD}}
+      POSTGRES_DB: ${V1_DB_NAME:-teameet_v1}
+    volumes:
+      - v1_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${V1_DB_USER:-teameet_v1} -d ${V1_DB_NAME:-teameet_v1}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
   api:
     image: teameet-api:latest
     container_name: teameet_api
@@ -122,6 +148,70 @@ services:
         limits:
           memory: 512M
 
+  v1_api:
+    image: teameet-v1-api:latest
+    container_name: teameet_v1_api
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://${V1_DB_USER:-teameet_v1}:${V1_DB_PASSWORD:-${DB_PASSWORD}}@v1_postgres:5432/${V1_DB_NAME:-teameet_v1}
+      JWT_SECRET: ${V1_JWT_SECRET:-${JWT_SECRET}}
+      API_PORT: 8121
+      NODE_ENV: production
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:8121/api/v1/health').then(async (res) => { if (!res.ok) throw new Error('v1 api health ' + res.status); const json = await res.json(); if (!json?.data?.checks?.db) throw new Error('v1 api health degraded'); }).catch(() => process.exit(1));",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    depends_on:
+      v1_postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8121:8121"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  v1_web:
+    image: teameet-v1-web:latest
+    container_name: teameet_v1_web
+    restart: always
+    environment:
+      NEXT_PUBLIC_API_URL: /v1/api/v1
+      NEXT_PUBLIC_BASE_PATH: /v1
+      INTERNAL_API_ORIGIN: ${V1_INTERNAL_API_ORIGIN:-http://v1_api:8121}
+      HOSTNAME: 0.0.0.0
+      PORT: 3013
+      NODE_ENV: production
+    depends_on:
+      v1_api:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3013/v1/landing').then((res) => { if (!res.ok) throw new Error('v1 web health ' + res.status); }).catch(() => process.exit(1));",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    ports:
+      - "127.0.0.1:3013:3013"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
   nginx:
     image: nginx:alpine
     container_name: teameet_nginx
@@ -138,7 +228,12 @@ services:
         condition: service_healthy
       api:
         condition: service_healthy
+      v1_web:
+        condition: service_healthy
+      v1_api:
+        condition: service_healthy
 
 volumes:
   postgres_data:
+  v1_postgres_data:
   uploads_data:

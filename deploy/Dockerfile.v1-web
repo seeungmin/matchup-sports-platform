@@ -1,0 +1,33 @@
+FROM node:22-alpine AS builder
+WORKDIR /app
+RUN npm install -g pnpm@9.15.4
+
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY apps/v1_web/package.json apps/v1_web/
+RUN pnpm install --frozen-lockfile
+
+COPY apps/v1_web/ apps/v1_web/
+
+ARG NEXT_PUBLIC_API_URL=/v1/api/v1
+ARG INTERNAL_API_ORIGIN=http://v1_api:8121
+ARG NEXT_PUBLIC_BASE_PATH=/v1
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ENV INTERNAL_API_ORIGIN=${INTERNAL_API_ORIGIN}
+ENV NEXT_PUBLIC_BASE_PATH=${NEXT_PUBLIC_BASE_PATH}
+ENV NODE_ENV=production
+
+WORKDIR /app/apps/v1_web
+RUN npx next build
+
+FROM node:22-alpine
+WORKDIR /app
+
+COPY --from=builder /app/apps/v1_web/.next/standalone ./
+COPY --from=builder /app/apps/v1_web/.next/static ./apps/v1_web/.next/static
+COPY --from=builder /app/apps/v1_web/public ./apps/v1_web/public
+
+ENV NODE_ENV=production
+ENV PORT=3013
+ENV HOSTNAME=0.0.0.0
+EXPOSE 3013
+CMD ["node", "apps/v1_web/server.js"]
