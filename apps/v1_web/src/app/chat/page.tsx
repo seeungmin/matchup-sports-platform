@@ -1,5 +1,6 @@
-import { FirstDesignPage } from '@/components/design/first-design-page';
+import { ChatListPageView } from '@/components/community/community-page';
+import { getChatListViewModel } from '@/components/community/community.view-model';
 
 export default function ChatPage() {
-  return <FirstDesignPage screen="chatList" />;
+  return <ChatListPageView model={getChatListViewModel()} />;
 }

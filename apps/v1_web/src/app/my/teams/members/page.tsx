@@ -1,5 +1,6 @@
-import { FirstDesignPage } from '@/components/design/first-design-page';
+import { MyTeamMembersPageView } from '@/components/my/my-page';
+import { myTeamMembersModel } from '@/components/my/my.view-model';
 
 export default function MyTeamMembersPage() {
-  return <FirstDesignPage screen="myTeamMembers" />;
+  return <MyTeamMembersPageView model={myTeamMembersModel} />;
 }

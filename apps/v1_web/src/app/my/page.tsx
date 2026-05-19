@@ -1,5 +1,6 @@
-import { FirstDesignPage } from '@/components/design/first-design-page';
+import { MyHomePageView } from '@/components/my/my-page';
+import { myHomeModel } from '@/components/my/my.view-model';
 
 export default function MyPage() {
-  return <FirstDesignPage screen="my" />;
+  return <MyHomePageView model={myHomeModel} />;
 }

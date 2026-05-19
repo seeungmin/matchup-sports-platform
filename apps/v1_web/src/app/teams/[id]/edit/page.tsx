@@ -1,5 +1,6 @@
-import { FirstDesignPage } from '@/components/design/first-design-page';
+import { TeamFormPageView } from '@/components/teams/teams-page';
+import { getTeamFormViewModel } from '@/components/teams/teams.view-model';
 
 export default function TeamEditPage() {
-  return <FirstDesignPage screen="teamBrowseDetail" />;
+  return <TeamFormPageView model={getTeamFormViewModel('edit')} />;
 }

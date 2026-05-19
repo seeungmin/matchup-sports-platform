@@ -1,5 +1,6 @@
-import { FirstDesignPage } from '@/components/design/first-design-page';
+import { MatchCreatePageView } from '@/components/matches/matches-page';
+import { getMatchCreateViewModel } from '@/components/matches/matches.view-model';
 
 export default function MatchCreateCompletePage() {
-  return <FirstDesignPage screen="matchCreateComplete" />;
+  return <MatchCreatePageView model={getMatchCreateViewModel('complete')} />;
 }

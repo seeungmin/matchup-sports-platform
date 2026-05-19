@@ -1,5 +1,6 @@
-import { FirstDesignPage } from '@/components/design/first-design-page';
+import { ProfileEditPageView } from '@/components/my/my-page';
+import { profileEditModel } from '@/components/my/my.view-model';
 
 export default function MyProfileEditPage() {
-  return <FirstDesignPage screen="profile" />;
+  return <ProfileEditPageView model={profileEditModel} />;
 }

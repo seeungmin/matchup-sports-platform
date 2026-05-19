@@ -1,5 +1,6 @@
-import { FirstDesignPage } from '@/components/design/first-design-page';
+import { LegalPageView } from '@/components/my/my-page';
+import { settingsModel } from '@/components/my/my.view-model';
 
 export default function MyLegalSettingsPage() {
-  return <FirstDesignPage screen="profilePrivate" />;
+  return <LegalPageView model={settingsModel} />;
 }

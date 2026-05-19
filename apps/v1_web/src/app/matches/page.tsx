@@ -1,5 +1,6 @@
-import { FirstDesignPage } from '@/components/design/first-design-page';
+import { MatchListPageView } from '@/components/matches/matches-page';
+import { getMatchListViewModel } from '@/components/matches/matches.view-model';
 
 export default function MatchesPage() {
-  return <FirstDesignPage screen="matchList" />;
+  return <MatchListPageView model={getMatchListViewModel()} />;
 }

@@ -1,5 +1,6 @@
-import { FirstDesignPage } from '@/components/design/first-design-page';
+import { TeamMatchListPageView } from '@/components/team-matches/team-matches-page';
+import { getTeamMatchListViewModel } from '@/components/team-matches/team-matches.view-model';
 
 export default function TeamMatchesPage() {
-  return <FirstDesignPage screen="teamMatchList" />;
+  return <TeamMatchListPageView model={getTeamMatchListViewModel()} />;
 }

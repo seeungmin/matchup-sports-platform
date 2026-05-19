@@ -1,0 +1,110 @@
+import type { HomeMatchCard, HomeViewModel } from './home.types';
+
+const matches: HomeMatchCard[] = [
+  {
+    id: 'match-1',
+    sport: 'soccer',
+    sportLabel: '축구',
+    title: '주말 축구 한 판, 같이 뛰어요',
+    venue: '상암월드컵경기장 보조구장',
+    date: '5월 3일 (토)',
+    time: '14:00',
+    currentParticipants: 18,
+    maxParticipants: 22,
+    fee: 12000,
+    imageUrl: '/mock/generated/team-huddle.webp',
+  },
+  {
+    id: 'match-2',
+    sport: 'futsal',
+    sportLabel: '풋살',
+    title: '수요일 저녁 풋살 매치',
+    venue: '이태원 풋살파크 A코트',
+    date: '5월 7일 (수)',
+    time: '20:30',
+    currentParticipants: 9,
+    maxParticipants: 10,
+    fee: 8000,
+    imageUrl: '/mock/generated/futsal-rooftop.webp',
+  },
+  {
+    id: 'match-3',
+    sport: 'basketball',
+    sportLabel: '농구',
+    title: '3on3 하프코트 농구',
+    venue: '강남농구장 2번코트',
+    date: '5월 4일 (일)',
+    time: '10:00',
+    currentParticipants: 5,
+    maxParticipants: 6,
+    fee: 5000,
+    imageUrl: '/mock/generated/basketball-hardwood.webp',
+  },
+  {
+    id: 'match-4',
+    sport: 'badminton',
+    sportLabel: '배드민턴',
+    title: '복식 배드민턴 정기모임',
+    venue: '서초체육관',
+    date: '5월 6일 (화)',
+    time: '19:00',
+    currentParticipants: 7,
+    maxParticipants: 8,
+    fee: 6000,
+    imageUrl: '/mock/generated/badminton-club.webp',
+  },
+  {
+    id: 'match-5',
+    sport: 'ice_hockey',
+    sportLabel: '아이스하키',
+    title: '아이스하키 친선경기',
+    venue: '목동 아이스링크',
+    date: '5월 10일 (토)',
+    time: '21:00',
+    currentParticipants: 12,
+    maxParticipants: 20,
+    fee: 18000,
+    imageUrl: '/mock/generated/ice-hockey-arena.webp',
+  },
+];
+
+export function getHomeViewModel(): HomeViewModel {
+  const sortedMatches = [...matches].sort(
+    (a, b) => b.currentParticipants / b.maxParticipants - a.currentParticipants / a.maxParticipants,
+  );
+
+  return {
+    viewerName: '정민',
+    signedOut: false,
+    network: false,
+    hasNewNotification: true,
+    stats: {
+      monthlyActivity: 12,
+      monthlyActivitySub: '지난달보다 +3',
+      mannerScore: '4.9',
+      mannerScoreSub: '상위 8%',
+      joined: 8,
+      mvp: 2,
+      paid: '86,000',
+    },
+    featuredMatch: sortedMatches[0],
+    recommendedMatches: matches,
+    quickActions: [
+      { label: '매치', sub: '03', color: 'var(--blue500)', background: 'var(--blue50)' },
+      { label: '팀매치', sub: '04', color: 'var(--orange500)', background: 'var(--orange50)' },
+      { label: '팀', sub: '05', color: 'var(--green500)', background: 'var(--green50)' },
+      { label: '나의 팀', sub: '미정', color: 'var(--grey500)', background: 'var(--grey100)', disabled: true },
+    ],
+    weather: {
+      city: '마포',
+      temp: 18,
+      cond: '맑음',
+      wind: 2,
+    },
+    notices: [
+      { id: 'notice-1', title: '이번 주 고정 공지', summary: '주말 경기장 혼잡 시간과 체크인 안내', trailing: '오늘' },
+      { id: 'notice-2', title: '매너 점수 업데이트', summary: '경기 후 리뷰 반영 기준 안내', trailing: '어제' },
+      { id: 'notice-3', title: '비 예보 경기 안내', summary: '우천 시 취소/환불 기준 확인', trailing: '5월 2일' },
+    ],
+  };
+}

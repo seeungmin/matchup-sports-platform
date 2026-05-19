@@ -43,25 +43,30 @@ One design section does not always equal one route.
 
 ## Design Section Map
 
+Important: `No` below is the original design number shown in `Team Design >
+1차 디자인 완료`. Do not renumber `02-1`, `03-1`, or `04-1` as ordinary
+sequential product sections; those suffixes are part of the source design
+inventory and must stay visible in publishing work.
+
 | No | Design section | Required product page(s) | Current route evidence | Port status | Exception/state handling |
-|---:|---|---|---|---|---|
-| 1 | `core-shell-sm-final` | shared shell, top bar, bottom nav, search entry, notification entry | `components/design/first-design-page.tsx`, `components/design/design-frame.tsx` | Imported | First-complete design shell is active on v1 routes. Product shell replacement comes after visual import review. |
-| 2 | `auth-onboarding-sm-final` | login, terms, signup, onboarding sport/level/region/confirm/resume | `/login`, `/signup`, `/terms`, `/onboarding/*` | Imported | Provider denied, email missing, conflict, blocked, incomplete resume, validation failure are available in design-source and need route exposure if QA requires separate URLs. |
-| 3 | `home-discovery-sm-final` | `/home`, search entry, recommendations, quick actions, home notices | `/home`, `/search`, `/search/new`, `/search/empty`, `/search/error`, `/search/stale` | Imported | Search states are exposed through fixture routes where available. |
-| 4 | `home-notice-sm-final` | `/notices`, `/notices/[id]` | routes exist | Imported | Notices are read-only. |
-| 5 | `matches-core-sm-final` | `/matches`, `/matches/[id]`, `/matches/participants`, joined/created management entry | routes exist: list/detail/empty/error/filter/joined/participants | Imported | Empty/error/filter are separate fixture routes for first visual review. |
-| 6 | `matches-core-sm-create-final` | `/matches/new/*`, `/matches/[id]/edit`, create complete | routes exist for sport, place-time, confirm, complete, edit | Imported | Required-field, invalid time, permission, duplicate submit, save failure, cancel guard remain productization states. |
-| 7 | `teams-team-matches-sm-revision-4` | `/team-matches`, `/team-matches/[id]`, application/manage states | routes exist: list/detail/empty/error/filter | Imported | Empty/error/filter are separate fixture routes for first visual review. |
-| 8 | `teams-team-matches-sm-create-final` | `/team-matches/new/*`, `/team-matches/[id]/edit`, complete | routes exist for team, sport, info, place-time, confirm, complete, edit | Imported | Team owner/manager and cost note product behavior remains for API binding. |
-| 9 | `team-browse-sm-revision-5` | `/teams`, `/teams/[id]`, `/teams/new`, `/teams/[id]/edit`, `/teams/[id]/members` | routes exist: list/detail/filter/search states/new/edit/members | Imported | Search/filter empty/error are separate fixture routes for first visual review. |
-| 10 | `community-sm-final` | `/chat`, `/chat/[id]`, `/notifications`, notification read state | routes exist | Imported | V1 chat is linked match/team-match text chat only; product constraints remain for binding. |
-| 11 | `my-profile-trust-sm-revision` | `/my`, `/my/matches/joined`, `/my/matches/created`, `/my/teams`, `/my/teams/[id]`, `/my/teams/[id]/members`, profile/trust sections | core my/team management plus `/my/profile/edit` | Imported | Profile/settings routes use closest exported profile/trust designs until a dedicated settings design is chosen. |
-| 12 | `payments-support-sm-revision` | disabled/read-only payment/support surfaces only if visible | no dedicated v1 payment/support route expected | Deferred | Must not show fake payment/refund/support success. Match/team-match CTA maps to application request, not checkout. |
-| 13 | `settings-states` | settings main, notification settings, legal, logout, withdrawal | `/my/settings`, `/my/settings/notifications`, `/my/settings/legal`, `/my/settings/withdrawal` | Closest imported | Dedicated settings export is not present; current routes use profile/trust/notification designs as placeholders. |
-| 14 | `public-marketing-sm-revision` | landing/public entry route if launch needs it | `/landing`; `/` still redirects to `/home` | Imported | Root remains app-first until launch routing is decided. |
-| 15 | `desktop-web` | responsive desktop treatment for core pages | no desktop-specific implementation confirmed | Pending | Implement after mobile core pages are stable. Same APIs, wider layout. Keyboard/focus state must be covered. |
-| 16 | `admin-ops-sm-revision` | admin minimum dashboard/status/audit pages | `/admin`, `/admin/audit` | Imported | API exists for admin minimum. Non-minimum admin actions remain blocked/deferred. |
-| 17 | `common-flows-motion` | shared list/detail/form/mutation states across all domains | scattered state routes exist | Pending | Loading, empty, error, retry, stale, duplicate submit, permission denied, destructive confirm, optimistic navigation must become shared UI patterns. |
+|---|---|---|---|---|---|
+| 00 | `core-shell-sm-final` | shared shell, top bar, bottom nav, search entry, notification entry | `components/design/first-design-page.tsx`, `components/design/design-frame.tsx` | Imported | First-complete design shell is active on v1 routes. Product shell replacement comes after visual import review. |
+| 01 | `auth-onboarding-sm-final` | login, terms, signup, onboarding sport/level/region/confirm/resume | `/login`, `/signup`, `/terms`, `/onboarding/*` | Imported | Provider denied, email missing, conflict, blocked, incomplete resume, validation failure are available in design-source and need route exposure if QA requires separate URLs. |
+| 02 | `home-discovery-sm-final` | `/home`, search entry, recommendations, quick actions, home notices | `/home`, `/search`, `/search/new`, `/search/empty`, `/search/error`, `/search/stale` | Imported | Search states are exposed through fixture routes where available. |
+| 02-1 | `home-notice-sm-final` | `/notices`, `/notices/[id]` | routes exist | Imported | Notices are read-only. |
+| 03 | `matches-core-sm-final` | `/matches`, `/matches/[id]`, `/matches/participants`, joined/created management entry | routes exist: list/detail/empty/error/filter/joined/participants | Imported | Empty/error/filter are separate fixture routes for first visual review. |
+| 03-1 | `matches-core-sm-create-final` | `/matches/new/*`, `/matches/[id]/edit`, create complete | routes exist for sport, place-time, confirm, complete, edit | Imported | Required-field, invalid time, permission, duplicate submit, save failure, cancel guard remain productization states. |
+| 04 | `teams-team-matches-sm-revision-4` | `/team-matches`, `/team-matches/[id]`, application/manage states | routes exist: list/detail/empty/error/filter | Imported | Empty/error/filter are separate fixture routes for first visual review. |
+| 04-1 | `teams-team-matches-sm-create-final` | `/team-matches/new/*`, `/team-matches/[id]/edit`, complete | routes exist for team, sport, info, condition, place-time, confirm, complete, edit | Imported | Team owner/manager and cost note product behavior remains for API binding. |
+| 05 | `team-browse-sm-revision-5` | `/teams`, `/teams/[id]`, `/teams/new`, `/teams/[id]/edit`, `/teams/[id]/members` | routes exist: list/detail/filter/search states/new/edit/members | Componentized core | Search/filter empty/error remain separate fixture routes for visual QA until folded into API-bound page states. |
+| 06 | `community-sm-final` | `/chat`, `/chat/[id]`, `/notifications`, notification read state | routes exist | Componentized core | V1 chat is linked match/team-match/team text chat only; websocket/backfill/read mutation behavior remains for API binding. |
+| 07 | `my-profile-trust-sm-revision` | `/my`, `/my/matches/joined`, `/my/matches/created`, `/my/teams`, `/my/teams/[id]`, `/my/teams/[id]/members`, profile/trust sections | core my/team management plus `/my/profile/edit` | Componentized core | Profile/settings routes now use API-bindable my components; deeper trust/review history states remain future API-bound variants. |
+| 08 | `payments-support-sm-revision` | disabled/read-only payment/support surfaces only if visible | no dedicated v1 payment/support route expected | Deferred | Must not show fake payment/refund/support success. Match/team-match CTA maps to application request, not checkout. |
+| 09 | `settings-states` | settings main, notification settings, legal, logout, withdrawal | `/my/settings`, `/my/settings/notifications`, `/my/settings/legal`, `/my/settings/withdrawal` | Closest imported | Dedicated settings export is not present; current routes use profile/trust/notification designs as placeholders. |
+| 10 | `public-marketing-sm-revision` | landing/public entry route if launch needs it | `/landing`; `/` still redirects to `/home` | Imported | Root remains app-first until launch routing is decided. |
+| 11 | `desktop-web` | responsive desktop treatment for core pages | no desktop-specific implementation confirmed | Pending | Implement after mobile core pages are stable. Same APIs, wider layout. Keyboard/focus state must be covered. |
+| 12 | `admin-ops-sm-revision` | admin minimum dashboard/status/audit pages | `/admin`, `/admin/audit` | Imported | API exists for admin minimum. Non-minimum admin actions remain blocked/deferred. |
+| 13 | `common-flows-motion` | shared list/detail/form/mutation states across all domains | scattered state routes exist | Pending | Loading, empty, error, retry, stale, duplicate submit, permission denied, destructive confirm, optimistic navigation must become shared UI patterns. |
 
 ## Existing Route Coverage Snapshot
 
@@ -74,7 +79,7 @@ Covered as route scaffold:
 - `/search`, `/search/new`, `/search/empty`, `/search/error`, `/search/stale`
 - `/notices`, `/notices/[id]`
 - `/matches`, `/matches/[id]`, `/matches/[id]/edit`, `/matches/empty`, `/matches/error`, `/matches/filter`, `/matches/joined`, `/matches/participants`, `/matches/new/*`
-- `/team-matches`, `/team-matches/[id]`, `/team-matches/[id]/edit`, `/team-matches/empty`, `/team-matches/error`, `/team-matches/filter`, `/team-matches/new/*`
+- `/team-matches`, `/team-matches/[id]`, `/team-matches/[id]/edit`, `/team-matches/empty`, `/team-matches/error`, `/team-matches/filter`, `/team-matches/new/*` including `/team-matches/new/condition`
 - `/teams`, `/teams/[id]`, `/teams/[id]/edit`, `/teams/[id]/members`, `/teams/filter`, `/teams/new`, `/teams/search/*`
 - `/my`, `/my/matches/*`, `/my/teams/*`
 - `/my/profile/edit`, `/my/settings`, `/my/settings/notifications`, `/my/settings/legal`, `/my/settings/withdrawal`
@@ -93,6 +98,8 @@ Missing or unclear:
 ### Phase 1 -- Frontend Design Inventory Freeze
 
 - [x] Create this design port map.
+- [x] Restore the original `Team Design > 1차 디자인 완료` numbering
+  (`00`, `02-1`, `03-1`, `04-1`) in the publishing inventory.
 - [ ] Add a per-route checklist under this document after inspecting every existing page.
 - [ ] Decide whether state fixture routes remain public dev routes or move behind a QA-only convention.
 
@@ -102,6 +109,39 @@ Missing or unclear:
 - [x] Add `FirstDesignPage` wrapper.
 - [x] Route the v1 pages to first-complete design components through `DesignFrame`.
 - [ ] Review closest-placeholder routes for settings/team create/profile edit/admin audit.
+- [x] Start the componentized publishing path with `/home`: the route now uses
+  `page -> view-model -> HomePageView -> v1-ui shell/primitives` instead of
+  rendering `design-source` directly.
+- [x] Continue the componentized publishing path with core `03 / 03-1` personal
+  match routes: `/matches`, `/matches/[id]`, `/matches/new/*`, and
+  `/matches/[id]/edit` now use `matches.types -> matches.view-model ->
+  matches-page` instead of rendering `design-source` directly. State fixture
+  routes such as `/matches/empty`, `/matches/error`, `/matches/filter`,
+  `/matches/joined`, and `/matches/participants` remain as visual QA fixtures
+  until their API-bound state variants are folded into the shared match view.
+- [x] Continue the componentized publishing path with core `04 / 04-1` team
+  match routes: `/team-matches`, `/team-matches/[id]`,
+  `/team-matches/new/*`, and `/team-matches/[id]/edit` now use
+  `team-matches.types -> team-matches.view-model -> team-matches-page`
+  instead of rendering `design-source` directly. Added the missing
+  `/team-matches/new/condition` route so the create flow keeps the source
+  design's six-step structure. State fixture routes such as
+  `/team-matches/empty`, `/team-matches/error`, and `/team-matches/filter`
+  remain as visual QA fixtures until folded into API-bound page states.
+- [x] Continue the componentized publishing path with core `05` team browse
+  routes: `/teams`, `/teams/[id]`, `/teams/new`, `/teams/[id]/edit`, and
+  `/teams/[id]/members` now use `teams.types -> teams.view-model ->
+  teams-page` instead of rendering `design-source` directly. Search/filter
+  state routes remain as visual QA fixtures for now.
+- [x] Continue the componentized publishing path with core `06` community
+  routes: `/chat`, `/chat/[id]`, `/notifications`, and
+  `/notifications/read` now use `community.types -> community.view-model ->
+  community-page` instead of rendering `design-source` directly.
+- [x] Continue the componentized publishing path with core `07` my/profile
+  routes: `/my`, `/my/matches/joined`, `/my/matches/created`, `/my/teams`,
+  `/my/teams/[id]`, `/my/teams/[id]/members`, `/my/profile/edit`, and
+  `/my/settings/*` now use `my.types -> my.view-model -> my-page`
+  instead of rendering `design-source` directly.
 
 ### Phase 3 -- Mobile Core Pages
 
@@ -154,6 +194,78 @@ Missing or unclear:
 - [x] Add missing auth/onboarding/settings/profile/admin/public route scaffolds.
 - [x] Add first-pass v1 frontend contract layer: API types, client, query keys, hooks, and MSW fixtures/handlers.
 - [x] Repoint active v1 routes to first-complete design components before productization.
+- [x] Corrected the design map so publishing work follows source design numbers
+  instead of sequential scenario numbering.
+- [x] Added the first API-bindable publishing slice for `02 home`: shared
+  `v1-ui` shell/primitives, `HomePageView`, and `home.view-model`.
+- [x] Added the API-bindable publishing slices for `03 / 03-1 matches` and
+  `04 / 04-1 team-matches`, preserving source design numbering and fixed
+  shell behavior while moving active routes to componentized page views.
+- [x] Added the API-bindable publishing slice for `05 teams`, including
+  browse cards, detail CTA, create/edit form scaffold, and member management.
+- [x] Added the API-bindable publishing slice for `06 community`, including
+  chat category counts, pinned/unread room rows, chat context card, fixed
+  message input, unread notifications, and all-read notification state.
+- [x] Added the API-bindable publishing slice for `07 my/profile`, including
+  profile summary, monthly activity, joined/created match lists, my team
+  management, member review, profile edit, settings, legal, notification
+  settings, and withdrawal warning surfaces.
+
+## Detail Pass Handoff
+
+Current checkpoint: the active v1 frontend has moved from "show the first
+design as exported source" to "publish the same first design through
+API-bindable components." The next work should be detail correction, not broad
+new surface expansion.
+
+Completed componentized slices:
+
+1. `00` shared shell
+   - Top bar and bottom nav are fixed chrome.
+   - Only the content area scrolls.
+   - Shared `v1-ui` shell/primitives/icons are now the baseline for active
+     componentized routes.
+2. `02` home
+   - `/home` uses `HomePageView + home.view-model + v1-ui`.
+3. `03 / 03-1` personal matches
+   - `/matches`, `/matches/[id]`, `/matches/new/*`, and
+     `/matches/[id]/edit` use componentized match views.
+4. `04 / 04-1` team matches
+   - `/team-matches`, `/team-matches/[id]`, `/team-matches/new/*`, and
+     `/team-matches/[id]/edit` use componentized team-match views.
+   - Missing `/team-matches/new/condition` was added to preserve the source
+     design create-step structure.
+5. `05` teams
+   - Team browse, detail, create/edit, and member management use
+     componentized team views.
+6. `06` community
+   - Chat list, chat room, notification list, and read-state notification
+     routes use componentized community views.
+7. `07` my/profile/settings baseline
+   - My home, joined/created matches, my teams, team management, member
+     management, profile edit, settings, notification settings, legal, and
+     withdrawal warning routes use componentized my views.
+
+Deferred:
+
+- `08 payments-support-sm-revision` is intentionally deferred. Do not implement
+  fake payment, refund, dispute, or support success states. When resumed, this
+  slice must keep test/mock payment honesty visible through the full flow and
+  show disabled/read-only or pending states unless real API contracts are ready.
+- `09 settings-states` is partially covered by the `07` settings baseline.
+  Treat the remaining `09` work as detailed state coverage rather than a new
+  top-level page build.
+
+Next detail-pass order:
+
+1. Compare each componentized route against the `Team Design > 1차 디자인 완료`
+   source and correct spacing, font weight, radius, fixed chrome behavior, and
+   sticky/fixed CTA placement.
+2. Fold state variants into the owning component where practical: empty, error,
+   pending, disabled, complete, permission, duplicate submit, and stale states.
+3. Verify route flow continuity: home -> list -> detail -> create/edit -> my.
+4. Before API binding, reshape view-model fields to match the intended DTO and
+   hook contracts so page components can stay mostly unchanged.
 
 ## Ambiguity Log
 

@@ -3,6 +3,10 @@
 이 문서는 `Team Design > 1차 디자인 완료`의 17개 섹션을 기준으로 v1 E2E 시나리오를 정의한다.
 각 시나리오는 화면 흐름, API 계약, DB 상태 전이를 함께 검증하는 단위다.
 
+Scenario heading numbers and IDs preserve the source design numbers from
+`Team Design.html`, including `00`, `02-1`, `03-1`, and `04-1`, so publishing
+work can be checked directly against the design inventory.
+
 ## Sources
 
 - Design baseline: `docs/reference/handoff-sm-new-direction/sports-platform/project/Teameet Design.html`
@@ -37,7 +41,31 @@
 - Every admin mutation validates `v1_admin_action_logs` plus target `v1_status_change_logs`.
 - Payment/refund/dispute, marketplace, lessons, venue owner/operator, tournament, DM, permanent team chat, and file attachment are not v1 core E2E success flows.
 
+## Source Design Inventory
+
+| Design No | Design section | Scenario group |
+|---|---|---|
+| 00 | `core-shell-sm-final` | `V1-00-*` Core Shell |
+| 01 | `auth-onboarding-sm-final` | `V1-01-*` Auth And Onboarding |
+| 02 | `home-discovery-sm-final` | `V1-02-*` Home Discovery |
+| 02-1 | `home-notice-sm-final` | `V1-02-1-*` Notice |
+| 03 | `matches-core-sm-final` | `V1-03-*` Personal Match Browse And Join |
+| 03-1 | `matches-core-sm-create-final` | `V1-03-1-*` Personal Match Create And Edit |
+| 04 | `teams-team-matches-sm-revision-4` | `V1-04-*` Team Match Browse And Apply |
+| 04-1 | `teams-team-matches-sm-create-final` | `V1-04-1-*` Team Match Create And Edit |
+| 05 | `team-browse-sm-revision-5` | `V1-05-*` Team Browse And Join |
+| 06 | `community-sm-final` | `V1-06-*` Community, Chat, Notifications |
+| 07 | `my-profile-trust-sm-revision` | `V1-07-*` My, Profile, Trust |
+| 08 | `payments-support-sm-revision` | `V1-08-*` Payment And Support Deferred Surfaces |
+| 09 | `settings-states` | `V1-09-*` Settings |
+| 10 | `public-marketing-sm-revision` | `V1-10-*` Public Marketing |
+| 11 | `desktop-web` | `V1-11-*` Desktop Web |
+| 12 | `admin-ops-sm-revision` | `V1-12-*` Admin Operations |
+| 13 | `common-flows-motion` | `V1-13-*` Common Flows And Motion |
+
 ## 00. Core Shell
+
+Source design no: `00`
 
 Design section: `core-shell-sm-final`
 
@@ -57,6 +85,8 @@ DB evidence:
 | V1-00-006 | Sticky CTA double click protection | One mutation request wins; duplicate click shows locked/pending UI |
 
 ## 01. Auth And Onboarding
+
+Source design no: `01`
 
 Design section: `auth-onboarding-sm-final`
 
@@ -83,6 +113,8 @@ DB evidence:
 
 ## 02. Home Discovery
 
+Source design no: `02`
+
 Design section: `home-discovery-sm-final`
 
 Primary contracts:
@@ -101,7 +133,9 @@ DB evidence:
 | V1-02-005 | Unified search latest-query-wins | Slow old response does not overwrite newer query results |
 | V1-02-006 | Search group result routing | Match/team-match/team result rows route to correct detail pages |
 
-## 03. Notice
+## 02-1. Notice
+
+Source design no: `02-1`
 
 Design section: `home-notice-sm-final`
 
@@ -113,11 +147,13 @@ DB evidence:
 
 | ID | Scenario | Expected E2E assertion |
 |---|---|---|
-| V1-03-001 | Notice list cursor pagination | Published notices render; draft/archived notices do not |
-| V1-03-002 | Notice detail access | Public notice opens for guest; users-only notice requires auth |
-| V1-03-003 | Notice has no read-state side effect | Opening detail does not create notification/read rows |
+| V1-02-1-001 | Notice list cursor pagination | Published notices render; draft/archived notices do not |
+| V1-02-1-002 | Notice detail access | Public notice opens for guest; users-only notice requires auth |
+| V1-02-1-003 | Notice has no read-state side effect | Opening detail does not create notification/read rows |
 
-## 04. Personal Match Browse And Join
+## 03. Personal Match Browse And Join
+
+Source design no: `03`
 
 Design section: `matches-core-sm-final`
 
@@ -135,16 +171,18 @@ DB evidence:
 
 | ID | Scenario | Expected E2E assertion |
 |---|---|---|
-| V1-04-001 | Match list filter/search/sort | URL or draft filter state preserves selected query after reload |
-| V1-04-002 | Match detail CTA states | Own match, already requested, approved, full, closed, cancelled, and guest states lock CTA correctly |
-| V1-04-003 | Apply to match | Application row becomes `requested`; CTA changes to pending without payment copy |
-| V1-04-004 | Withdraw application | Application becomes `withdrawn`; duplicate withdraw converges or returns processed conflict |
-| V1-04-005 | Host approves applicant | Application approved, participant active, capacity updates, status log exists |
-| V1-04-006 | Host rejects applicant | Application rejected, no participant row created, applicant sees rejected state |
-| V1-04-007 | Host cancels approval | Participant removed, application history preserved |
-| V1-04-008 | Participant cancellation handling | Host marks participant cancelled; participant no longer counted as active |
+| V1-03-001 | Match list filter/search/sort | URL or draft filter state preserves selected query after reload |
+| V1-03-002 | Match detail CTA states | Own match, already requested, approved, full, closed, cancelled, and guest states lock CTA correctly |
+| V1-03-003 | Apply to match | Application row becomes `requested`; CTA changes to pending without payment copy |
+| V1-03-004 | Withdraw application | Application becomes `withdrawn`; duplicate withdraw converges or returns processed conflict |
+| V1-03-005 | Host approves applicant | Application approved, participant active, capacity updates, status log exists |
+| V1-03-006 | Host rejects applicant | Application rejected, no participant row created, applicant sees rejected state |
+| V1-03-007 | Host cancels approval | Participant removed, application history preserved |
+| V1-03-008 | Participant cancellation handling | Host marks participant cancelled; participant no longer counted as active |
 
-## 05. Personal Match Create And Edit
+## 03-1. Personal Match Create And Edit
+
+Source design no: `03-1`
 
 Design section: `matches-core-sm-create-final`
 
@@ -156,14 +194,16 @@ DB evidence:
 
 | ID | Scenario | Expected E2E assertion |
 |---|---|---|
-| V1-05-001 | Create match stepper happy path | Sport/info/place/time/confirm create recruiting match and host participant |
-| V1-05-002 | Create validation | Missing sport/title/time/capacity and invalid end-before-start block submit |
-| V1-05-003 | Image field behavior | One representative image URL is saved or upload-disabled UI stays honest |
-| V1-05-004 | Edit prefill and save | Host sees current fields; save updates DB and detail after reload |
-| V1-05-005 | Edit permission denied | Non-host cannot open edit or receives permission recovery UI |
-| V1-05-006 | Cancel match | Host cancel changes status, logs transition, locks future applications |
+| V1-03-1-001 | Create match stepper happy path | Sport/info/place/time/confirm create recruiting match and host participant |
+| V1-03-1-002 | Create validation | Missing sport/title/time/capacity and invalid end-before-start block submit |
+| V1-03-1-003 | Image field behavior | One representative image URL is saved or upload-disabled UI stays honest |
+| V1-03-1-004 | Edit prefill and save | Host sees current fields; save updates DB and detail after reload |
+| V1-03-1-005 | Edit permission denied | Non-host cannot open edit or receives permission recovery UI |
+| V1-03-1-006 | Cancel match | Host cancel changes status, logs transition, locks future applications |
 
-## 06. Team Match Browse And Apply
+## 04. Team Match Browse And Apply
+
+Source design no: `04`
 
 Design section: `teams-team-matches-sm-revision-4`
 
@@ -182,14 +222,16 @@ DB evidence:
 
 | ID | Scenario | Expected E2E assertion |
 |---|---|---|
-| V1-06-001 | Team match list filter/search/sort | Team match list preserves context and excludes cancelled/archived entries as contracted |
-| V1-06-002 | Team match detail eligibility | User sees eligible applicant teams only when owner/manager |
-| V1-06-003 | Apply with managed team | Application becomes `requested`; host team cannot apply to itself |
-| V1-06-004 | Withdraw team match application | Applicant team owner/manager can withdraw; member cannot |
-| V1-06-005 | Approve applicant team | Application approved, team match becomes `matched`, only one approved team remains |
-| V1-06-006 | Reject applicant team | Application rejected, team match remains recruiting if no approved team |
+| V1-04-001 | Team match list filter/search/sort | Team match list preserves context and excludes cancelled/archived entries as contracted |
+| V1-04-002 | Team match detail eligibility | User sees eligible applicant teams only when owner/manager |
+| V1-04-003 | Apply with managed team | Application becomes `requested`; host team cannot apply to itself |
+| V1-04-004 | Withdraw team match application | Applicant team owner/manager can withdraw; member cannot |
+| V1-04-005 | Approve applicant team | Application approved, team match becomes `matched`, only one approved team remains |
+| V1-04-006 | Reject applicant team | Application rejected, team match remains recruiting if no approved team |
 
-## 07. Team Match Create And Edit
+## 04-1. Team Match Create And Edit
+
+Source design no: `04-1`
 
 Design section: `teams-team-matches-sm-create-final`
 
@@ -202,13 +244,15 @@ DB evidence:
 
 | ID | Scenario | Expected E2E assertion |
 |---|---|---|
-| V1-07-001 | Create team match as owner/manager | Selected host team creates recruiting team match |
-| V1-07-002 | Create permission guard | Regular member or non-member cannot choose team or submit |
-| V1-07-003 | Cost/free invitation fields | No payment API is called; cost note is text-only |
-| V1-07-004 | Edit team match | Owner/manager sees prefilled form and persisted update |
-| V1-07-005 | Cancel team match | Status changes to cancelled and pending applications lock |
+| V1-04-1-001 | Create team match as owner/manager | Selected host team creates recruiting team match |
+| V1-04-1-002 | Create permission guard | Regular member or non-member cannot choose team or submit |
+| V1-04-1-003 | Cost/free invitation fields | No payment API is called; cost note is text-only |
+| V1-04-1-004 | Edit team match | Owner/manager sees prefilled form and persisted update |
+| V1-04-1-005 | Cancel team match | Status changes to cancelled and pending applications lock |
 
-## 08. Team Browse And Join
+## 05. Team Browse And Join
+
+Source design no: `05`
 
 Design section: `team-browse-sm-revision-5`
 
@@ -229,15 +273,17 @@ DB evidence:
 
 | ID | Scenario | Expected E2E assertion |
 |---|---|---|
-| V1-08-001 | Team browse filter/search | List filters by sport/region/trust and keeps context after reload |
-| V1-08-002 | Team detail join eligibility | Approval-required team allows request; closed team shows disabled copy |
-| V1-08-003 | Submit team join request | Application row becomes `requested`; open instant join is never shown |
-| V1-08-004 | Withdraw team join request | Applicant can withdraw and detail CTA resets correctly |
-| V1-08-005 | Owner/manager approve join | Application approved, membership active, member count updates |
-| V1-08-006 | Owner/manager reject join | Application rejected and user remains non-member |
-| V1-08-007 | Team member management | Owner changes role, manager limit is enforced, member removal persists |
+| V1-05-001 | Team browse filter/search | List filters by sport/region/trust and keeps context after reload |
+| V1-05-002 | Team detail join eligibility | Approval-required team allows request; closed team shows disabled copy |
+| V1-05-003 | Submit team join request | Application row becomes `requested`; open instant join is never shown |
+| V1-05-004 | Withdraw team join request | Applicant can withdraw and detail CTA resets correctly |
+| V1-05-005 | Owner/manager approve join | Application approved, membership active, member count updates |
+| V1-05-006 | Owner/manager reject join | Application rejected and user remains non-member |
+| V1-05-007 | Team member management | Owner changes role, manager limit is enforced, member removal persists |
 
-## 09. Community, Chat, Notifications
+## 06. Community, Chat, Notifications
+
+Source design no: `06`
 
 Design section: `community-sm-final`
 
@@ -254,15 +300,17 @@ DB evidence:
 
 | ID | Scenario | Expected E2E assertion |
 |---|---|---|
-| V1-09-001 | Chat list shows linked rooms only | Match/team-match rooms appear; DM/team permanent room entry is absent or disabled |
-| V1-09-002 | Resolve linked chat room | Eligible participant resolves or creates one room; unauthorized user is denied |
-| V1-09-003 | Send text message | Message persists, latest room preview updates, duplicate idempotency handled |
-| V1-09-004 | Pin/unpin and leave room | Participant state persists after reload; leaving hides room or marks left |
-| V1-09-005 | Notification list and deep link | Row read state updates and explicit navigation reaches target route |
-| V1-09-006 | Mark all read | All unread rows get `read_at`; duplicate call remains successful |
-| V1-09-007 | Notification preferences | Toggle save persists and reload hydrates server state |
+| V1-06-001 | Chat list shows linked rooms only | Match/team-match rooms appear; DM/team permanent room entry is absent or disabled |
+| V1-06-002 | Resolve linked chat room | Eligible participant resolves or creates one room; unauthorized user is denied |
+| V1-06-003 | Send text message | Message persists, latest room preview updates, duplicate idempotency handled |
+| V1-06-004 | Pin/unpin and leave room | Participant state persists after reload; leaving hides room or marks left |
+| V1-06-005 | Notification list and deep link | Row read state updates and explicit navigation reaches target route |
+| V1-06-006 | Mark all read | All unread rows get `read_at`; duplicate call remains successful |
+| V1-06-007 | Notification preferences | Toggle save persists and reload hydrates server state |
 
-## 10. My, Profile, Trust
+## 07. My, Profile, Trust
+
+Source design no: `07`
 
 Design section: `my-profile-trust-sm-revision`
 
@@ -278,16 +326,18 @@ DB evidence:
 
 | ID | Scenario | Expected E2E assertion |
 |---|---|---|
-| V1-10-001 | My page summary | Profile, reputation, activity links, and trust state render from API |
-| V1-10-002 | Edit profile | Nickname/bio/avatar visibility validation and persistence after reload |
-| V1-10-003 | Public profile trust labels | verified/estimated/sample/none are visually distinct and not misleading |
-| V1-10-004 | My matches joined/created | Toggle uses correct API role and opens correct manage/detail route |
-| V1-10-005 | Created match manage from My | Applicant approval/rejection works from My route and reflects in detail |
-| V1-10-006 | My team matches manage | Applicant team profile opens; approve/reject updates team match status |
-| V1-10-007 | My teams by role | Owner/manager/member roles render and member manage entry is role-gated |
-| V1-10-008 | Deferred permanent team chat | Team chat entry is disabled/read-only unless linked chat is available |
+| V1-07-001 | My page summary | Profile, reputation, activity links, and trust state render from API |
+| V1-07-002 | Edit profile | Nickname/bio/avatar visibility validation and persistence after reload |
+| V1-07-003 | Public profile trust labels | verified/estimated/sample/none are visually distinct and not misleading |
+| V1-07-004 | My matches joined/created | Toggle uses correct API role and opens correct manage/detail route |
+| V1-07-005 | Created match manage from My | Applicant approval/rejection works from My route and reflects in detail |
+| V1-07-006 | My team matches manage | Applicant team profile opens; approve/reject updates team match status |
+| V1-07-007 | My teams by role | Owner/manager/member roles render and member manage entry is role-gated |
+| V1-07-008 | Deferred permanent team chat | Team chat entry is disabled/read-only unless linked chat is available |
 
-## 11. Payment And Support Deferred Surfaces
+## 08. Payment And Support Deferred Surfaces
+
+Source design no: `08`
 
 Design section: `payments-support-sm-revision`
 
@@ -299,11 +349,13 @@ No v1 payment/refund/dispute tables.
 
 | ID | Scenario | Expected E2E assertion |
 |---|---|---|
-| V1-11-001 | Match/team-match CTA does not imply real payment | CTA copy maps to application request, not checkout |
-| V1-11-002 | Payment history/detail route if visible | Surface is disabled/read-only/test-only and makes no payment API call |
-| V1-11-003 | Refund/support action if visible | Action is blocked with deferred copy and no fake success state |
+| V1-08-001 | Match/team-match CTA does not imply real payment | CTA copy maps to application request, not checkout |
+| V1-08-002 | Payment history/detail route if visible | Surface is disabled/read-only/test-only and makes no payment API call |
+| V1-08-003 | Refund/support action if visible | Action is blocked with deferred copy and no fake success state |
 
-## 12. Settings
+## 09. Settings
+
+Source design no: `09`
 
 Design section: `settings-states`
 
@@ -318,14 +370,16 @@ DB evidence:
 
 | ID | Scenario | Expected E2E assertion |
 |---|---|---|
-| V1-12-001 | Settings hydrate | Account, profile visibility, notification prefs, legal links render from API |
-| V1-12-002 | Save settings | Visibility and preference changes persist after reload |
-| V1-12-003 | Legal document view | Terms/privacy current versions are readable from shared terms API |
-| V1-12-004 | Logout | Session clears and protected routes show auth wall/login |
-| V1-12-005 | Withdrawal request | Account becomes `withdrawal_pending`, status log exists, app shows recovery/hard-stop copy |
-| V1-12-006 | Unsupported email/password changes | If UI exists, it is disabled or clearly deferred |
+| V1-09-001 | Settings hydrate | Account, profile visibility, notification prefs, legal links render from API |
+| V1-09-002 | Save settings | Visibility and preference changes persist after reload |
+| V1-09-003 | Legal document view | Terms/privacy current versions are readable from shared terms API |
+| V1-09-004 | Logout | Session clears and protected routes show auth wall/login |
+| V1-09-005 | Withdrawal request | Account becomes `withdrawal_pending`, status log exists, app shows recovery/hard-stop copy |
+| V1-09-006 | Unsupported email/password changes | If UI exists, it is disabled or clearly deferred |
 
-## 13. Public Marketing
+## 10. Public Marketing
+
+Source design no: `10`
 
 Design section: `public-marketing-sm-revision`
 
@@ -337,11 +391,13 @@ Public domain read tables only.
 
 | ID | Scenario | Expected E2E assertion |
 |---|---|---|
-| V1-13-001 | Landing start flow | Start CTA routes to login/signup without requiring old app routes |
-| V1-13-002 | Public entry cards | Public match/team/team-match previews use public APIs or explicit sample labels |
-| V1-13-003 | Public stats honesty | Sample/derived stats are labelled and not shown as verified operational truth |
+| V1-10-001 | Landing start flow | Start CTA routes to login/signup without requiring old app routes |
+| V1-10-002 | Public entry cards | Public match/team/team-match previews use public APIs or explicit sample labels |
+| V1-10-003 | Public stats honesty | Sample/derived stats are labelled and not shown as verified operational truth |
 
-## 14. Desktop Web
+## 11. Desktop Web
+
+Source design no: `11`
 
 Design section: `desktop-web`
 
@@ -353,12 +409,14 @@ Same as active domain.
 
 | ID | Scenario | Expected E2E assertion |
 |---|---|---|
-| V1-14-001 | Desktop shell responsive layout | Nav/search/filter affordances work without mobile-only overlap |
-| V1-14-002 | Desktop match search | Wider filter layout calls same `GET /matches` contract |
-| V1-14-003 | Desktop keyboard flow | Enter submits search, Escape closes sheets/dialogs, focus remains visible |
-| V1-14-004 | Desktop detail/manage parity | Desktop detail exposes the same CTA states and permission locks as mobile |
+| V1-11-001 | Desktop shell responsive layout | Nav/search/filter affordances work without mobile-only overlap |
+| V1-11-002 | Desktop match search | Wider filter layout calls same `GET /matches` contract |
+| V1-11-003 | Desktop keyboard flow | Enter submits search, Escape closes sheets/dialogs, focus remains visible |
+| V1-11-004 | Desktop detail/manage parity | Desktop detail exposes the same CTA states and permission locks as mobile |
 
-## 15. Admin Operations
+## 12. Admin Operations
+
+Source design no: `12`
 
 Design section: `admin-ops-sm-revision`
 
@@ -373,13 +431,15 @@ DB evidence:
 
 | ID | Scenario | Expected E2E assertion |
 |---|---|---|
-| V1-15-001 | Admin auth gate | Non-admin user is denied; active admin enters dashboard |
-| V1-15-002 | Overview queues | Counts link to filtered operational targets and handle empty state |
-| V1-15-003 | User status change | Reason required; user status changes; admin and status logs are created |
-| V1-15-004 | Match/team/team-match status change | Target status changes and affected user-facing CTAs lock after refetch |
-| V1-15-005 | Audit log filters | Action/status logs filter by target, actor, status, and cursor paginate |
+| V1-12-001 | Admin auth gate | Non-admin user is denied; active admin enters dashboard |
+| V1-12-002 | Overview queues | Counts link to filtered operational targets and handle empty state |
+| V1-12-003 | User status change | Reason required; user status changes; admin and status logs are created |
+| V1-12-004 | Match/team/team-match status change | Target status changes and affected user-facing CTAs lock after refetch |
+| V1-12-005 | Audit log filters | Action/status logs filter by target, actor, status, and cursor paginate |
 
-## 16. Common Flows And Motion
+## 13. Common Flows And Motion
+
+Source design no: `13`
 
 Design section: `common-flows-motion`
 
@@ -391,12 +451,12 @@ All mutable v1 tables plus audit/status logs where applicable.
 
 | ID | Scenario | Expected E2E assertion |
 |---|---|---|
-| V1-16-001 | List state atlas | Loading, empty, error, retry, success, and pagination states exist for every list |
-| V1-16-002 | Detail state atlas | Loading, not found/archived, permission denied, stale CTA, and success states exist |
-| V1-16-003 | Create/edit parity | Edit uses same validation/control language as create and prefilled values are real |
-| V1-16-004 | Mutation idempotency | Required mutations handle repeated `Idempotency-Key` and conflicting payloads |
-| V1-16-005 | Stale state conflict | Two actors changing same target produce latest-state recovery, not fake success |
-| V1-16-006 | Navigation after optimistic mutation | Navigation is not lost when mutation invalidates/reorders/unmounts list rows |
+| V1-13-001 | List state atlas | Loading, empty, error, retry, success, and pagination states exist for every list |
+| V1-13-002 | Detail state atlas | Loading, not found/archived, permission denied, stale CTA, and success states exist |
+| V1-13-003 | Create/edit parity | Edit uses same validation/control language as create and prefilled values are real |
+| V1-13-004 | Mutation idempotency | Required mutations handle repeated `Idempotency-Key` and conflicting payloads |
+| V1-13-005 | Stale state conflict | Two actors changing same target produce latest-state recovery, not fake success |
+| V1-13-006 | Navigation after optimistic mutation | Navigation is not lost when mutation invalidates/reorders/unmounts list rows |
 
 ## Suggested Automation Files
 
@@ -417,11 +477,11 @@ e2e/v1/deferred-and-responsive.spec.ts
 ## Recommended Execution Order
 
 1. `V1-01-*` auth/onboarding because all protected flows depend on personas.
-2. `V1-02-*`, `V1-03-*` home/search/notice because these are mostly read paths.
-3. `V1-04-*`, `V1-05-*` personal match lifecycle.
-4. `V1-08-*` team browse/create/member management because team match depends on managed teams.
-5. `V1-06-*`, `V1-07-*` team match lifecycle.
-6. `V1-09-*` chat/notifications after match/team-match linked targets exist.
-7. `V1-10-*`, `V1-12-*` my/profile/settings.
-8. `V1-15-*` admin/audit.
-9. `V1-11-*`, `V1-13-*`, `V1-14-*`, `V1-16-*` deferred honesty, public, desktop, and common state sweep.
+2. `V1-02-*`, `V1-02-1-*` home/search/notice because these are mostly read paths.
+3. `V1-03-*`, `V1-03-1-*` personal match lifecycle.
+4. `V1-05-*` team browse/create/member management because team match depends on managed teams.
+5. `V1-04-*`, `V1-04-1-*` team match lifecycle.
+6. `V1-06-*` chat/notifications after match/team-match linked targets exist.
+7. `V1-07-*`, `V1-09-*` my/profile/settings.
+8. `V1-12-*` admin/audit.
+9. `V1-08-*`, `V1-10-*`, `V1-11-*`, `V1-13-*` deferred honesty, public, desktop, and common state sweep.

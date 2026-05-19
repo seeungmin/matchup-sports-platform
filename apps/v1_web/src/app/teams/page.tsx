@@ -1,5 +1,6 @@
-import { FirstDesignPage } from '@/components/design/first-design-page';
+import { TeamListPageView } from '@/components/teams/teams-page';
+import { getTeamListViewModel } from '@/components/teams/teams.view-model';
 
 export default function TeamsPage() {
-  return <FirstDesignPage screen="teamBrowse" />;
+  return <TeamListPageView model={getTeamListViewModel()} />;
 }

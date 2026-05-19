@@ -1,5 +1,6 @@
-import { FirstDesignPage } from '@/components/design/first-design-page';
+import { NotificationsPageView } from '@/components/community/community-page';
+import { getNotificationsViewModel } from '@/components/community/community.view-model';
 
 export default function NotificationsPage() {
-  return <FirstDesignPage screen="notifications" />;
+  return <NotificationsPageView model={getNotificationsViewModel()} />;
 }

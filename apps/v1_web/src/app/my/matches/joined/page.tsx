@@ -1,5 +1,6 @@
-import { FirstDesignPage } from '@/components/design/first-design-page';
+import { MyMatchesPageView } from '@/components/my/my-page';
+import { getMyMatchesModel } from '@/components/my/my.view-model';
 
 export default function MyJoinedMatchesPage() {
-  return <FirstDesignPage screen="myMatchesJoined" />;
+  return <MyMatchesPageView model={getMyMatchesModel('joined')} />;
 }

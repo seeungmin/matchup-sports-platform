@@ -1,5 +1,6 @@
-import { FirstDesignPage } from '@/components/design/first-design-page';
+import { SettingsPageView } from '@/components/my/my-page';
+import { settingsModel } from '@/components/my/my.view-model';
 
 export default function MySettingsPage() {
-  return <FirstDesignPage screen="profilePrivate" />;
+  return <SettingsPageView model={settingsModel} />;
 }

@@ -7,10 +7,12 @@ vi.mock('next/navigation', () => ({
 }));
 
 describe('HomePage', () => {
-  it('renders the v1 product home shell', () => {
+  it('renders the componentized first-design home shell', () => {
     render(<HomePage />);
 
-    expect(screen.getByText('03 홈 · 1차 디자인 완료')).toBeInTheDocument();
     expect(screen.getByText('teameet')).toBeInTheDocument();
+    expect(screen.getByText('안녕하세요, 정민님')).toBeInTheDocument();
+    expect(screen.getByText('오늘의 추천')).toBeInTheDocument();
+    expect(screen.getByText('공지사항')).toBeInTheDocument();
   });
 });

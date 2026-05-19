@@ -1,0 +1,153 @@
+import type { CSSProperties, ReactNode } from 'react';
+import { ChevronRightIcon } from './icons';
+
+type CardProps = {
+  children: ReactNode;
+  pad?: number;
+  className?: string;
+  style?: CSSProperties;
+};
+
+export function Card({ children, pad = 20, className = '', style }: CardProps) {
+  return (
+    <div className={`tm-card ${className}`.trim()} style={{ padding: pad, ...style }}>
+      {children}
+    </div>
+  );
+}
+
+type NumberDisplayProps = {
+  value: number | string;
+  unit?: string;
+  size?: number;
+  sub?: string;
+};
+
+export function NumberDisplay({ value, unit = '원', size = 32, sub }: NumberDisplayProps) {
+  return (
+    <div>
+      <div
+        className="tab-num"
+        style={{
+          fontSize: size,
+          fontWeight: 700,
+          letterSpacing: 0,
+          color: 'var(--text-strong)',
+          lineHeight: 1.1,
+          display: 'flex',
+          alignItems: 'baseline',
+          gap: 4,
+        }}
+      >
+        {typeof value === 'number' ? value.toLocaleString('ko-KR') : value}
+        <span style={{ fontSize: size * 0.5, fontWeight: 600, color: 'var(--text-muted)' }}>{unit}</span>
+      </div>
+      {sub ? <div className="tm-text-caption" style={{ marginTop: 4 }}>{sub}</div> : null}
+    </div>
+  );
+}
+
+type KPIStatProps = {
+  label: string;
+  value: number | string;
+  unit?: string;
+};
+
+export function KPIStat({ label, value, unit }: KPIStatProps) {
+  return (
+    <div>
+      <div className="tm-text-caption" style={{ color: 'var(--text-muted)' }}>{label}</div>
+      <div className="tab-num" style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-strong)', marginTop: 4 }}>
+        {typeof value === 'number' ? value.toLocaleString('ko-KR') : value}
+        {unit ? <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-muted)', marginLeft: 2 }}>{unit}</span> : null}
+      </div>
+    </div>
+  );
+}
+
+type SectionTitleProps = {
+  title: string;
+  sub?: string;
+  action?: string;
+};
+
+export function SectionTitle({ title, sub, action }: SectionTitleProps) {
+  return (
+    <div className="tm-section-title" style={{ alignItems: sub ? 'flex-start' : 'center' }}>
+      <div>
+        <div className="tm-text-body-lg">{title}</div>
+        {sub ? <div className="tm-text-caption" style={{ marginTop: 4 }}>{sub}</div> : null}
+      </div>
+      {action ? (
+        <button className="tm-section-action" type="button">
+          {action}
+          <ChevronRightIcon size={14} strokeWidth={2.2} />
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+type ListItemProps = {
+  title: string;
+  sub?: string;
+  trailing?: string;
+  chev?: boolean;
+};
+
+export function ListItem({ title, sub, trailing, chev }: ListItemProps) {
+  return (
+    <div className="tm-list-row">
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="tm-text-body" style={{ color: 'var(--text-strong)', lineHeight: 1.35 }}>
+          {title}
+        </div>
+        {sub ? <div className="tm-text-caption" style={{ marginTop: 2 }}>{sub}</div> : null}
+      </div>
+      {trailing ? <div className="tm-text-label" style={{ color: 'var(--text-muted)' }}>{trailing}</div> : null}
+      {chev ? <ChevronRightIcon size={18} stroke="var(--text-caption)" strokeWidth={2} /> : null}
+    </div>
+  );
+}
+
+type EmptyStateProps = {
+  title: string;
+  sub: string;
+  cta?: string;
+};
+
+export function EmptyState({ title, sub, cta }: EmptyStateProps) {
+  return (
+    <div className="tm-empty-state">
+      <div className="tm-empty-icon" />
+      <div className="tm-text-body-lg">{title}</div>
+      <div className="tm-text-label" style={{ color: 'var(--text-muted)', marginTop: 8, lineHeight: 1.5 }}>
+        {sub}
+      </div>
+      {cta ? <button className="tm-btn tm-btn-sm tm-btn-primary" type="button" style={{ marginTop: 24 }}>{cta}</button> : null}
+    </div>
+  );
+}
+
+type WeatherStripProps = {
+  city: string;
+  temp: number | string;
+  cond: string;
+  wind: number | string;
+};
+
+export function WeatherStrip({ city, temp, cond, wind }: WeatherStripProps) {
+  return (
+    <div className="tm-weather-strip">
+      <div className="tm-weather-sun" />
+      <div style={{ flex: 1 }}>
+        <div className="tab-num" style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-strong)' }}>
+          {city} {temp}° · {cond}
+        </div>
+        <div className="tm-text-micro" style={{ color: 'var(--text-muted)', marginTop: 1 }}>
+          체감 17° · 바람 {wind}m/s · 운동하기 좋아요
+        </div>
+      </div>
+    </div>
+  );
+}

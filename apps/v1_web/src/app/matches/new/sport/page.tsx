@@ -1,5 +1,6 @@
-import { FirstDesignPage } from '@/components/design/first-design-page';
+import { MatchCreatePageView } from '@/components/matches/matches-page';
+import { getMatchCreateViewModel } from '@/components/matches/matches.view-model';
 
 export default function MatchCreateSportPage() {
-  return <FirstDesignPage screen="matchCreateSport" />;
+  return <MatchCreatePageView model={getMatchCreateViewModel('sport')} />;
 }

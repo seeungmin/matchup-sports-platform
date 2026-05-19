@@ -1,5 +1,5 @@
-import { FirstDesignPage } from '@/components/design/first-design-page';
+import { WithdrawalPageView } from '@/components/my/my-page';
 
 export default function MyWithdrawalPage() {
-  return <FirstDesignPage screen="profilePrivate" />;
+  return <WithdrawalPageView />;
 }

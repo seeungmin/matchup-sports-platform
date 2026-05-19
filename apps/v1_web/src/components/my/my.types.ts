@@ -1,0 +1,107 @@
+export type MyUser = {
+  name: string;
+  handle: string;
+  region: string;
+  sports: string[];
+  intro: string;
+  initials: string;
+  stats: Array<{ label: string; value: number | string; unit?: string }>;
+  monthly: Array<{ label: string; value: number | string; unit?: string }>;
+};
+
+export type MyMenuItem = {
+  label: string;
+  sub: string;
+  href: string;
+  icon: string;
+};
+
+export type MyMenuSection = {
+  title: string;
+  items: MyMenuItem[];
+};
+
+export type MyHomeViewModel = {
+  user: MyUser;
+  sections: MyMenuSection[];
+};
+
+export type MyMatchStatus = 'pending' | 'approved' | 'recruiting' | 'ended';
+
+export type MyMatch = {
+  id: string;
+  title: string;
+  meta: string;
+  status: MyMatchStatus;
+  statusLabel: string;
+  note: string;
+  href: string;
+};
+
+export type MyMatchesViewModel = {
+  mode: 'joined' | 'created';
+  title: string;
+  summary: Array<{ label: string; value: number; unit: string }>;
+  matches: MyMatch[];
+};
+
+export type MyTeamRole = 'owner' | 'admin' | 'member';
+
+export type MyTeam = {
+  id: string;
+  name: string;
+  logo: string;
+  sport: string;
+  region: string;
+  role: MyTeamRole;
+  roleLabel: string;
+  members: number;
+  manner: string;
+  next: string;
+  description: string;
+};
+
+export type MyTeamsViewModel = {
+  teams: MyTeam[];
+  summary: Array<{ label: string; value: number | string; unit?: string }>;
+};
+
+export type MyTeamDetailViewModel = {
+  team: MyTeam;
+  actions: MyMenuItem[];
+  recentMatches: MyMatch[];
+};
+
+export type MyMember = {
+  name: string;
+  role: string;
+  meta: string;
+  status: string;
+};
+
+export type MyTeamMembersViewModel = {
+  teamName: string;
+  summary: Array<{ label: string; value: number; unit: string }>;
+  members: MyMember[];
+  requests: MyMember[];
+};
+
+export type ProfileEditViewModel = {
+  user: MyUser;
+  fields: Array<{ label: string; value: string; multiline?: boolean }>;
+};
+
+export type SettingsViewModel = {
+  title: string;
+  groups: MyMenuSection[];
+};
+
+export type NotificationSetting = {
+  label: string;
+  sub: string;
+  enabled: boolean;
+};
+
+export type NotificationSettingsViewModel = {
+  settings: NotificationSetting[];
+};
