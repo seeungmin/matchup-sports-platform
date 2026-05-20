@@ -28,6 +28,27 @@ export type V1User = {
   onboardingStatus: 'pending' | 'completed' | 'deferred';
 };
 
+export type V1AuthMe = {
+  user: {
+    id: string;
+    email: string | null;
+    phone?: string | null;
+    accountStatus?: string;
+    onboardingStatus: 'pending' | 'completed' | 'deferred';
+    lastLoginAt?: string | null;
+    createdAt?: string;
+  };
+  profile: {
+    displayName: string;
+    nickname?: string | null;
+    avatarUrl?: string | null;
+    profileVisibility?: string;
+    regionSummary?: string | null;
+  };
+  onboarding?: unknown;
+  reputation?: unknown;
+};
+
 export type V1Sport = {
   id: string;
   name: string;
@@ -123,11 +144,42 @@ export type V1Settings = {
   withdrawalRequested: boolean;
 };
 
+export type V1HomeRecommendation = {
+  matchId: string;
+  title: string;
+  sportName: string;
+  regionName: string | null;
+  startsAt: string;
+  participantCount?: number;
+  capacity?: number;
+};
+
 export type V1Home = {
-  notices: V1Notice[];
-  recommendedMatches: V1Match[];
-  recommendedTeamMatches: V1TeamMatch[];
-  recommendedTeams: V1Team[];
+  viewer?: {
+    authenticated: boolean;
+    displayName: string | null;
+    onboardingStatus: 'pending' | 'completed' | 'deferred' | null;
+  };
+  summary?: {
+    monthlyMatches: number | null;
+    mannerScore: number | null;
+    trustState: string;
+    pendingLabel: string | null;
+  };
+  featuredMatch?: {
+    matchId: string;
+    title: string;
+    reason: string;
+    participantCount: number;
+    capacity: number;
+  } | null;
+  recommendations?: V1HomeRecommendation[];
+  notice?: { noticeId: string; title: string; pinned: boolean } | null;
+  notifications?: { unreadCount: number };
+  notices?: V1Notice[];
+  recommendedMatches?: V1Match[];
+  recommendedTeamMatches?: V1TeamMatch[];
+  recommendedTeams?: V1Team[];
 };
 
 export type V1AdminOverview = {

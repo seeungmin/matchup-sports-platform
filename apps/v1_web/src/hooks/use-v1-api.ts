@@ -7,6 +7,7 @@ import type {
   CursorPage,
   V1AdminLog,
   V1AdminOverview,
+  V1AuthMe,
   V1ChatMessage,
   V1ChatRoom,
   V1Home,
@@ -20,15 +21,16 @@ import type {
   V1Sport,
   V1Team,
   V1TeamMatch,
-  V1User,
 } from '@/types/api';
 
 type ListFilters = Record<string, string | number | boolean | null | undefined>;
 
-export function useV1AuthMe() {
+export function useV1AuthMe(options?: { enabled?: boolean; retry?: boolean | number }) {
   return useQuery({
     queryKey: v1Keys.authMe(),
-    queryFn: () => v1Get<V1User>('/auth/me'),
+    queryFn: () => v1Get<V1AuthMe>('/auth/me'),
+    enabled: options?.enabled,
+    retry: options?.retry,
   });
 }
 
