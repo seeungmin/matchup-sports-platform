@@ -10,6 +10,7 @@ import type {
   V1AuthMe,
   V1ChatMessage,
   V1ChatRoom,
+  V1DevLoginResponse,
   V1Home,
   V1Match,
   V1Notification,
@@ -31,6 +32,14 @@ export function useV1AuthMe(options?: { enabled?: boolean; retry?: boolean | num
     queryFn: () => v1Get<V1AuthMe>('/auth/me'),
     enabled: options?.enabled,
     retry: options?.retry,
+  });
+}
+
+export function useV1DevLogin() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { email: string }) => v1Post<V1DevLoginResponse>('/auth/dev-login', body),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: v1Keys.authMe() }),
   });
 }
 

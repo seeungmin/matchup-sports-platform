@@ -33,6 +33,7 @@ function page<T>(items: T[]) {
 
 export const v1MswHandlers = [
   http.get(`${api}/auth/me`, () => ok(v1UserFixture)),
+  http.post(`${api}/auth/dev-login`, () => ok({ session: { userId: v1UserFixture.id, userEmail: v1UserFixture.email }, ...v1UserFixture })),
   http.get(`${api}/onboarding`, () => ok({ currentStep: 'confirm', completed: false })),
   http.patch(`${api}/onboarding/preferences`, async ({ request }) => ok(await request.json())),
   http.post(`${api}/onboarding/complete`, () => ok({ completed: true })),

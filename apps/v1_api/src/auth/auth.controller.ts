@@ -1,6 +1,7 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { CurrentUser } from './current-user.decorator';
 import { AuthService } from './auth.service';
+import { DevLoginDto } from './dto/dev-login.dto';
 import { V1AuthUser } from './v1-auth-user';
 import { V1AuthGuard } from './v1-auth.guard';
 
@@ -12,5 +13,10 @@ export class AuthController {
   @UseGuards(V1AuthGuard)
   me(@CurrentUser() user: V1AuthUser) {
     return this.authService.me(user.id);
+  }
+
+  @Post('dev-login')
+  devLogin(@Body() dto: DevLoginDto) {
+    return this.authService.devLogin(dto.email);
   }
 }

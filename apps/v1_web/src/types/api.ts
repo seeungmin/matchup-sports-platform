@@ -49,6 +49,13 @@ export type V1AuthMe = {
   reputation?: unknown;
 };
 
+export type V1DevLoginResponse = V1AuthMe & {
+  session: {
+    userId: string;
+    userEmail: string | null;
+  };
+};
+
 export type V1Sport = {
   id: string;
   name: string;

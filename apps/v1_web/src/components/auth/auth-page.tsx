@@ -4,7 +4,7 @@ import { Card } from '@/components/v1-ui/primitives';
 import { ChevronLeftIcon, ChevronRightIcon } from '@/components/v1-ui/icons';
 import type { AuthAction, AuthExceptionViewModel, EmailLoginViewModel, LoginProvider, LoginViewModel, OnboardingOption, OnboardingViewModel, SignupCompleteViewModel, SignupField, SignupFormViewModel, TermsViewModel } from './auth.types';
 
-export function LoginPageView({ model }: { model: LoginViewModel }) {
+export function LoginPageView({ model, devLogin }: { model: LoginViewModel; devLogin?: ReactNode }) {
   return (
     <AuthFrame>
       <div className="tm-auth-login">
@@ -24,6 +24,7 @@ export function LoginPageView({ model }: { model: LoginViewModel }) {
           <div className="tm-auth-provider-row">
             {model.providers.map((provider) => <ProviderButton key={provider.label} provider={provider} />)}
           </div>
+          {devLogin}
           <p className="tm-text-caption tm-auth-policy">계속하면 서비스 약관과 개인정보 처리방침에 동의합니다.</p>
         </div>
       </div>

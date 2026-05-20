@@ -6,6 +6,44 @@ import { buildOnboardingSummary } from '../onboarding/onboarding-summary';
 export class AuthService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async devLogin(email: string) {
+    const user = await this.prisma.v1User.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        accountStatus: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException({
+        code: 'NOT_FOUND',
+        message: 'V1 seed user was not found',
+      });
+    }
+
+    if (user.accountStatus !== 'active') {
+      throw new ForbiddenException({
+        code: 'PERMISSION_DENIED',
+        message: 'Only active v1 users can use dev login',
+      });
+    }
+
+    await this.prisma.v1User.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date() },
+    });
+
+    return {
+      session: {
+        userId: user.id,
+        userEmail: user.email,
+      },
+      ...(await this.me(user.id)),
+    };
+  }
+
   async me(userId: string) {
     const user = await this.prisma.v1User.findUnique({
       where: { id: userId },
