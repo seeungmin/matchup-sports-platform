@@ -1,6 +1,5 @@
-import { MatchListPageView } from '@/components/matches/matches-page';
-import { getMatchListViewModel } from '@/components/matches/matches.view-model';
+import { MatchListPageClient } from '@/components/matches/matches-client';
 
 export default function MatchesPage() {
-  return <MatchListPageView model={getMatchListViewModel()} />;
+  return <MatchListPageClient />;
 }

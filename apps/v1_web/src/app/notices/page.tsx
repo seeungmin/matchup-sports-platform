@@ -1,6 +1,5 @@
-import { NoticeListPageView } from '@/components/notices/notices-page';
-import { getNoticeListViewModel } from '@/components/notices/notices.view-model';
+import { NoticeListPageClient } from '@/components/notices/notices-client';
 
 export default function NoticesPage() {
-  return <NoticeListPageView model={getNoticeListViewModel()} />;
+  return <NoticeListPageClient />;
 }

@@ -37,6 +37,12 @@ const users = [
   ['admin@teameet.v1', '운영자'],
 ] as const;
 
+const seedNow = new Date('2026-05-18T00:00:00.000Z');
+const futureStart = new Date('2026-06-20T10:00:00.000Z');
+const futureEnd = new Date('2026-06-20T11:00:00.000Z');
+const pastStart = new Date('2026-05-01T10:00:00.000Z');
+const pastEnd = new Date('2026-05-01T11:00:00.000Z');
+
 async function seedRuntimeCheck() {
   await prisma.v1RuntimeCheck.upsert({
     where: { key: 'seed' },
@@ -507,6 +513,768 @@ async function seedAdmin(userIds: Record<string, string>) {
   });
 }
 
+async function upsertCoverageUser(input: {
+  id: string;
+  email: string;
+  nickname: string;
+  accountStatus?: 'active' | 'suspended' | 'blocked' | 'withdrawal_pending' | 'deleted';
+  onboardingStatus?:
+    | 'not_started'
+    | 'terms_done'
+    | 'signup_done'
+    | 'sport_done'
+    | 'level_done'
+    | 'region_done'
+    | 'completed'
+    | 'deferred';
+  trustState?: 'verified' | 'estimated' | 'sample' | 'none';
+}) {
+  const accountStatus = input.accountStatus ?? 'active';
+  const onboardingStatus = input.onboardingStatus ?? 'completed';
+  const deletedAt = accountStatus === 'deleted' ? seedNow : null;
+  const user = await prisma.v1User.upsert({
+    where: { email: input.email },
+    update: { accountStatus, onboardingStatus, deletedAt },
+    create: {
+      id: input.id,
+      email: input.email,
+      accountStatus,
+      onboardingStatus,
+      deletedAt,
+    },
+  });
+
+  await prisma.v1UserProfile.upsert({
+    where: { userId: user.id },
+    update: {
+      nickname: input.nickname,
+      displayName: input.nickname,
+      visibility: accountStatus === 'deleted' ? 'private' : 'public',
+      deletedAt,
+    },
+    create: {
+      userId: user.id,
+      nickname: input.nickname,
+      displayName: input.nickname,
+      visibility: accountStatus === 'deleted' ? 'private' : 'public',
+      deletedAt,
+    },
+  });
+
+  await prisma.v1AuthIdentity.upsert({
+    where: { provider_providerUserKey: { provider: V1AuthProvider.email, providerUserKey: input.email } },
+    update: { userId: user.id, email: input.email, status: accountStatus === 'blocked' ? 'blocked' : 'active' },
+    create: {
+      userId: user.id,
+      provider: V1AuthProvider.email,
+      providerUserKey: input.email,
+      email: input.email,
+      status: accountStatus === 'blocked' ? 'blocked' : 'active',
+    },
+  });
+
+  await prisma.v1UserOnboardingProgress.upsert({
+    where: { userId: user.id },
+    update: {
+      currentStep: onboardingStatus,
+      completedAt: onboardingStatus === 'completed' ? seedNow : null,
+      deferredAt: onboardingStatus === 'deferred' ? seedNow : null,
+    },
+    create: {
+      userId: user.id,
+      currentStep: onboardingStatus,
+      completedAt: onboardingStatus === 'completed' ? seedNow : null,
+      deferredAt: onboardingStatus === 'deferred' ? seedNow : null,
+    },
+  });
+
+  await prisma.v1UserReputationSummary.upsert({
+    where: { userId: user.id },
+    update: {
+      trustState: input.trustState ?? 'sample',
+      mannerScore: input.trustState === 'none' ? null : 4.2,
+      reviewCount: input.trustState === 'none' ? 0 : 2,
+      sourceLabel: 'seed-coverage',
+      calculatedAt: input.trustState === 'none' ? null : seedNow,
+    },
+    create: {
+      userId: user.id,
+      trustState: input.trustState ?? 'sample',
+      mannerScore: input.trustState === 'none' ? null : 4.2,
+      reviewCount: input.trustState === 'none' ? 0 : 2,
+      sourceLabel: 'seed-coverage',
+      calculatedAt: input.trustState === 'none' ? null : seedNow,
+    },
+  });
+
+  await prisma.v1NotificationPreference.upsert({
+    where: { userId: user.id },
+    update: {},
+    create: { userId: user.id, importantEnabled: true, activityEnabled: true, marketingEnabled: false },
+  });
+
+  return user;
+}
+
+async function seedCoverageUsers() {
+  const result: Record<string, string> = {};
+  const coverageUsers = [
+    ['00000000-0000-4000-8000-000000001001', 'coverage-active@teameet.v1', '활성커버', 'active', 'completed', 'verified'],
+    ['00000000-0000-4000-8000-000000001002', 'coverage-suspended@teameet.v1', '정지커버', 'suspended', 'completed', 'estimated'],
+    ['00000000-0000-4000-8000-000000001003', 'coverage-blocked@teameet.v1', '차단커버', 'blocked', 'completed', 'sample'],
+    ['00000000-0000-4000-8000-000000001004', 'coverage-withdrawal@teameet.v1', '탈퇴대기커버', 'withdrawal_pending', 'completed', 'none'],
+    ['00000000-0000-4000-8000-000000001005', 'coverage-deleted@teameet.v1', '삭제커버', 'deleted', 'completed', 'none'],
+    ['00000000-0000-4000-8000-000000001006', 'coverage-not-started@teameet.v1', '시작전커버', 'active', 'not_started', 'sample'],
+    ['00000000-0000-4000-8000-000000001007', 'coverage-terms@teameet.v1', '약관커버', 'active', 'terms_done', 'sample'],
+    ['00000000-0000-4000-8000-000000001008', 'coverage-signup@teameet.v1', '가입커버', 'active', 'signup_done', 'sample'],
+    ['00000000-0000-4000-8000-000000001009', 'coverage-sport@teameet.v1', '종목커버', 'active', 'sport_done', 'sample'],
+    ['00000000-0000-4000-8000-000000001010', 'coverage-level@teameet.v1', '레벨커버', 'active', 'level_done', 'sample'],
+    ['00000000-0000-4000-8000-000000001011', 'coverage-region@teameet.v1', '지역커버', 'active', 'region_done', 'sample'],
+    ['00000000-0000-4000-8000-000000001012', 'coverage-deferred@teameet.v1', '나중커버', 'active', 'deferred', 'sample'],
+    ['00000000-0000-4000-8000-000000001013', 'coverage-extra-a@teameet.v1', '추가A커버', 'active', 'completed', 'verified'],
+    ['00000000-0000-4000-8000-000000001014', 'coverage-extra-b@teameet.v1', '추가B커버', 'active', 'completed', 'estimated'],
+    ['00000000-0000-4000-8000-000000001015', 'coverage-extra-c@teameet.v1', '추가C커버', 'active', 'completed', 'sample'],
+    ['00000000-0000-4000-8000-000000001016', 'coverage-extra-d@teameet.v1', '추가D커버', 'active', 'completed', 'none'],
+    ['00000000-0000-4000-8000-000000001017', 'coverage-extra-e@teameet.v1', '추가E커버', 'active', 'completed', 'sample'],
+    ['00000000-0000-4000-8000-000000001018', 'coverage-extra-f@teameet.v1', '추가F커버', 'active', 'completed', 'sample'],
+    ['00000000-0000-4000-8000-000000001019', 'coverage-extra-g@teameet.v1', '추가G커버', 'active', 'completed', 'sample'],
+    ['00000000-0000-4000-8000-000000001020', 'coverage-extra-h@teameet.v1', '추가H커버', 'active', 'completed', 'sample'],
+  ] as const;
+
+  for (const [id, email, nickname, accountStatus, onboardingStatus, trustState] of coverageUsers) {
+    const user = await upsertCoverageUser({ id, email, nickname, accountStatus, onboardingStatus, trustState });
+    result[email] = user.id;
+  }
+
+  await prisma.v1AuthIdentity.upsert({
+    where: { provider_providerUserKey: { provider: V1AuthProvider.kakao, providerUserKey: 'coverage-kakao-active' } },
+    update: { userId: result['coverage-active@teameet.v1'], status: 'active', unlinkedAt: null },
+    create: {
+      userId: result['coverage-active@teameet.v1'],
+      provider: V1AuthProvider.kakao,
+      providerUserKey: 'coverage-kakao-active',
+      email: 'coverage-active@teameet.v1',
+      status: 'active',
+    },
+  });
+
+  await prisma.v1AuthIdentity.upsert({
+    where: { provider_providerUserKey: { provider: V1AuthProvider.naver, providerUserKey: 'coverage-naver-unlinked' } },
+    update: { userId: result['coverage-extra-a@teameet.v1'], status: 'unlinked', unlinkedAt: seedNow },
+    create: {
+      userId: result['coverage-extra-a@teameet.v1'],
+      provider: V1AuthProvider.naver,
+      providerUserKey: 'coverage-naver-unlinked',
+      email: 'coverage-extra-a@teameet.v1',
+      status: 'unlinked',
+      unlinkedAt: seedNow,
+    },
+  });
+
+  return result;
+}
+
+async function seedCoverageTermsAndNotices() {
+  await prisma.v1TermsDocument.upsert({
+    where: { kind_version: { kind: V1TermsKind.terms, version: '2026-05-18-draft' } },
+    update: { title: 'Teameet v1 draft terms', content: 'draft terms coverage', status: 'draft', isRequired: true },
+    create: { kind: V1TermsKind.terms, version: '2026-05-18-draft', title: 'Teameet v1 draft terms', content: 'draft terms coverage', status: 'draft', isRequired: true },
+  });
+  await prisma.v1TermsDocument.upsert({
+    where: { kind_version: { kind: V1TermsKind.privacy, version: '2026-05-18-archived' } },
+    update: {
+      title: 'Teameet v1 archived privacy',
+      content: 'archived privacy coverage',
+      status: 'archived',
+      isRequired: true,
+      archivedAt: seedNow,
+    },
+    create: {
+      kind: V1TermsKind.privacy,
+      version: '2026-05-18-archived',
+      title: 'Teameet v1 archived privacy',
+      content: 'archived privacy coverage',
+      status: 'archived',
+      isRequired: true,
+      archivedAt: seedNow,
+    },
+  });
+
+  const notices = [
+    ['00000000-0000-4000-8000-000000001101', 'users', 'published', '사용자 공지 커버리지'],
+    ['00000000-0000-4000-8000-000000001102', 'admins', 'published', '관리자 공지 커버리지'],
+    ['00000000-0000-4000-8000-000000001103', 'public', 'draft', '초안 공지 커버리지'],
+    ['00000000-0000-4000-8000-000000001104', 'public', 'archived', '보관 공지 커버리지'],
+  ] as const;
+
+  for (const [id, audience, status, title] of notices) {
+    await prisma.v1Notice.upsert({
+      where: { id },
+      update: {
+        audience,
+        status,
+        title,
+        body: `${title} seed data`,
+        publishedAt: status === 'published' ? seedNow : null,
+        archivedAt: status === 'archived' ? seedNow : null,
+      },
+      create: {
+        id,
+        audience,
+        status,
+        title,
+        body: `${title} seed data`,
+        publishedAt: status === 'published' ? seedNow : null,
+        archivedAt: status === 'archived' ? seedNow : null,
+      },
+    });
+  }
+}
+
+async function seedCoverageTeams(
+  userIds: Record<string, string>,
+  sportIds: Record<string, string>,
+  regionId: string,
+) {
+  const specs = [
+    ['00000000-0000-4000-8000-000000001201', '커버 활성 승인 팀', 'active', 'approval_required', 'verified'],
+    ['00000000-0000-4000-8000-000000001202', '커버 가입 마감 팀', 'active', 'closed', 'estimated'],
+    ['00000000-0000-4000-8000-000000001203', '커버 정지 팀', 'suspended', 'approval_required', 'sample'],
+    ['00000000-0000-4000-8000-000000001204', '커버 보관 팀', 'archived', 'approval_required', 'none'],
+  ] as const;
+
+  for (const [id, name, status, joinPolicy, trustState] of specs) {
+    await prisma.v1Team.upsert({
+      where: { id },
+      update: {
+        name,
+        ownerUserId: userIds['coverage-active@teameet.v1'],
+        sportId: sportIds.futsal,
+        regionId,
+        status,
+        joinPolicy,
+        memberCount: 1,
+        managerCount: 0,
+      },
+      create: {
+        id,
+        name,
+        ownerUserId: userIds['coverage-active@teameet.v1'],
+        sportId: sportIds.futsal,
+        regionId,
+        status,
+        joinPolicy,
+        memberCount: 1,
+        managerCount: 0,
+      },
+    });
+
+    await prisma.v1TeamProfile.upsert({
+      where: { teamId: id },
+      update: { description: `${name} seed coverage`, activityNote: '상태 커버리지', skillNote: '전체 레벨' },
+      create: { teamId: id, description: `${name} seed coverage`, activityNote: '상태 커버리지', skillNote: '전체 레벨' },
+    });
+
+    await prisma.v1TeamTrustScore.upsert({
+      where: { teamId: id },
+      update: {
+        trustState,
+        mannerScore: trustState === 'none' ? null : 4.1,
+        matchCount: trustState === 'none' ? 0 : 4,
+        sourceLabel: 'seed-coverage',
+        calculatedAt: trustState === 'none' ? null : seedNow,
+      },
+      create: {
+        teamId: id,
+        trustState,
+        mannerScore: trustState === 'none' ? null : 4.1,
+        matchCount: trustState === 'none' ? 0 : 4,
+        sourceLabel: 'seed-coverage',
+        calculatedAt: trustState === 'none' ? null : seedNow,
+      },
+    });
+  }
+
+  const memberships = [
+    ['00000000-0000-4000-8000-000000001201', userIds['coverage-active@teameet.v1'], 'owner', 'active'],
+    ['00000000-0000-4000-8000-000000001201', userIds['coverage-extra-a@teameet.v1'], 'manager', 'removed'],
+    ['00000000-0000-4000-8000-000000001201', userIds['coverage-extra-b@teameet.v1'], 'member', 'left'],
+    ['00000000-0000-4000-8000-000000001202', userIds['coverage-active@teameet.v1'], 'owner', 'active'],
+  ] as const;
+
+  for (const [teamId, userId, role, status] of memberships) {
+    await prisma.v1TeamMembership.upsert({
+      where: { teamId_userId: { teamId, userId } },
+      update: {
+        role,
+        status,
+        joinedAt: seedNow,
+        leftAt: status === 'left' || status === 'removed' ? seedNow : null,
+        removedByUserId: status === 'removed' ? userIds['coverage-active@teameet.v1'] : null,
+      },
+      create: {
+        teamId,
+        userId,
+        role,
+        status,
+        joinedAt: seedNow,
+        leftAt: status === 'left' || status === 'removed' ? seedNow : null,
+        removedByUserId: status === 'removed' ? userIds['coverage-active@teameet.v1'] : null,
+      },
+    });
+  }
+
+  const joinApps = [
+    ['00000000-0000-4000-8000-000000001201', userIds['coverage-extra-c@teameet.v1'], 'requested'],
+    ['00000000-0000-4000-8000-000000001201', userIds['coverage-extra-d@teameet.v1'], 'approved'],
+    ['00000000-0000-4000-8000-000000001201', userIds['coverage-extra-e@teameet.v1'], 'rejected'],
+    ['00000000-0000-4000-8000-000000001201', userIds['coverage-extra-f@teameet.v1'], 'withdrawn'],
+    ['00000000-0000-4000-8000-000000001201', userIds['coverage-extra-g@teameet.v1'], 'expired'],
+  ] as const;
+
+  for (const [teamId, applicantUserId, status] of joinApps) {
+    await prisma.v1TeamJoinApplication.upsert({
+      where: { teamId_applicantUserId: { teamId, applicantUserId } },
+      update: {
+        status,
+        message: `team join ${status} coverage`,
+        reviewedByUserId: status === 'approved' || status === 'rejected' ? userIds['coverage-active@teameet.v1'] : null,
+        reviewedAt: status === 'approved' || status === 'rejected' ? seedNow : null,
+        withdrawnAt: status === 'withdrawn' ? seedNow : null,
+      },
+      create: {
+        teamId,
+        applicantUserId,
+        status,
+        message: `team join ${status} coverage`,
+        reviewedByUserId: status === 'approved' || status === 'rejected' ? userIds['coverage-active@teameet.v1'] : null,
+        reviewedAt: status === 'approved' || status === 'rejected' ? seedNow : null,
+        withdrawnAt: status === 'withdrawn' ? seedNow : null,
+      },
+    });
+  }
+}
+
+async function seedCoverageMatches(
+  userIds: Record<string, string>,
+  sportIds: Record<string, string>,
+  regionId: string,
+) {
+  const statuses = ['recruiting', 'closed', 'cancelled', 'completed', 'archived'] as const;
+  for (const [index, status] of statuses.entries()) {
+    const id = `00000000-0000-4000-8000-00000000130${index + 1}`;
+    await prisma.v1Match.upsert({
+      where: { id },
+      update: {
+        title: `개인 매치 ${status} 커버리지`,
+        hostUserId: userIds['coverage-active@teameet.v1'],
+        sportId: sportIds.running,
+        regionId,
+        status,
+        startAt: futureStart,
+        endAt: futureEnd,
+        cancelledAt: status === 'cancelled' ? seedNow : null,
+        completedAt: status === 'completed' ? seedNow : null,
+      },
+      create: {
+        id,
+        hostUserId: userIds['coverage-active@teameet.v1'],
+        sportId: sportIds.running,
+        regionId,
+        title: `개인 매치 ${status} 커버리지`,
+        description: `${status} 상태 확인용 개인 매치입니다.`,
+        placeName: '커버리지 운동장',
+        placeAddress: '서울 강남구',
+        startAt: futureStart,
+        endAt: futureEnd,
+        maxParticipants: 6,
+        levelNote: '상태 커버리지',
+        genderRule: '무관',
+        costNote: '무료',
+        status,
+        cancelledAt: status === 'cancelled' ? seedNow : null,
+        completedAt: status === 'completed' ? seedNow : null,
+      },
+    });
+  }
+
+  await prisma.v1Match.upsert({
+    where: { id: '00000000-0000-4000-8000-000000001306' },
+    update: {
+      title: '개인 매치 expired 표시 커버리지',
+      hostUserId: userIds['coverage-active@teameet.v1'],
+      sportId: sportIds.running,
+      regionId,
+      status: 'recruiting',
+      startAt: pastStart,
+      endAt: pastEnd,
+    },
+    create: {
+      id: '00000000-0000-4000-8000-000000001306',
+      hostUserId: userIds['coverage-active@teameet.v1'],
+      sportId: sportIds.running,
+      regionId,
+      title: '개인 매치 expired 표시 커버리지',
+      description: 'DB status는 recruiting이지만 API display status가 expired인 샘플입니다.',
+      placeName: '과거 운동장',
+      placeAddress: '서울 강남구',
+      startAt: pastStart,
+      endAt: pastEnd,
+      maxParticipants: 6,
+      status: 'recruiting',
+    },
+  });
+
+  const participantStatuses = ['active', 'removed', 'cancelled', 'no_show', 'completed'] as const;
+  for (const [index, status] of participantStatuses.entries()) {
+    await prisma.v1MatchParticipant.upsert({
+      where: {
+        matchId_userId: {
+          matchId: '00000000-0000-4000-8000-000000001301',
+          userId: userIds[`coverage-extra-${String.fromCharCode(97 + index)}@teameet.v1`],
+        },
+      },
+      update: {
+        role: index === 0 ? 'host' : 'participant',
+        status,
+        approvedAt: seedNow,
+        cancelledAt: status === 'cancelled' || status === 'removed' ? seedNow : null,
+        completedAt: status === 'completed' ? seedNow : null,
+      },
+      create: {
+        matchId: '00000000-0000-4000-8000-000000001301',
+        userId: userIds[`coverage-extra-${String.fromCharCode(97 + index)}@teameet.v1`],
+        role: index === 0 ? 'host' : 'participant',
+        status,
+        approvedAt: seedNow,
+        cancelledAt: status === 'cancelled' || status === 'removed' ? seedNow : null,
+        completedAt: status === 'completed' ? seedNow : null,
+      },
+    });
+  }
+
+  const applicationStatuses = ['requested', 'approved', 'rejected', 'withdrawn', 'cancelled_by_host', 'expired'] as const;
+  for (const [index, status] of applicationStatuses.entries()) {
+    const applicantUserId = userIds[`coverage-extra-${String.fromCharCode(99 + index)}@teameet.v1`];
+    await prisma.v1MatchApplication.upsert({
+      where: {
+        matchId_applicantUserId: {
+          matchId: '00000000-0000-4000-8000-000000001302',
+          applicantUserId,
+        },
+      },
+      update: {
+        status,
+        message: `match application ${status} coverage`,
+        reviewedByUserId: status === 'approved' || status === 'rejected' || status === 'cancelled_by_host' ? userIds['coverage-active@teameet.v1'] : null,
+        reviewedAt: status === 'approved' || status === 'rejected' || status === 'cancelled_by_host' ? seedNow : null,
+        withdrawnAt: status === 'withdrawn' ? seedNow : null,
+      },
+      create: {
+        matchId: '00000000-0000-4000-8000-000000001302',
+        applicantUserId,
+        status,
+        message: `match application ${status} coverage`,
+        reviewedByUserId: status === 'approved' || status === 'rejected' || status === 'cancelled_by_host' ? userIds['coverage-active@teameet.v1'] : null,
+        reviewedAt: status === 'approved' || status === 'rejected' || status === 'cancelled_by_host' ? seedNow : null,
+        withdrawnAt: status === 'withdrawn' ? seedNow : null,
+      },
+    });
+  }
+}
+
+async function seedCoverageTeamMatches(
+  userIds: Record<string, string>,
+  sportIds: Record<string, string>,
+  regionId: string,
+) {
+  const statuses = ['recruiting', 'matched', 'cancelled', 'completed', 'archived'] as const;
+  for (const [index, status] of statuses.entries()) {
+    const id = `00000000-0000-4000-8000-00000000140${index + 1}`;
+    await prisma.v1TeamMatch.upsert({
+      where: { id },
+      update: {
+        title: `팀 매치 ${status} 커버리지`,
+        hostTeamId: '00000000-0000-4000-8000-000000001201',
+        createdByUserId: userIds['coverage-active@teameet.v1'],
+        sportId: sportIds.futsal,
+        regionId,
+        status,
+        approvedApplicantTeamId: status === 'matched' ? '00000000-0000-4000-8000-000000001202' : null,
+        startAt: futureStart,
+        endAt: futureEnd,
+        cancelledAt: status === 'cancelled' ? seedNow : null,
+        completedAt: status === 'completed' ? seedNow : null,
+      },
+      create: {
+        id,
+        hostTeamId: '00000000-0000-4000-8000-000000001201',
+        createdByUserId: userIds['coverage-active@teameet.v1'],
+        sportId: sportIds.futsal,
+        regionId,
+        title: `팀 매치 ${status} 커버리지`,
+        description: `${status} 상태 확인용 팀 매치입니다.`,
+        placeName: '커버리지 풋살장',
+        placeAddress: '서울 송파구',
+        startAt: futureStart,
+        endAt: futureEnd,
+        formatNote: '6:6',
+        genderRule: '무관',
+        costNote: '구장비 N분의 1',
+        status,
+        approvedApplicantTeamId: status === 'matched' ? '00000000-0000-4000-8000-000000001202' : null,
+        cancelledAt: status === 'cancelled' ? seedNow : null,
+        completedAt: status === 'completed' ? seedNow : null,
+      },
+    });
+  }
+
+  await prisma.v1TeamMatch.upsert({
+    where: { id: '00000000-0000-4000-8000-000000001406' },
+    update: {
+      title: '팀 매치 expired 표시 커버리지',
+      hostTeamId: '00000000-0000-4000-8000-000000001201',
+      createdByUserId: userIds['coverage-active@teameet.v1'],
+      sportId: sportIds.futsal,
+      regionId,
+      status: 'recruiting',
+      startAt: pastStart,
+      endAt: pastEnd,
+    },
+    create: {
+      id: '00000000-0000-4000-8000-000000001406',
+      hostTeamId: '00000000-0000-4000-8000-000000001201',
+      createdByUserId: userIds['coverage-active@teameet.v1'],
+      sportId: sportIds.futsal,
+      regionId,
+      title: '팀 매치 expired 표시 커버리지',
+      description: 'DB status는 recruiting이지만 API display status가 expired인 팀 매치 샘플입니다.',
+      placeName: '과거 풋살장',
+      placeAddress: '서울 송파구',
+      startAt: pastStart,
+      endAt: pastEnd,
+      status: 'recruiting',
+    },
+  });
+
+  const applicationStatuses = ['requested', 'approved', 'rejected', 'withdrawn', 'expired'] as const;
+  for (const [index, status] of applicationStatuses.entries()) {
+    const applicantTeamId = `00000000-0000-4000-8000-00000000120${index === 0 ? 2 : index + 4}`;
+    if (index > 0) {
+      await prisma.v1Team.upsert({
+        where: { id: applicantTeamId },
+        update: {
+          name: `커버 신청 팀 ${status}`,
+          ownerUserId: userIds['coverage-active@teameet.v1'],
+          sportId: sportIds.futsal,
+          regionId,
+          status: 'active',
+          joinPolicy: 'approval_required',
+          memberCount: 1,
+          managerCount: 0,
+        },
+        create: {
+          id: applicantTeamId,
+          name: `커버 신청 팀 ${status}`,
+          ownerUserId: userIds['coverage-active@teameet.v1'],
+          sportId: sportIds.futsal,
+          regionId,
+          status: 'active',
+          joinPolicy: 'approval_required',
+          memberCount: 1,
+          managerCount: 0,
+        },
+      });
+    }
+
+    await prisma.v1TeamMatchApplication.upsert({
+      where: {
+        teamMatchId_applicantTeamId: {
+          teamMatchId: '00000000-0000-4000-8000-000000001401',
+          applicantTeamId,
+        },
+      },
+      update: {
+        appliedByUserId: userIds['coverage-active@teameet.v1'],
+        status,
+        message: `team match application ${status} coverage`,
+        reviewedByUserId: status === 'approved' || status === 'rejected' ? userIds['coverage-active@teameet.v1'] : null,
+        reviewedAt: status === 'approved' || status === 'rejected' ? seedNow : null,
+        withdrawnAt: status === 'withdrawn' ? seedNow : null,
+      },
+      create: {
+        teamMatchId: '00000000-0000-4000-8000-000000001401',
+        applicantTeamId,
+        appliedByUserId: userIds['coverage-active@teameet.v1'],
+        status,
+        message: `team match application ${status} coverage`,
+        reviewedByUserId: status === 'approved' || status === 'rejected' ? userIds['coverage-active@teameet.v1'] : null,
+        reviewedAt: status === 'approved' || status === 'rejected' ? seedNow : null,
+        withdrawnAt: status === 'withdrawn' ? seedNow : null,
+      },
+    });
+  }
+}
+
+async function seedCoverageChatNotificationsAndAdmin(userIds: Record<string, string>) {
+  const archivedRoom = await prisma.v1ChatRoom.upsert({
+    where: { matchId: '00000000-0000-4000-8000-000000001303' },
+    update: { status: 'archived', lastMessageAt: seedNow },
+    create: { matchId: '00000000-0000-4000-8000-000000001303', status: 'archived', lastMessageAt: seedNow },
+  });
+
+  await prisma.v1ChatRoomParticipant.upsert({
+    where: { chatRoomId_userId: { chatRoomId: archivedRoom.id, userId: userIds['coverage-active@teameet.v1'] } },
+    update: { status: 'left', leftAt: seedNow },
+    create: { chatRoomId: archivedRoom.id, userId: userIds['coverage-active@teameet.v1'], status: 'left', leftAt: seedNow },
+  });
+  await prisma.v1ChatRoomParticipant.upsert({
+    where: { chatRoomId_userId: { chatRoomId: archivedRoom.id, userId: userIds['coverage-extra-h@teameet.v1'] } },
+    update: { status: 'active', leftAt: null, pinnedAt: seedNow },
+    create: { chatRoomId: archivedRoom.id, userId: userIds['coverage-extra-h@teameet.v1'], status: 'active', pinnedAt: seedNow },
+  });
+
+  const chatMessages = [
+    ['00000000-0000-4000-8000-000000001501', 'sent', null, null],
+    ['00000000-0000-4000-8000-000000001502', 'hidden', seedNow, null],
+    ['00000000-0000-4000-8000-000000001503', 'deleted', null, seedNow],
+  ] as const;
+
+  for (const [id, status, hiddenAt, deletedAt] of chatMessages) {
+    await prisma.v1ChatMessage.upsert({
+      where: { id },
+      update: {
+        chatRoomId: archivedRoom.id,
+        senderUserId: userIds['coverage-active@teameet.v1'],
+        body: `chat message ${status} coverage`,
+        status,
+        hiddenAt,
+        deletedAt,
+      },
+      create: {
+        id,
+        chatRoomId: archivedRoom.id,
+        senderUserId: userIds['coverage-active@teameet.v1'],
+        body: `chat message ${status} coverage`,
+        status,
+        hiddenAt,
+        deletedAt,
+      },
+    });
+  }
+
+  const notifications = [
+    ['00000000-0000-4000-8000-000000001601', V1NotificationTargetType.match, '00000000-0000-4000-8000-000000001301', '/matches/00000000-0000-4000-8000-000000001301', null],
+    ['00000000-0000-4000-8000-000000001602', V1NotificationTargetType.team, '00000000-0000-4000-8000-000000001201', '/teams/00000000-0000-4000-8000-000000001201', seedNow],
+    ['00000000-0000-4000-8000-000000001603', V1NotificationTargetType.team_match, '00000000-0000-4000-8000-000000001401', '/team-matches/00000000-0000-4000-8000-000000001401', null],
+    ['00000000-0000-4000-8000-000000001604', V1NotificationTargetType.chat, archivedRoom.id, `/chat/rooms/${archivedRoom.id}`, seedNow],
+    ['00000000-0000-4000-8000-000000001605', V1NotificationTargetType.notice, '00000000-0000-4000-8000-000000000001', '/notices/00000000-0000-4000-8000-000000000001', null],
+    ['00000000-0000-4000-8000-000000001606', V1NotificationTargetType.system, null, null, seedNow],
+  ] as const;
+
+  for (const [id, targetType, targetId, deepLink, readAt] of notifications) {
+    await prisma.v1Notification.upsert({
+      where: { id },
+      update: {
+        recipientUserId: userIds['coverage-active@teameet.v1'],
+        targetType,
+        targetId,
+        title: `${targetType} 알림 커버리지`,
+        body: `${targetType} target coverage`,
+        deepLink,
+        readAt,
+      },
+      create: {
+        id,
+        recipientUserId: userIds['coverage-active@teameet.v1'],
+        targetType,
+        targetId,
+        title: `${targetType} 알림 커버리지`,
+        body: `${targetType} target coverage`,
+        deepLink,
+        readAt,
+      },
+    });
+  }
+
+  const adminSpecs = [
+    [userIds['coverage-extra-h@teameet.v1'], V1AdminRole.ops, 'active'],
+    [userIds['coverage-extra-g@teameet.v1'], V1AdminRole.support, 'suspended'],
+    [userIds['coverage-extra-f@teameet.v1'], V1AdminRole.support, 'revoked'],
+  ] as const;
+  for (const [userId, adminRole, status] of adminSpecs) {
+    await prisma.v1AdminUser.upsert({
+      where: { userId },
+      update: { adminRole, status, revokedAt: status === 'revoked' ? seedNow : null },
+      create: {
+        userId,
+        adminRole,
+        status,
+        grantedByAdminUserId: userIds['admin@teameet.v1'],
+        grantedAt: seedNow,
+        revokedAt: status === 'revoked' ? seedNow : null,
+      },
+    });
+  }
+
+  const ownerAdmin = await prisma.v1AdminUser.findUniqueOrThrow({ where: { userId: userIds['admin@teameet.v1'] } });
+  await prisma.v1AdminActionLog.upsert({
+    where: { id: '00000000-0000-4000-8000-000000001701' },
+    update: {
+      adminUserId: ownerAdmin.id,
+      action: 'seed.coverage.review',
+      targetType: 'system',
+      targetId: 'seed-coverage',
+      reason: 'seed coverage action log',
+      beforeJson: { coverage: false },
+      afterJson: { coverage: true },
+    },
+    create: {
+      id: '00000000-0000-4000-8000-000000001701',
+      adminUserId: ownerAdmin.id,
+      action: 'seed.coverage.review',
+      targetType: 'system',
+      targetId: 'seed-coverage',
+      reason: 'seed coverage action log',
+      beforeJson: { coverage: false },
+      afterJson: { coverage: true },
+    },
+  });
+
+  const statusLogs = [
+    ['00000000-0000-4000-8000-000000001711', 'user', userIds['coverage-active@teameet.v1'], 'not_started', 'completed', 'user'],
+    ['00000000-0000-4000-8000-000000001712', 'team', '00000000-0000-4000-8000-000000001203', 'active', 'suspended', 'admin'],
+    ['00000000-0000-4000-8000-000000001713', 'system', 'seed-coverage', null, 'created', 'system'],
+  ] as const;
+
+  for (const [id, targetType, targetId, fromStatus, toStatus, actorType] of statusLogs) {
+    await prisma.v1StatusChangeLog.upsert({
+      where: { id },
+      update: {
+        targetType,
+        targetId,
+        fromStatus,
+        toStatus,
+        actorType,
+        actorUserId: actorType === 'user' ? userIds['coverage-active@teameet.v1'] : null,
+        adminUserId: actorType === 'admin' ? ownerAdmin.id : null,
+        reason: `${actorType} status log coverage`,
+      },
+      create: {
+        id,
+        targetType,
+        targetId,
+        fromStatus,
+        toStatus,
+        actorType,
+        actorUserId: actorType === 'user' ? userIds['coverage-active@teameet.v1'] : null,
+        adminUserId: actorType === 'admin' ? ownerAdmin.id : null,
+        reason: `${actorType} status log coverage`,
+      },
+    });
+  }
+}
+
 async function main() {
   await seedRuntimeCheck();
   const sportIds = await seedSports();
@@ -536,6 +1304,13 @@ async function main() {
 
   await seedChatAndNotifications(userIds, match.id, teamMatch.id);
   await seedAdmin(userIds);
+
+  const coverageUserIds = { ...userIds, ...(await seedCoverageUsers()) };
+  await seedCoverageTermsAndNotices();
+  await seedCoverageTeams(coverageUserIds, sportIds, regions.seoulGangnam.id);
+  await seedCoverageMatches(coverageUserIds, sportIds, regions.seoulGangnam.id);
+  await seedCoverageTeamMatches(coverageUserIds, sportIds, regions.seoulSongpa.id);
+  await seedCoverageChatNotificationsAndAdmin(coverageUserIds);
 }
 
 main()

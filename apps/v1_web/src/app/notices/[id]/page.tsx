@@ -1,7 +1,6 @@
-import { NoticeDetailPageView } from '@/components/notices/notices-page';
-import { getNoticeDetailViewModel } from '@/components/notices/notices.view-model';
+import { NoticeDetailPageClient } from '@/components/notices/notices-client';
 
 export default async function NoticeDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  return <NoticeDetailPageView model={getNoticeDetailViewModel(id)} />;
+  return <NoticeDetailPageClient noticeId={id} />;
 }

@@ -1,6 +1,6 @@
-import { MatchDetailPageView } from '@/components/matches/matches-page';
-import { getMatchDetailViewModel } from '@/components/matches/matches.view-model';
+import { MatchDetailPageClient } from '@/components/matches/matches-client';
 
-export default function MatchDetailPage() {
-  return <MatchDetailPageView model={getMatchDetailViewModel()} />;
+export default async function MatchDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  return <MatchDetailPageClient matchId={id} />;
 }

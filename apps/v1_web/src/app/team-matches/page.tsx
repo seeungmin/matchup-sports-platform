@@ -1,6 +1,5 @@
-import { TeamMatchListPageView } from '@/components/team-matches/team-matches-page';
-import { getTeamMatchListViewModel } from '@/components/team-matches/team-matches.view-model';
+import { TeamMatchListPageClient } from '@/components/team-matches/team-matches-client';
 
 export default function TeamMatchesPage() {
-  return <TeamMatchListPageView model={getTeamMatchListViewModel()} />;
+  return <TeamMatchListPageClient />;
 }
