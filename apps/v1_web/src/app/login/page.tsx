@@ -1,5 +1,6 @@
-import { FirstDesignPage } from '@/components/design/first-design-page';
+import { LoginPageView } from '@/components/auth/auth-page';
+import { getLoginViewModel } from '@/components/auth/auth.view-model';
 
 export default function LoginPage() {
-  return <FirstDesignPage screen="authLogin" />;
+  return <LoginPageView model={getLoginViewModel()} />;
 }

@@ -140,14 +140,14 @@ export function TeamMembersPageView({ model }: { model: TeamMembersViewModel }) 
 
 function TeamSearchBar({ model }: { model: TeamListViewModel }) {
   return (
-    <div className="tm-team-searchbar">
-      <Link className="tm-team-search-input" href="/teams/search" aria-label="팀 검색">
-        <span className="tm-team-search-text">{model.query || model.placeholder}</span>
+    <div className="tm-list-searchbar">
+      <Link className="tm-list-search-input" href="/teams/search" aria-label="팀 검색">
+        <span className="tm-list-search-text">{model.query || model.placeholder}</span>
         <SearchIcon size={19} strokeWidth={2} />
       </Link>
-      <Link className="tm-team-filter-button" href="/teams/filter" aria-label={`필터 ${model.filterCount}개 적용`}>
+      <Link className="tm-list-filter-button" href="/teams/filter" aria-label={`필터 ${model.filterCount}개 적용`}>
         <FilterIcon size={21} strokeWidth={2} />
-        <span className="tm-team-filter-count tab-num">{model.filterCount}</span>
+        <span className="tm-list-filter-count tab-num">{model.filterCount}</span>
       </Link>
     </div>
   );

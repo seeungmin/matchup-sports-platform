@@ -1,5 +1,6 @@
-import { FirstDesignPage } from '@/components/design/first-design-page';
+import { OnboardingPageView } from '@/components/auth/auth-page';
+import { getOnboardingViewModel } from '@/components/auth/auth.view-model';
 
 export default function OnboardingResumePage() {
-  return <FirstDesignPage screen="authResume" />;
+  return <OnboardingPageView model={getOnboardingViewModel('resume')} />;
 }

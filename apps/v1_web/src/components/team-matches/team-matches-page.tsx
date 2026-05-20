@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { AppChrome } from '@/components/v1-ui/shell';
 import { Card, EmptyState, ListItem } from '@/components/v1-ui/primitives';
-import { BellIcon, ChevronLeftIcon, PlusIcon, SearchIcon, ShareIcon } from '@/components/v1-ui/icons';
+import { BellIcon, ChevronLeftIcon, FilterIcon, PlusIcon, SearchIcon, ShareIcon } from '@/components/v1-ui/icons';
 import type { TeamMatchCreateViewModel, TeamMatchDetailViewModel, TeamMatchListViewModel, TeamMatchModel } from './team-matches.types';
 
 export function TeamMatchListPageView({ model }: { model: TeamMatchListViewModel }) {
@@ -9,15 +9,11 @@ export function TeamMatchListPageView({ model }: { model: TeamMatchListViewModel
     <AppChrome
       title="팀매치"
       activeTab="teamMatches"
-      hasNewNotification
+      topBar={false}
       floatingSlot={<TeamMatchCreateFloatingButton />}
     >
+      <TeamMatchSearchBar filterCount={model.filterCount} />
       <div className="tm-match-list">
-        <div className="tm-match-searchbar">
-          <div className="tm-match-search-input"><span className="tm-text-body" style={{ color: 'var(--text-caption)' }}>지역, 팀 이름, 경기조건 검색</span></div>
-          <button className="tm-btn tm-btn-icon tm-btn-ghost" type="button" aria-label="검색 실행"><SearchIcon size={19} /></button>
-          <button className="tm-match-filter-button" type="button">필터 {model.filterCount}</button>
-        </div>
         <div className="tm-sport-chip-row">{model.sports.map((sport) => <button key={sport.label} className={`tm-chip ${sport.active ? 'tm-chip-active' : ''}`} type="button">{sport.label} <span className="tab-num">{sport.count}</span></button>)}</div>
         <div className="tm-match-summary-row"><div className="tm-text-label">서울 전체 · 팀매치</div><div className="tm-text-caption tab-num">{model.summary.count}개 · 오늘 {model.summary.today} · 마감 {model.summary.urgent}</div></div>
         <div className="tm-match-section-head"><div><div className="tm-text-label">팀매치</div><div className="tm-text-caption" style={{ marginTop: 2 }}>종목은 상단에 유지하고 정렬과 보기 방식은 필터에서 조정합니다.</div></div><span className="tm-badge tm-badge-blue">필터 {model.filterCount}</span></div>
@@ -89,6 +85,21 @@ export function TeamMatchCreatePageView({ model }: { model: TeamMatchCreateViewM
       </div>
       <div className="tm-fixed-cta tm-create-fixed-cta"><div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 8 }}><Link className="tm-btn tm-btn-lg tm-btn-neutral" href={model.step === 'team' ? '/team-matches' : '/team-matches/new/team'}>{edit ? '변경 취소' : model.step === 'team' ? '취소' : '이전'}</Link><Link className="tm-btn tm-btn-lg tm-btn-primary" href={nextHref(model.step)}>{edit ? '변경사항 저장' : model.step === 'confirm' ? '팀매치 만들기' : '다음'}</Link></div></div>
     </AppChrome>
+  );
+}
+
+function TeamMatchSearchBar({ filterCount }: { filterCount: number }) {
+  return (
+    <div className="tm-list-searchbar">
+      <Link className="tm-list-search-input" href="/search" aria-label="팀매치 검색">
+        <span className="tm-list-search-text">지역, 팀 이름, 경기조건 검색</span>
+        <SearchIcon size={19} strokeWidth={2} />
+      </Link>
+      <Link className="tm-list-filter-button" href="/team-matches/filter" aria-label={`필터 ${filterCount}개 적용`}>
+        <FilterIcon size={21} strokeWidth={2} />
+        <span className="tm-list-filter-count tab-num">{filterCount}</span>
+      </Link>
+    </div>
   );
 }
 

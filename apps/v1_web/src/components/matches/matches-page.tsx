@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { AppChrome } from '@/components/v1-ui/shell';
 import { Card, EmptyState, ListItem } from '@/components/v1-ui/primitives';
-import { BellIcon, ChevronLeftIcon, PlusIcon, SearchIcon, ShareIcon } from '@/components/v1-ui/icons';
+import { BellIcon, ChevronLeftIcon, FilterIcon, PlusIcon, SearchIcon, ShareIcon } from '@/components/v1-ui/icons';
 import type { MatchCardModel, MatchCreateViewModel, MatchDetailViewModel, MatchListViewModel } from './matches.types';
 
 export function MatchListPageView({ model }: { model: MatchListViewModel }) {
@@ -9,11 +9,11 @@ export function MatchListPageView({ model }: { model: MatchListViewModel }) {
     <AppChrome
       title="매치"
       activeTab="matches"
-      hasNewNotification
+      topBar={false}
       floatingSlot={<MatchCreateFloatingButton />}
     >
+      <MatchSearchBar query={model.query} filterCount={model.filterCount} />
       <div className="tm-match-list">
-        <MatchSearchBar query={model.query} filterCount={model.filterCount} />
         <SportSelector sports={model.sports} />
         <div className="tm-match-summary-row">
           <div className="tm-text-label">{model.summary.label}</div>
@@ -133,12 +133,15 @@ export function MatchCreatePageView({ model }: { model: MatchCreateViewModel }) 
 
 function MatchSearchBar({ query, filterCount }: { query: string; filterCount: number }) {
   return (
-    <div className="tm-match-searchbar">
-      <div className={`tm-match-search-input ${query ? 'tm-match-search-input-filled' : ''}`}>
-        <span className="tm-text-body" style={{ color: query ? 'var(--text-strong)' : 'var(--text-caption)' }}>{query || '지역, 시간, 매치명 검색'}</span>
-      </div>
-      <button className="tm-btn tm-btn-icon tm-btn-ghost" type="button" aria-label="검색 실행"><SearchIcon size={19} /></button>
-      <button className="tm-match-filter-button" type="button" aria-label="필터">필터 {filterCount}</button>
+    <div className="tm-list-searchbar">
+      <Link className="tm-list-search-input" href="/search" aria-label="매치 검색">
+        <span className="tm-list-search-text">{query || '지역, 시간, 매치명 검색'}</span>
+        <SearchIcon size={19} strokeWidth={2} />
+      </Link>
+      <Link className="tm-list-filter-button" href="/matches/filter" aria-label={`필터 ${filterCount}개 적용`}>
+        <FilterIcon size={21} strokeWidth={2} />
+        <span className="tm-list-filter-count tab-num">{filterCount}</span>
+      </Link>
     </div>
   );
 }

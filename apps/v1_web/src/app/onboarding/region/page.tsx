@@ -1,5 +1,6 @@
-import { FirstDesignPage } from '@/components/design/first-design-page';
+import { OnboardingPageView } from '@/components/auth/auth-page';
+import { getOnboardingViewModel } from '@/components/auth/auth.view-model';
 
 export default function OnboardingRegionPage() {
-  return <FirstDesignPage screen="authRegion" />;
+  return <OnboardingPageView model={getOnboardingViewModel('region')} />;
 }

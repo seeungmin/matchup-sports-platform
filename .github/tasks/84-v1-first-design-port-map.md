@@ -216,6 +216,19 @@ Missing or unclear:
 - [x] Started the shell/chrome consistency pass: removed the mock mobile
   status bar from active `AppChrome` routes and the standalone search surface,
   then realigned topbar and scroll-area anchors to the actual app-frame top.
+- [x] Continued the shell/chrome consistency pass by applying the `/teams`
+  top search/filter chrome to `/matches` and `/team-matches`: all three list
+  routes now use the same `topBar={false}` placement and shared
+  `.tm-list-search*` classes, with filter links kept on their domain routes.
+- [x] Continued the componentized publishing path with core `01` auth and
+  onboarding routes: `/login`, `/terms`, `/signup`, and `/onboarding/*` now
+  use `auth.types -> auth.view-model -> auth-page` instead of rendering
+  `FirstDesignPage` and `design-source` directly.
+- [x] Continued the shell/chrome consistency pass for fixed bottom surfaces:
+  `.tm-fixed-cta` and `.tm-chat-inputbar` now anchor to the `AppChrome` frame
+  instead of the viewport, matching the existing frame-level FAB behavior; my
+  and chat content bottom padding was increased so final content is not hidden
+  behind fixed actions.
 - [x] Detail pass started with `02 home`: compared active
   `HomePageView` against `SMRevisionHomeMobileV2`, kept the existing
   componentized structure, and corrected route continuity for home shortcuts,
@@ -437,6 +450,43 @@ Validation notes:
 - Restarted the v1 dev server on `3013` with `pnpm --filter v1_web dev` after
   the shell/chrome pass; readiness smoke returned `200` for `/home`, `/search`,
   and `/matches/match-1`.
+- List search/filter chrome validation passed: removed stale
+  `.tm-match-searchbar`, `.tm-match-search-input`, and `.tm-match-filter-button`
+  usage, leaving active list chrome on shared `.tm-list-search*` classes;
+  `git diff --check -- apps/v1_web/src/components/matches/matches-page.tsx
+  apps/v1_web/src/components/team-matches/team-matches-page.tsx
+  apps/v1_web/src/components/teams/teams-page.tsx apps/v1_web/src/app/globals.css`
+  passed; `pnpm --filter v1_web exec tsc --noEmit --pretty false` passed.
+- List chrome smoke returned `200`: `/matches`, `/team-matches`, `/teams`,
+  `/search`, `/matches/filter`, `/team-matches/filter`, `/teams/search`, and
+  `/teams/filter`.
+- Auth/onboarding detail pass validation passed: active auth route search has
+  no remaining `FirstDesignPage`, `design-source`, or `components/design`
+  imports; `git diff --check -- apps/v1_web/src/components/auth
+  apps/v1_web/src/app/login/page.tsx apps/v1_web/src/app/signup/page.tsx
+  apps/v1_web/src/app/terms/page.tsx apps/v1_web/src/app/onboarding
+  apps/v1_web/src/app/globals.css` passed; `pnpm --filter v1_web exec tsc
+  --noEmit --pretty false` passed.
+- Auth/onboarding smoke returned `200`: `/login`, `/terms`, `/signup`,
+  `/onboarding/resume`, `/onboarding/sport`, `/onboarding/level`,
+  `/onboarding/region`, and `/onboarding/confirm`.
+- Restarted the v1 dev server on `3013` with `pnpm --filter v1_web dev` after
+  the auth/onboarding pass; readiness smoke returned `200` for `/login` and
+  `/onboarding/confirm`.
+- Fixed bottom surface validation passed: `git diff --check -- apps/v1_web/src/app/globals.css
+  .github/tasks/84-v1-first-design-port-map.md apps/v1_web/src/components/auth
+  apps/v1_web/src/app/login/page.tsx apps/v1_web/src/app/signup/page.tsx
+  apps/v1_web/src/app/terms/page.tsx apps/v1_web/src/app/onboarding
+  apps/v1_web/src/components/matches/matches-page.tsx
+  apps/v1_web/src/components/team-matches/team-matches-page.tsx
+  apps/v1_web/src/components/teams/teams-page.tsx` passed; `pnpm --filter
+  v1_web exec tsc --noEmit --pretty false` passed.
+- Fixed bottom surface smoke returned `200`: `/matches/match-1`,
+  `/team-matches/team-match-1`, `/teams/team-1`, `/chat/room-1`,
+  `/my/profile/edit`, and `/my/settings/withdrawal`.
+- Restarted the v1 dev server on `3013` with `pnpm --filter v1_web dev` after
+  the fixed bottom surface pass; readiness smoke returned `200` for `/login`,
+  `/matches/match-1`, and `/chat/room-1`.
 
 ## Ambiguity Log
 
