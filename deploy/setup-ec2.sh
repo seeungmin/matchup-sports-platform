@@ -169,7 +169,7 @@ for i in $(seq 1 30); do
 done
 
 $COMPOSE -f docker-compose.prod.yml run --rm --no-deps -T api npx ts-node prisma/bootstrap-deploy-db.ts
-$COMPOSE -f docker-compose.prod.yml run --rm --no-deps -T v1_api sh -c "cd /app/apps/v1_api && ./node_modules/.bin/prisma migrate deploy"
+$COMPOSE -f docker-compose.prod.yml run --rm --no-deps -T v1_api sh -c "cd /app/apps/v1_api && ./node_modules/.bin/prisma db push --skip-generate && ./node_modules/.bin/prisma migrate deploy"
 
 # 10. 전체 스택 시작
 echo "🚀 애플리케이션 스택 시작..."

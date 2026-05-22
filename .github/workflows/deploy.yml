@@ -333,9 +333,9 @@ jobs:
           echo "[INFO] Bootstrapping deploy database..."
           ${COMPOSE} -f docker-compose.prod.yml --env-file .env \
             run --rm --no-deps -T api sh -c "cd /app/apps/api && ./node_modules/.bin/ts-node prisma/bootstrap-deploy-db.ts"
-          echo "[INFO] Applying v1 deploy database migrations..."
+          echo "[INFO] Syncing v1 deploy database schema..."
           ${COMPOSE} -f docker-compose.prod.yml --env-file .env \
-            run --rm --no-deps -T v1_api sh -c "cd /app/apps/v1_api && ./node_modules/.bin/prisma migrate deploy"
+            run --rm --no-deps -T v1_api sh -c "cd /app/apps/v1_api && ./node_modules/.bin/prisma db push --skip-generate && ./node_modules/.bin/prisma migrate deploy"
           echo "[INFO] Build phase complete."
           EOF
 

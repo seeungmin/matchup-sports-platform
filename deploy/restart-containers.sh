@@ -47,6 +47,9 @@ for i in $(seq 1 30); do
 done
 
 echo "[INFO] Recreating api, v1_api, web, v1_web, nginx only (keeping postgres/redis running)..."
+echo "[INFO] Syncing v1 deploy database schema..."
+${COMPOSE} -f docker-compose.prod.yml --env-file .env run --rm --no-deps -T v1_api sh -c "cd /app/apps/v1_api && ./node_modules/.bin/prisma db push --skip-generate && ./node_modules/.bin/prisma migrate deploy"
+
 ${COMPOSE} -f docker-compose.prod.yml --env-file .env up -d --force-recreate --no-deps api
 ${COMPOSE} -f docker-compose.prod.yml --env-file .env up -d --force-recreate --no-deps v1_api
 echo "[INFO] Waiting for APIs to be ready before starting web..."
