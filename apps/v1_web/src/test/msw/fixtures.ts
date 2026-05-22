@@ -10,6 +10,7 @@ import type {
   V1Notice,
   V1Profile,
   V1Region,
+  V1RecentSearch,
   V1Settings,
   V1Sport,
   V1Team,
@@ -37,20 +38,39 @@ export const v1RegionsFixture: V1Region[] = [
   { id: 'region-songpa', name: '송파', parentId: 'region-seoul' },
 ];
 
+export const v1RecentSearchesFixture: V1RecentSearch[] = [
+  { id: 'recent-1', query: '풋살', searchedAt: '2026-05-18T09:00:00.000Z' },
+  { id: 'recent-2', query: '마포', searchedAt: '2026-05-18T08:00:00.000Z' },
+];
+
 export const v1NoticesFixture: V1Notice[] = [
   {
     id: 'notice-1',
-    title: 'v1 베타 운영 기준 안내',
-    category: '운영',
+    title: '이번 주 고정 공지',
+    category: '고정',
     publishedAt: '2026-05-18T00:00:00.000Z',
-    body: 'SM New v1은 새 앱과 새 데이터베이스에서 검증 중입니다.',
+    body: '주말 경기장 입장 시간과 체크인 안내',
   },
   {
     id: 'notice-2',
-    title: '결제와 환불 기능은 이번 v1 범위에서 제외됩니다',
-    category: '범위',
+    title: '매너 점수 업데이트',
+    category: '업데이트',
     publishedAt: '2026-05-17T00:00:00.000Z',
-    body: '참여 신청과 승인 흐름까지만 제공합니다.',
+    body: '경기 후 리뷰 반영 기준 안내',
+  },
+  {
+    id: 'notice-3',
+    title: '비 예보 경기 안내',
+    category: '안내',
+    publishedAt: '2026-05-16T00:00:00.000Z',
+    body: '우천 시 취소와 환불 기준 확인',
+  },
+  {
+    id: 'notice-4',
+    title: '프로필 공개 범위 안내',
+    category: '안내',
+    publishedAt: '2026-05-15T00:00:00.000Z',
+    body: '닉네임, 활동 지역, 선호 종목 공개 범위 기준을 안내합니다.',
   },
 ];
 

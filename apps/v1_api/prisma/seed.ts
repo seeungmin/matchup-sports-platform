@@ -162,24 +162,35 @@ async function seedTermsAndNotice() {
     });
   }
 
-  await prisma.v1Notice.upsert({
-    where: { id: '00000000-0000-4000-8000-000000000001' },
-    update: {
-      audience: 'public',
-      title: 'Teameet v1 개발 환경 안내',
-      body: 'v1 seed 데이터로 생성된 공지입니다.',
-      status: 'published',
-      publishedAt: new Date('2026-05-18T00:00:00.000Z'),
-    },
-    create: {
-      id: '00000000-0000-4000-8000-000000000001',
-      audience: 'public',
-      title: 'Teameet v1 개발 환경 안내',
-      body: 'v1 seed 데이터로 생성된 공지입니다.',
-      status: 'published',
-      publishedAt: new Date('2026-05-18T00:00:00.000Z'),
-    },
-  });
+  const publicNotices = [
+    ['00000000-0000-4000-8000-000000000001', '고정', '이번 주 고정 공지', '주말 경기장 입장 시간과 체크인 안내', '2026-05-18T00:00:00.000Z'],
+    ['00000000-0000-4000-8000-000000000002', '업데이트', '매너 점수 업데이트', '경기 후 리뷰 반영 기준 안내', '2026-05-17T00:00:00.000Z'],
+    ['00000000-0000-4000-8000-000000000003', '안내', '비 예보 경기 안내', '우천 시 취소와 환불 기준 확인', '2026-05-16T00:00:00.000Z'],
+    ['00000000-0000-4000-8000-000000000004', '안내', '프로필 공개 범위 안내', '닉네임, 활동 지역, 선호 종목 공개 범위 기준을 안내합니다.', '2026-05-15T00:00:00.000Z'],
+  ] as const;
+
+  for (const [id, category, title, body, publishedAt] of publicNotices) {
+    await prisma.v1Notice.upsert({
+      where: { id },
+      update: {
+        audience: 'public',
+        category,
+        title,
+        body,
+        status: 'published',
+        publishedAt: new Date(publishedAt),
+      },
+      create: {
+        id,
+        audience: 'public',
+        category,
+        title,
+        body,
+        status: 'published',
+        publishedAt: new Date(publishedAt),
+      },
+    });
+  }
 }
 
 async function seedUsers() {
@@ -709,17 +720,21 @@ async function seedCoverageTermsAndNotices() {
   });
 
   const notices = [
-    ['00000000-0000-4000-8000-000000001101', 'users', 'published', '사용자 공지 커버리지'],
-    ['00000000-0000-4000-8000-000000001102', 'admins', 'published', '관리자 공지 커버리지'],
-    ['00000000-0000-4000-8000-000000001103', 'public', 'draft', '초안 공지 커버리지'],
-    ['00000000-0000-4000-8000-000000001104', 'public', 'archived', '보관 공지 커버리지'],
+    ['00000000-0000-4000-8000-000000001101', 'users', 'published', '안내', '사용자 공지 커버리지'],
+    ['00000000-0000-4000-8000-000000001102', 'admins', 'published', '안내', '관리자 공지 커버리지'],
+    ['00000000-0000-4000-8000-000000001103', 'public', 'draft', '업데이트', '초안 공지 커버리지'],
+    ['00000000-0000-4000-8000-000000001104', 'public', 'archived', '안내', '보관 공지 커버리지'],
+    ['00000000-0000-4000-8000-000000001105', 'public', 'published', '고정', '이번 주 고정 공지'],
+    ['00000000-0000-4000-8000-000000001106', 'public', 'published', '업데이트', '매너 점수 업데이트'],
+    ['00000000-0000-4000-8000-000000001107', 'public', 'published', '안내', '비 예보 경기 안내'],
   ] as const;
 
-  for (const [id, audience, status, title] of notices) {
+  for (const [id, audience, status, category, title] of notices) {
     await prisma.v1Notice.upsert({
       where: { id },
       update: {
         audience,
+        category,
         status,
         title,
         body: `${title} seed data`,
@@ -729,6 +744,7 @@ async function seedCoverageTermsAndNotices() {
       create: {
         id,
         audience,
+        category,
         status,
         title,
         body: `${title} seed data`,

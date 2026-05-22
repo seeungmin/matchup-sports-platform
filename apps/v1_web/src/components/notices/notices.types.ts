@@ -9,7 +9,7 @@ export type NoticeModel = {
 };
 
 export type NoticeListViewModel = {
-  filters: Array<{ label: string; active?: boolean }>;
+  filters: Array<{ label: string; active?: boolean; onSelect?: () => void }>;
   notices: NoticeModel[];
 };
 

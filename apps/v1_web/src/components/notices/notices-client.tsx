@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo, useState } from 'react';
 import { useV1Notice, useV1Notices } from '@/hooks/use-v1-api';
 import type { V1Notice } from '@/types/api';
 import { NoticeDetailPageView, NoticeListPageView } from './notices-page';
@@ -7,14 +8,30 @@ import type { NoticeDetailViewModel, NoticeListViewModel, NoticeModel } from './
 import { getNoticeDetailViewModel, getNoticeListViewModel } from './notices.view-model';
 
 export function NoticeListPageClient() {
-  const query = useV1Notices();
+  const [selectedCategory, setSelectedCategory] = useState('전체');
+  const query = useV1Notices(selectedCategory === '전체' ? undefined : { category: selectedCategory });
   const fallback = getNoticeListViewModel();
+  const notices = sortPinnedFirst(query.data ? getNoticeItems(query.data).map(toNotice) : fallback.notices);
+  const categories = useMemo(() => {
+    const labels = ['전체', '고정', '업데이트', '안내'];
+    return labels.map((label) => ({
+      label,
+      active: selectedCategory === label,
+      onSelect: () => setSelectedCategory(label),
+    }));
+  }, [selectedCategory]);
+
   const model: NoticeListViewModel = query.data
     ? {
         ...fallback,
-        notices: getNoticeItems(query.data).map(toNotice),
+        filters: categories,
+        notices,
       }
-    : fallback;
+    : {
+        ...fallback,
+        filters: categories,
+        notices: selectedCategory === '전체' ? notices : notices.filter((notice) => notice.tag === selectedCategory),
+      };
 
   return <NoticeListPageView model={model} />;
 }
@@ -41,7 +58,7 @@ function toNotice(notice: V1Notice): NoticeModel {
     title: notice.title,
     summary: body,
     date: formatDate(notice.publishedAt),
-    pinned: notice.category === '운영' || notice.audience === 'public',
+    pinned: notice.category === '고정',
     body: body.split('\n').filter(Boolean),
   };
 }
@@ -63,6 +80,14 @@ function fallbackNotice(noticeId: string): V1Notice {
     body: fallback.body.join('\n'),
     publishedAt: new Date().toISOString(),
   };
+}
+
+function sortPinnedFirst(notices: NoticeModel[]) {
+  return [...notices].sort((a, b) => {
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+    return 0;
+  });
 }
 
 function formatDate(value: string) {

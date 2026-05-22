@@ -38,6 +38,8 @@ import type {
   V1OnboardingPreferencePayload,
   V1Profile,
   V1Region,
+  V1RecentSearch,
+  V1RecentSearchesResponse,
   V1Settings,
   V1Sport,
   V1Team,
@@ -61,6 +63,7 @@ import type {
 } from '@/types/api';
 
 type ListFilters = Record<string, string | number | boolean | null | undefined>;
+type QueryOptions = { enabled?: boolean };
 
 export function useV1AuthMe(options?: { enabled?: boolean; retry?: boolean | number }) {
   return useQuery({
@@ -150,6 +153,21 @@ export function useV1MasterRegions() {
   });
 }
 
+export function useV1RecentSearches() {
+  return useQuery({
+    queryKey: v1Keys.recentSearches(),
+    queryFn: () => v1Get<V1RecentSearchesResponse>('/search/recent', { limit: 8 }),
+  });
+}
+
+export function useV1RecordSearch() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { query: string; filters?: Record<string, unknown> }) => v1Post<V1RecentSearch>('/search/recent', body),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: v1Keys.recentSearches() }),
+  });
+}
+
 export function useV1Home(filters?: ListFilters) {
   return useQuery({
     queryKey: v1Keys.home(filters),
@@ -157,10 +175,10 @@ export function useV1Home(filters?: ListFilters) {
   });
 }
 
-export function useV1Notices() {
+export function useV1Notices(filters?: ListFilters) {
   return useQuery({
-    queryKey: v1Keys.notices(),
-    queryFn: () => v1Get<V1NoticesResponse>('/notices'),
+    queryKey: v1Keys.notices(filters),
+    queryFn: () => v1Get<V1NoticesResponse>('/notices', filters),
   });
 }
 
@@ -172,10 +190,11 @@ export function useV1Notice(noticeId: string) {
   });
 }
 
-export function useV1Matches(filters?: ListFilters) {
+export function useV1Matches(filters?: ListFilters, options?: QueryOptions) {
   return useQuery({
     queryKey: v1Keys.matches(filters),
     queryFn: () => v1Get<CursorPage<V1Match>>('/matches', filters),
+    enabled: options?.enabled,
   });
 }
 
@@ -294,10 +313,11 @@ export function useV1RejectMatchApplication(matchId: string) {
   });
 }
 
-export function useV1Teams(filters?: ListFilters) {
+export function useV1Teams(filters?: ListFilters, options?: QueryOptions) {
   return useQuery({
     queryKey: v1Keys.teams(filters),
     queryFn: () => v1Get<CursorPage<V1Team>>('/teams', filters),
+    enabled: options?.enabled,
   });
 }
 
@@ -444,10 +464,11 @@ export function useV1RemoveTeamMembership(teamId: string) {
   });
 }
 
-export function useV1TeamMatches(filters?: ListFilters) {
+export function useV1TeamMatches(filters?: ListFilters, options?: QueryOptions) {
   return useQuery({
     queryKey: v1Keys.teamMatches(filters),
     queryFn: () => v1Get<CursorPage<V1TeamMatch>>('/team-matches', filters),
+    enabled: options?.enabled,
   });
 }
 

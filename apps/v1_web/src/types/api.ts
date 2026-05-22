@@ -136,6 +136,17 @@ export type V1NoticeResponse = {
   notice: V1Notice;
 };
 
+export type V1RecentSearch = {
+  id: string;
+  query: string;
+  filters?: unknown;
+  searchedAt: string;
+};
+
+export type V1RecentSearchesResponse = {
+  items: V1RecentSearch[];
+};
+
 export type V1Match = {
   id: string;
   matchId?: string;

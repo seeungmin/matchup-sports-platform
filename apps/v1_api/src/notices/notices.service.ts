@@ -1,21 +1,24 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import type { NoticesQueryDto } from './dto/notices-query.dto';
 
 @Injectable()
 export class NoticesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async list() {
+  async list(query: NoticesQueryDto = {}) {
     const notices = await this.prisma.v1Notice.findMany({
       where: {
         status: 'published',
         audience: 'public',
+        ...(query.category ? { category: query.category } : {}),
       },
       orderBy: [{ publishedAt: 'desc' }, { id: 'desc' }],
       take: 20,
       select: {
         id: true,
         audience: true,
+        category: true,
         title: true,
         body: true,
         publishedAt: true,
@@ -23,13 +26,20 @@ export class NoticesService {
     });
 
     return {
-      notices: notices.map((notice) => ({
-        noticeId: notice.id,
-        audience: notice.audience,
-        title: notice.title,
-        body: notice.body,
-        publishedAt: notice.publishedAt,
-      })),
+      notices: notices
+        .sort((a, b) => {
+          if (a.category === '고정' && b.category !== '고정') return -1;
+          if (a.category !== '고정' && b.category === '고정') return 1;
+          return 0;
+        })
+        .map((notice) => ({
+          noticeId: notice.id,
+          audience: notice.audience,
+          category: notice.category,
+          title: notice.title,
+          body: notice.body,
+          publishedAt: notice.publishedAt,
+        })),
       pageInfo: {
         hasNextPage: false,
         nextCursor: null,
@@ -47,6 +57,7 @@ export class NoticesService {
       select: {
         id: true,
         audience: true,
+        category: true,
         title: true,
         body: true,
         publishedAt: true,
@@ -61,6 +72,7 @@ export class NoticesService {
       notice: {
         noticeId: notice.id,
         audience: notice.audience,
+        category: notice.category,
         title: notice.title,
         body: notice.body,
         publishedAt: notice.publishedAt,

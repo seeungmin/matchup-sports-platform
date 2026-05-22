@@ -1,4 +1,5 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
+import { NoticesQueryDto } from './dto/notices-query.dto';
 import { NoticesService } from './notices.service';
 
 @Controller('notices')
@@ -6,8 +7,8 @@ export class NoticesController {
   constructor(private readonly noticesService: NoticesService) {}
 
   @Get()
-  list() {
-    return this.noticesService.list();
+  list(@Query() query: NoticesQueryDto) {
+    return this.noticesService.list(query);
   }
 
   @Get(':noticeId')

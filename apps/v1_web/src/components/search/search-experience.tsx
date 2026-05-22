@@ -2,8 +2,10 @@
 
 import { Search, X, ChevronLeft, Clock, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
+import { useV1Matches, useV1RecentSearches, useV1RecordSearch, useV1TeamMatches, useV1Teams } from '@/hooks/use-v1-api';
+import type { V1Match, V1Team, V1TeamMatch } from '@/types/api';
 
 type SearchState = 'results' | 'new' | 'empty' | 'error' | 'stale';
 
@@ -11,7 +13,6 @@ type SearchExperienceProps = {
   state?: SearchState;
 };
 
-const recentSearches = ['동네', '강남', '오늘 대기', '마감임박'];
 const quickFilters = [
   ['오늘 참여 가능', '오늘 매치만 기준'],
   ['마감임박', '24시간 이내'],
@@ -27,15 +28,44 @@ const baseResults = [
 
 export function SearchExperience({ state = 'results' }: SearchExperienceProps) {
   const router = useRouter();
-  const [query, setQuery] = useState(state === 'new' ? '' : '동네');
-  const [submittedQuery, setSubmittedQuery] = useState(state === 'new' ? '' : '동네');
+  const initialQuery = getInitialQuery(state);
+  const [query, setQuery] = useState(initialQuery);
+  const [submittedQuery, setSubmittedQuery] = useState(initialQuery);
+  const [selectedQuickFilter, setSelectedQuickFilter] = useState<string | null>(null);
+  const shouldSearch = state === 'results' && submittedQuery.trim().length > 0;
+  const filters = useMemo(() => ({ query: submittedQuery.trim(), limit: 5, sort: 'recommended' }), [submittedQuery]);
+  const recentSearches = useV1RecentSearches();
+  const recordSearch = useV1RecordSearch();
+  const matchesQuery = useV1Matches(filters, { enabled: shouldSearch });
+  const teamMatchesQuery = useV1TeamMatches(filters, { enabled: shouldSearch });
+  const teamsQuery = useV1Teams(filters, { enabled: shouldSearch });
+  const apiResults = useMemo(() => {
+    if (!shouldSearch) return [];
+    return [
+      ...(matchesQuery.data?.items ?? []).map(toMatchResult),
+      ...(teamMatchesQuery.data?.items ?? []).map(toTeamMatchResult),
+      ...(teamsQuery.data?.items ?? []).map(toTeamResult),
+    ];
+  }, [matchesQuery.data?.items, shouldSearch, teamMatchesQuery.data?.items, teamsQuery.data?.items]);
+  const loading = shouldSearch && (matchesQuery.isLoading || teamMatchesQuery.isLoading || teamsQuery.isLoading);
+  const errored = shouldSearch && (matchesQuery.isError || teamMatchesQuery.isError || teamsQuery.isError);
 
   const viewState = useMemo<SearchState>(() => {
     if (state !== 'results') {
       return state;
     }
+    if (errored) return 'error';
+    if (loading) return 'stale';
     return submittedQuery.trim() ? 'results' : 'new';
-  }, [state, submittedQuery]);
+  }, [errored, loading, state, submittedQuery]);
+
+  useEffect(() => {
+    if (state !== 'results') return;
+    const next = new URLSearchParams(window.location.search).get('q') ?? '';
+    if (!next) return;
+    setQuery(next);
+    setSubmittedQuery(next);
+  }, [state]);
 
   function goBack() {
     if (window.history.length > 1) {
@@ -53,7 +83,8 @@ export function SearchExperience({ state = 'results' }: SearchExperienceProps) {
       router.replace('/search/new');
       return;
     }
-    router.replace('/search');
+    router.replace(`/search?q=${encodeURIComponent(nextQuery)}`);
+    recordSearch.mutate({ query: nextQuery, filters: selectedQuickFilter ? { quickFilter: selectedQuickFilter } : undefined });
   }
 
   function clear() {
@@ -63,12 +94,25 @@ export function SearchExperience({ state = 'results' }: SearchExperienceProps) {
   }
 
   function useChip(value: string) {
+    setSelectedQuickFilter(null);
     setQuery(value);
     setSubmittedQuery(value);
-    router.replace('/search');
+    router.replace(`/search?q=${encodeURIComponent(value)}`);
+    recordSearch.mutate({ query: value, filters: { source: 'recent' } });
   }
 
-  const showStateMessage = viewState === 'empty' || viewState === 'error' || viewState === 'stale';
+  function toggleQuickFilter(value: string) {
+    setSelectedQuickFilter(value);
+    setQuery(value);
+    setSubmittedQuery(value);
+    router.replace(`/search?q=${encodeURIComponent(value)}`);
+    recordSearch.mutate({ query: value, filters: { quickFilter: value } });
+  }
+
+  const results = state === 'results' ? apiResults : baseResults;
+  const hasEmptyApiResults = shouldSearch && !loading && !errored && apiResults.length === 0;
+  const effectiveViewState = viewState === 'results' && hasEmptyApiResults ? 'empty' : viewState;
+  const effectiveShowStateMessage = effectiveViewState === 'empty' || effectiveViewState === 'error' || effectiveViewState === 'stale';
 
   return (
     <div style={{ width: 'min(100%, 375px)', height: '100dvh', margin: '0 auto', background: 'var(--bg)', fontFamily: 'var(--font)', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
@@ -102,21 +146,30 @@ export function SearchExperience({ state = 'results' }: SearchExperienceProps) {
       <div style={{ flex: 1, overflow: 'auto', padding: '18px 20px 22px' }}>
         <div className="tm-text-label">최근 검색</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
-          {recentSearches.map((label, index) => (
-            <button key={label} type="button" onClick={() => useChip(label)} className={`tm-chip ${index === 0 ? 'tm-chip-active' : ''}`}>
-              {label}
+          {(recentSearches.data?.items ?? []).map((item, index) => (
+            <button key={item.id} type="button" onClick={() => useChip(item.query)} className={`tm-chip ${index === 0 ? 'tm-chip-active' : ''}`}>
+              {item.query}
             </button>
           ))}
+          {!recentSearches.isLoading && !recentSearches.data?.items.length ? (
+            <span className="tm-text-caption" style={{ color: 'var(--text-caption)' }}>최근 검색어가 없습니다.</span>
+          ) : null}
+          {recentSearches.isLoading ? (
+            <span className="tm-text-caption" style={{ color: 'var(--text-caption)' }}>검색어 불러오는 중</span>
+          ) : null}
         </div>
 
         <div className="tm-text-label" style={{ marginTop: 20 }}>빠른 조건</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
-          {quickFilters.map(([title, sub], index) => (
-            <button key={title} type="button" onClick={() => useChip(title)} className="tm-card tm-card-interactive" style={{ textAlign: 'left', padding: 14, border: 0, background: index === 0 ? 'var(--blue50)' : 'var(--bg)' }}>
-              <div className="tm-text-label" style={{ color: index === 0 ? 'var(--blue500)' : 'var(--text-strong)' }}>{title}</div>
-              <div className="tm-text-micro" style={{ marginTop: 4, color: 'var(--text-caption)' }}>{sub}</div>
-            </button>
-          ))}
+          {quickFilters.map(([title, sub]) => {
+            const selected = selectedQuickFilter === title;
+            return (
+              <button key={title} type="button" onClick={() => toggleQuickFilter(title)} className="tm-card tm-card-interactive" aria-pressed={selected} style={{ textAlign: 'left', padding: 14, border: 0, background: selected ? 'var(--blue50)' : 'var(--bg)' }}>
+                <div className="tm-text-label" style={{ color: selected ? 'var(--blue500)' : 'var(--text-strong)' }}>{title}</div>
+                <div className="tm-text-micro" style={{ marginTop: 4, color: 'var(--text-caption)' }}>{sub}</div>
+              </button>
+            );
+          })}
         </div>
 
         <div style={{ height: 1, background: 'var(--grey100)', margin: '20px 0 18px' }} />
@@ -127,9 +180,9 @@ export function SearchExperience({ state = 'results' }: SearchExperienceProps) {
           </div>
         </div>
 
-        {viewState === 'results' ? (
+        {effectiveViewState === 'results' ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12 }}>
-            {baseResults.map((item) => (
+            {results.map((item) => (
               <button key={item.title} type="button" onClick={() => router.push(item.href)} className="tm-card tm-card-interactive" style={{ width: '100%', textAlign: 'left', border: 0, background: 'var(--bg)', padding: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span className="tm-badge tm-badge-blue tm-badge-sm">{item.type}</span>
@@ -141,7 +194,7 @@ export function SearchExperience({ state = 'results' }: SearchExperienceProps) {
           </div>
         ) : null}
 
-        {viewState === 'new' ? (
+        {effectiveViewState === 'new' ? (
           <div style={{ marginTop: 42, textAlign: 'center', color: 'var(--text-muted)' }}>
             <div style={{ width: 48, height: 48, borderRadius: 16, background: 'var(--grey50)', display: 'grid', placeItems: 'center', margin: '0 auto 14px', color: 'var(--grey500)' }}>
               <Search size={22} />
@@ -151,22 +204,68 @@ export function SearchExperience({ state = 'results' }: SearchExperienceProps) {
           </div>
         ) : null}
 
-        {showStateMessage ? (
+        {effectiveShowStateMessage ? (
           <div style={{ marginTop: 42, textAlign: 'center', color: 'var(--text-muted)' }}>
-            <div style={{ width: 48, height: 48, borderRadius: 16, background: 'var(--grey50)', display: 'grid', placeItems: 'center', margin: '0 auto 14px', color: viewState === 'error' ? 'var(--red500)' : 'var(--grey500)' }}>
-              {viewState === 'stale' ? <Clock size={22} /> : viewState === 'error' ? <AlertCircle size={22} /> : <Search size={22} />}
+            <div style={{ width: 48, height: 48, borderRadius: 16, background: 'var(--grey50)', display: 'grid', placeItems: 'center', margin: '0 auto 14px', color: effectiveViewState === 'error' ? 'var(--red500)' : 'var(--grey500)' }}>
+              {effectiveViewState === 'stale' ? <Clock size={22} /> : effectiveViewState === 'error' ? <AlertCircle size={22} /> : <Search size={22} />}
             </div>
-            <div className="tm-text-body-lg">{viewState === 'stale' ? '최신 검색 결과를 확인 중입니다.' : viewState === 'error' ? '검색 결과를 불러오지 못했습니다.' : '검색 결과가 없습니다.'}</div>
+            <div className="tm-text-body-lg">{effectiveViewState === 'stale' ? '최신 검색 결과를 확인 중입니다.' : effectiveViewState === 'error' ? '검색 결과를 불러오지 못했습니다.' : '검색 결과가 없습니다.'}</div>
             <div className="tm-text-caption" style={{ marginTop: 6 }}>검색어와 조건은 유지됩니다.</div>
           </div>
         ) : null}
       </div>
 
-      {viewState === 'error' ? (
+      {effectiveViewState === 'error' ? (
         <div style={{ position: 'absolute', left: 20, right: 20, bottom: 22, minHeight: 48, borderRadius: 14, background: 'rgba(25,31,40,.94)', color: 'var(--static-white)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 14px', fontSize: 13, fontWeight: 700 }}>
           새로고침이 필요합니다. 잠시 후 다시 검색해 주세요.
         </div>
       ) : null}
     </div>
   );
+}
+
+function getInitialQuery(state: SearchState) {
+  if (state === 'new') return '';
+  if (typeof window === 'undefined') return '';
+  return new URLSearchParams(window.location.search).get('q') ?? '';
+}
+
+function toMatchResult(item: V1Match) {
+  return {
+    type: '매치',
+    title: item.title,
+    meta: [item.sport?.name ?? item.sportName, item.place?.name ?? item.placeName, formatDateTime(item.startsAt), item.capacityText].filter(Boolean).join(' · '),
+    href: `/matches/${item.matchId ?? item.id}`,
+  };
+}
+
+function toTeamMatchResult(item: V1TeamMatch) {
+  return {
+    type: '팀매치',
+    title: item.title,
+    meta: [item.sport?.name ?? item.sportName, item.hostTeam?.name ?? item.hostTeamName, item.place?.name ?? item.placeName, formatDateTime(item.startsAt)].filter(Boolean).join(' · '),
+    href: `/team-matches/${item.teamMatchId ?? item.id}`,
+  };
+}
+
+function toTeamResult(item: V1Team) {
+  return {
+    type: '팀',
+    title: item.name,
+    meta: [item.sport?.name ?? item.sportName, item.region?.name ?? item.regionName, `${item.memberCount}명`, item.joinPolicy === 'approval_required' ? '신입 환영' : '모집 마감'].filter(Boolean).join(' · '),
+    href: `/teams/${item.teamId ?? item.id}`,
+  };
+}
+
+function formatDateTime(value?: string | null) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat('ko-KR', {
+    month: 'numeric',
+    day: 'numeric',
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
 }

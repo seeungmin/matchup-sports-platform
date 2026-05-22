@@ -9,6 +9,7 @@ import {
   v1NoticesFixture,
   v1NotificationsFixture,
   v1ProfileFixture,
+  v1RecentSearchesFixture,
   v1RegionsFixture,
   v1SettingsFixture,
   v1SportsFixture,
@@ -42,8 +43,17 @@ export const v1MswHandlers = [
   http.post(`${api}/onboarding/defer`, () => ok({ status: 'deferred', next: { route: '/home', reason: 'onboarding_deferred' }, missing: ['sports'], limited: true })),
   http.get(`${api}/master/sports`, () => ok(v1SportsFixture)),
   http.get(`${api}/master/regions`, () => ok(v1RegionsFixture)),
+  http.get(`${api}/search/recent`, () => ok({ items: v1RecentSearchesFixture })),
+  http.post(`${api}/search/recent`, async ({ request }) => {
+    const body = await request.json() as { query: string; filters?: unknown };
+    return ok({ id: 'recent-new', ...body, searchedAt: '2026-05-18T10:00:00.000Z' });
+  }),
   http.get(`${api}/home`, () => ok(v1HomeFixture)),
-  http.get(`${api}/notices`, () => ok({ notices: v1NoticesFixture, pageInfo: { hasNextPage: false, nextCursor: null } })),
+  http.get(`${api}/notices`, ({ request }) => {
+    const category = new URL(request.url).searchParams.get('category');
+    const notices = category ? v1NoticesFixture.filter((item) => item.category === category) : v1NoticesFixture;
+    return ok({ notices, pageInfo: { hasNextPage: false, nextCursor: null } });
+  }),
   http.get(`${api}/notices/:noticeId`, ({ params }) => ok({ notice: v1NoticesFixture.find((item) => item.id === params.noticeId) ?? v1NoticesFixture[0] })),
   http.get(`${api}/matches`, () => ok(page(v1MatchesFixture))),
   http.get(`${api}/matches/:matchId`, ({ params }) => ok(v1MatchesFixture.find((item) => item.id === params.matchId) ?? v1MatchesFixture[0])),

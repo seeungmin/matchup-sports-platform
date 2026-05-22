@@ -34,6 +34,7 @@ export function getV1DevAuthHeaders(): HeadersInit {
   return {
     ...(userId ? { 'x-v1-user-id': userId } : {}),
     ...(userEmail ? { 'x-v1-user-email': userEmail } : {}),
+    'x-v1-search-session-id': getV1SearchSessionId(),
   };
 }
 
@@ -87,4 +88,16 @@ function withQuery(path: string, query?: QueryParams) {
 
   const serialized = params.toString();
   return serialized ? `${path}?${serialized}` : path;
+}
+
+function getV1SearchSessionId() {
+  const key = 'v1.search.session';
+  const existing = window.localStorage.getItem(key);
+  if (existing) return existing;
+
+  const next = typeof window.crypto?.randomUUID === 'function'
+    ? window.crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  window.localStorage.setItem(key, next);
+  return next;
 }

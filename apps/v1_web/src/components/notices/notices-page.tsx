@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { AppChrome } from '@/components/v1-ui/shell';
+import { BellIcon, ChevronRightIcon } from '@/components/v1-ui/icons';
 import { Card } from '@/components/v1-ui/primitives';
 import type { NoticeDetailViewModel, NoticeListViewModel, NoticeModel } from './notices.types';
 
@@ -10,10 +11,25 @@ export function NoticeListPageView({ model }: { model: NoticeListViewModel }) {
         <h1 className="tm-text-heading">공지사항</h1>
         <p className="tm-text-caption tm-notice-lead">홈에 노출되는 고정 공지와 운영 안내를 한곳에서 확인합니다.</p>
         <div className="tm-sport-chip-row tm-notice-filter-row">
-          {model.filters.map((filter) => <button key={filter.label} className={`tm-chip ${filter.active ? 'tm-chip-active' : ''}`} type="button">{filter.label}</button>)}
+          {model.filters.map((filter) => (
+            <button
+              key={filter.label}
+              className={`tm-chip ${filter.active ? 'tm-chip-active' : ''}`}
+              type="button"
+              aria-pressed={Boolean(filter.active)}
+              onClick={filter.onSelect}
+            >
+              {filter.label}
+            </button>
+          ))}
         </div>
         <div className="tm-notice-stack">
-          {model.notices.map((notice) => <NoticeRow key={notice.id} notice={notice} />)}
+          {model.notices.length ? model.notices.map((notice) => <NoticeRow key={notice.id} notice={notice} />) : (
+            <Card pad={18} className="tm-notice-summary-card">
+              <div className="tm-text-label">공지 없음</div>
+              <p className="tm-text-body">선택한 카테고리에 등록된 공지가 아직 없습니다.</p>
+            </Card>
+          )}
         </div>
       </div>
     </AppChrome>
@@ -47,12 +63,15 @@ export function NoticeDetailPageView({ model }: { model: NoticeDetailViewModel }
 function NoticeRow({ notice }: { notice: NoticeModel }) {
   return (
     <Link className={`tm-card tm-pressable tm-notice-row ${notice.pinned ? 'tm-notice-row-active' : ''}`} href={`/notices/${notice.id}`}>
-      <span className={`tm-badge ${notice.pinned ? 'tm-badge-blue' : 'tm-badge-grey'}`}>{notice.tag}</span>
+      <span className="tm-notice-row-icon" aria-hidden="true">
+        <BellIcon size={18} />
+      </span>
       <span>
-        <span className="tm-text-body-lg">{notice.title}</span>
+        <span className="tm-text-micro tm-notice-row-meta">{notice.tag} · {notice.date}</span>
+        <span className="tm-text-label tm-notice-row-title">{notice.title}</span>
         <span className="tm-text-caption line-clamp-2">{notice.summary}</span>
       </span>
-      <span className="tm-text-caption">{notice.date}</span>
+      <ChevronRightIcon size={17} stroke="var(--grey400)" strokeWidth={2} />
     </Link>
   );
 }

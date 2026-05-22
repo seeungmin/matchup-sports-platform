@@ -28,7 +28,7 @@ describe('NoticesController', () => {
       pageInfo: { hasNextPage: false, nextCursor: null },
     });
 
-    await expect(controller.list()).resolves.toEqual({
+    await expect(controller.list({})).resolves.toEqual({
       notices: [{ noticeId: 'notice-1', title: '공지', body: '내용' }],
       pageInfo: { hasNextPage: false, nextCursor: null },
     });
