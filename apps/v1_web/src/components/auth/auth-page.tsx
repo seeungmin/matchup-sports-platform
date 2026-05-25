@@ -36,9 +36,8 @@ export function EmailLoginPageView({ model }: { model: EmailLoginViewModel }) {
   return (
     <AuthFrame topTitle="이메일 로그인" backHref={model.backHref} fixedAction={<AuthActionButton action={model.primary} />}>
       <div className="tm-auth-body">
-        <span className="tm-badge tm-badge-blue">EMAIL LOGIN</span>
         <h1 className="tm-text-heading tm-auth-heading">{model.title}</h1>
-        <p className="tm-text-body tm-auth-sub">{model.sub}</p>
+        {model.sub ? <p className="tm-text-body tm-auth-sub">{model.sub}</p> : null}
         <div className="tm-auth-form">
           {model.fields.map((field) => <AuthField key={field.label} {...field} />)}
         </div>
@@ -46,10 +45,12 @@ export function EmailLoginPageView({ model }: { model: EmailLoginViewModel }) {
           <AuthSmallAction action={model.forgot} />
           <Link className="tm-btn tm-btn-sm tm-btn-ghost" href={model.signupHref}>회원가입</Link>
         </div>
-        <Card pad={16} className="tm-auth-soft-card">
-          <div className="tm-text-body-lg">{model.notice.title}</div>
-          <div className="tm-text-caption">{model.notice.body}</div>
-        </Card>
+        {model.notice ? (
+          <Card pad={16} className="tm-auth-soft-card">
+            <div className="tm-text-body-lg">{model.notice.title}</div>
+            <div className="tm-text-caption">{model.notice.body}</div>
+          </Card>
+        ) : null}
       </div>
     </AuthFrame>
   );
@@ -75,7 +76,6 @@ export function TermsPageView({ model }: { model: TermsViewModel }) {
   return (
     <AuthFrame topTitle="약관 동의" backHref={model.backHref} fixedAction={<AuthActionButton action={model.primary} />}>
       <div className="tm-auth-body">
-        <span className="tm-badge tm-badge-blue">회원가입 전 필수</span>
         <h1 className="tm-text-heading tm-auth-heading">{model.title}</h1>
         <p className="tm-text-body tm-auth-sub">{model.sub}</p>
         <Card pad={16} className="tm-auth-agree-all">
@@ -89,6 +89,7 @@ export function TermsPageView({ model }: { model: TermsViewModel }) {
               <div>
                 <div className="tm-text-body-lg">{item.title}</div>
                 <div className="tm-text-caption">{item.meta}</div>
+                <div className="tm-text-caption">{item.detail}</div>
               </div>
               <ChevronRightIcon size={16} strokeWidth={2} />
             </Link>
@@ -206,7 +207,7 @@ function ProviderButton({ provider }: { provider: LoginProvider }) {
       {provider.label}
     </Link>
   ) : (
-    <button className="tm-btn tm-btn-md tm-pressable" disabled={provider.disabled} style={style} type="button">
+    <button className={`tm-btn tm-btn-md ${provider.disabled ? 'tm-auth-provider-disabled' : 'tm-pressable'}`} disabled={provider.disabled} style={provider.disabled ? undefined : style} type="button">
       {provider.label}
     </button>
   );

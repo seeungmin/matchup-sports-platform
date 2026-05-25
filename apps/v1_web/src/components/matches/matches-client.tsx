@@ -28,6 +28,7 @@ export function MatchListPageClient() {
   const selectedSportId = searchParams.get('sportId') ?? undefined;
   const selectedSort = toMatchSort(searchParams.get('sort'));
   const selectedView = toMatchView(searchParams.get('view'));
+  const selectedGenderRule = toGenderRuleFilter(searchParams.get('genderRule'));
   const filterOpen = searchParams.get('filter') === '1';
   const initialQuery = searchParams.get('q') ?? '';
   const [searchValue, setSearchValue] = useState(initialQuery);
@@ -39,13 +40,14 @@ export function MatchListPageClient() {
   }, [initialQuery]);
   const allMatches = useV1Matches();
   const matchFilters = useMemo(() => {
-    const filters: { sportId?: string; query?: string; sort?: 'recommended' | 'latest' | 'deadline'; view?: 'card' | 'compact' } = {};
+    const filters: { sportId?: string; query?: string; sort?: 'recommended' | 'latest' | 'deadline'; view?: 'card' | 'compact'; genderRule?: string } = {};
     if (selectedSportId) filters.sportId = selectedSportId;
+    if (selectedGenderRule !== 'all') filters.genderRule = selectedGenderRule;
     if (submittedQuery.trim()) filters.query = submittedQuery.trim();
     if (selectedSort !== 'recommended') filters.sort = selectedSort;
     if (selectedView !== 'card') filters.view = selectedView;
     return Object.keys(filters).length ? filters : undefined;
-  }, [selectedSportId, selectedSort, selectedView, submittedQuery]);
+  }, [selectedGenderRule, selectedSportId, selectedSort, selectedView, submittedQuery]);
   const filteredMatches = useV1Matches(matchFilters, { enabled: Boolean(matchFilters) });
   const recentSearches = useV1RecentSearches();
   const recordSearch = useV1RecordSearch();
@@ -79,7 +81,7 @@ export function MatchListPageClient() {
         query: submittedQuery,
         search: searchModel,
         filterHref: buildMatchHref(searchParams, { filter: '1' }),
-        filterSheet: buildMatchFilterSheet(searchParams, selectedSort, selectedView, filterOpen),
+        filterSheet: buildMatchFilterSheet(searchParams, selectedSort, selectedView, selectedGenderRule, filterOpen),
         matches: items.map((item, index) => toMatchCard(item, base.matches[index] ?? base.matches[0])),
         sports: buildSportSummary(countItems, base, selectedSportId, sports.data),
         summary: {
@@ -94,7 +96,7 @@ export function MatchListPageClient() {
         query: submittedQuery,
         search: searchModel,
         filterHref: buildMatchHref(searchParams, { filter: '1' }),
-        filterSheet: buildMatchFilterSheet(searchParams, selectedSort, selectedView, filterOpen),
+        filterSheet: buildMatchFilterSheet(searchParams, selectedSort, selectedView, selectedGenderRule, filterOpen),
       };
 
   return <MatchListPageView model={model} />;
@@ -184,6 +186,7 @@ function toMatchCard(match: V1Match, fallback: MatchCardModel): MatchCardModel {
     current: capacity.current,
     capacity: capacity.capacity,
     level: match.levelLabel ?? fallback.level,
+    gender: match.genderRule ?? fallback.gender,
     host: match.host?.displayName ?? fallback.host,
     image: match.imageUrl ?? fallback.image,
     status,
@@ -245,6 +248,7 @@ function buildMatchFilterSheet(
   params: URLSearchParams,
   sort: NonNullable<MatchListViewModel['filterSheet']>['sort'],
   view: NonNullable<MatchListViewModel['filterSheet']>['view'],
+  genderRule: NonNullable<MatchListViewModel['filterSheet']>['genderRule'],
   open: boolean,
 ): NonNullable<MatchListViewModel['filterSheet']> {
   const sortOptions: NonNullable<MatchListViewModel['filterSheet']>['sortOptions'] = [
@@ -256,16 +260,24 @@ function buildMatchFilterSheet(
     { label: '카드형', value: 'card', description: '이미지와 핵심 정보를 크게', href: buildMatchHref(params, { view: 'card', filter: '1' }), active: view === 'card' },
     { label: '콤팩트형', value: 'compact', description: '더 많은 매치를 빠르게', href: buildMatchHref(params, { view: 'compact', filter: '1' }), active: view === 'compact' },
   ];
+  const genderOptions: NonNullable<MatchListViewModel['filterSheet']>['genderOptions'] = [
+    { label: '전체', value: 'all', href: buildMatchHref(params, { genderRule: null, filter: '1' }), active: genderRule === 'all' },
+    { label: '성별 무관', value: '성별 무관', href: buildMatchHref(params, { genderRule: '성별 무관', filter: '1' }), active: genderRule === '성별 무관' },
+    { label: '남', value: '남', href: buildMatchHref(params, { genderRule: '남', filter: '1' }), active: genderRule === '남' },
+    { label: '여', value: '여', href: buildMatchHref(params, { genderRule: '여', filter: '1' }), active: genderRule === '여' },
+  ];
 
   return {
     open,
     closeHref: buildMatchHref(params, { filter: null }),
-    resetHref: buildMatchHref(params, { sort: null, view: null, filter: '1' }),
+    resetHref: buildMatchHref(params, { sort: null, view: null, genderRule: null, filter: '1' }),
     applyHref: buildMatchHref(params, { filter: null }),
     sort,
     view,
+    genderRule,
     sortOptions,
     viewOptions,
+    genderOptions,
   };
 }
 
@@ -286,6 +298,11 @@ function toMatchSort(value: string | null): 'recommended' | 'deadline' | 'latest
 
 function toMatchView(value: string | null): 'card' | 'compact' {
   return value === 'compact' ? 'compact' : 'card';
+}
+
+function toGenderRuleFilter(value: string | null): 'all' | '성별 무관' | '남' | '여' {
+  if (value === '성별 무관' || value === '남' || value === '여') return value;
+  return 'all';
 }
 
 function countToday(items: V1Match[]) {

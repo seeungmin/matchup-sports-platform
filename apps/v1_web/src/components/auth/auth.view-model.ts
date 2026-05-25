@@ -8,9 +8,9 @@ export function getLoginViewModel(): LoginViewModel {
     guestHref: '/home',
     signupHref: '/terms',
     providers: [
-      { label: '카카오', background: '#FEE500', color: 'var(--static-black)', href: '/auth/provider-denied' },
-      { label: '네이버', background: 'var(--green500)', color: 'var(--static-white)', href: '/auth/missing-email' },
-      { label: 'Apple', background: 'var(--static-black)', color: 'var(--static-white)', href: '/auth/account-conflict' },
+      { label: '카카오', background: '#FEE500', color: 'var(--static-black)', disabled: true },
+      { label: '네이버', background: 'var(--green500)', color: 'var(--static-white)', disabled: true },
+      { label: 'Apple', background: 'var(--static-black)', color: 'var(--static-white)', disabled: true },
     ],
   };
 }
@@ -19,7 +19,7 @@ export function getEmailLoginViewModel(): EmailLoginViewModel {
   return {
     backHref: '/login',
     title: '이메일로\n로그인하세요',
-    sub: '가입한 이메일과 비밀번호로 로그인합니다. 실패해도 입력값은 유지하고 같은 화면에서 복구합니다.',
+    sub: '',
     fields: [
       { label: '이메일', placeholder: 'you@example.com', type: 'email' },
       { label: '비밀번호', placeholder: '비밀번호', type: 'password' },
@@ -27,10 +27,7 @@ export function getEmailLoginViewModel(): EmailLoginViewModel {
     primary: { label: '로그인', tone: 'primary' },
     forgot: { label: '비밀번호 찾기', href: '/auth/password-reset', tone: 'neutral' },
     signupHref: '/terms',
-    notice: {
-      title: '로그인 안내',
-      body: '이메일로 가입한 계정은 이메일 로그인으로 이용할 수 있습니다. 간편 로그인은 선택한 계정으로 바로 시작합니다.',
-    },
+    notice: undefined,
   };
 }
 
@@ -101,10 +98,28 @@ export function getTermsViewModel(): TermsViewModel {
     title: '가입 전에 약관을 먼저 확인합니다',
     sub: '필수 약관을 모두 동의해야 회원가입 입력 화면으로 이동할 수 있습니다.',
     agreements: [
-      { title: '서비스 이용약관', meta: '필수 · 보기', required: true, checked: true },
-      { title: '개인정보 처리방침', meta: '필수 · 보기', required: true, checked: true },
-      { title: '위치 기반 서비스', meta: '선택 · 나중에 설정 가능', required: false, checked: false },
-      { title: '마케팅 알림', meta: '선택 · 설정에서 변경 가능', required: false, checked: false },
+      {
+        title: '서비스 이용약관',
+        meta: '필수',
+        required: true,
+        checked: true,
+        detail: 'Teameet의 매치, 팀매치, 팀 탐색, 채팅, 알림 기능을 이용하기 위한 기본 약관입니다. 부정 이용, 허위 신청, 운영 정책 위반 시 이용이 제한될 수 있습니다.',
+      },
+      {
+        title: '개인정보 처리방침',
+        meta: '필수',
+        required: true,
+        checked: true,
+        detail: '회원 식별, 로그인, 매치 신청, 알림 발송, 안전한 서비스 운영을 위해 이메일, 프로필, 활동 기록 등 필요한 개인정보를 처리합니다.',
+      },
+      {
+        title: '위치 기반 서비스',
+        meta: '선택 · 주변 매치 추천에 사용',
+        required: false,
+        checked: false,
+        locationBased: true,
+        detail: '선택 시 브라우저 위치 권한을 요청하고, 현재 위치를 기준으로 가까운 매치와 팀을 추천할 수 있습니다. 거부해도 지역을 직접 선택해 계속 이용할 수 있습니다.',
+      },
     ],
     primary: { label: '동의하고 회원가입하기', href: '/signup' },
   };

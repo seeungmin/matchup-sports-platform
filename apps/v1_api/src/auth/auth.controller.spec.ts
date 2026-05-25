@@ -121,6 +121,7 @@ describe('AuthController', () => {
       nickname: '민수',
       email: 'user@example.com',
       password: 'password123',
+      gender: 'male' as const,
       requiredTermsAccepted: true,
     };
 

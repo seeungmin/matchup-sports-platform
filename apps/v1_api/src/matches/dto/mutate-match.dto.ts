@@ -61,6 +61,11 @@ export class MutateMatchDto {
   @IsString()
   @MaxLength(2000)
   rulesText?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  genderRule?: string | null;
 }
 
 export class UpdateMatchDto extends MutateMatchDto {

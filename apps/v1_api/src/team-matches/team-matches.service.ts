@@ -48,6 +48,7 @@ export class TeamMatchesService {
         ...(status === 'expired' ? { startAt: { lt: new Date() } } : { status }),
         ...(query.sportId ? { sportId: query.sportId } : {}),
         ...(query.regionId ? { regionId: query.regionId } : {}),
+        ...(query.genderRule ? { genderRule: getGenderRuleWhere(query.genderRule) } : {}),
         ...(query.query
           ? {
               OR: [
@@ -93,6 +94,7 @@ export class TeamMatchesService {
       displayState: this.getDisplayState(teamMatch),
       costNote: teamMatch.costNote,
       rulesText: [teamMatch.formatNote, teamMatch.genderRule].filter(Boolean).join(' · ') || null,
+      genderRule: teamMatch.genderRule,
       paymentRequired: false,
       hostTeam: {
         teamId: teamMatch.hostTeam.id,
@@ -225,6 +227,7 @@ export class TeamMatchesService {
           startAt: dates.startsAt,
           endAt: dates.endsAt,
           formatNote: dto.rulesText ?? null,
+          genderRule: dto.genderRule ?? null,
           costNote: dto.costNote ?? null,
           status: 'recruiting',
         },
@@ -273,6 +276,7 @@ export class TeamMatchesService {
         addressText: teamMatch.placeAddress,
         costNote: teamMatch.costNote,
         rulesText: teamMatch.formatNote,
+        genderRule: teamMatch.genderRule,
       },
       status: this.getApiStatus(teamMatch),
       version: teamMatch.updatedAt.toISOString(),
@@ -301,6 +305,7 @@ export class TeamMatchesService {
         startAt: dates.startsAt,
         endAt: dates.endsAt,
         formatNote: dto.rulesText ?? null,
+        genderRule: dto.genderRule ?? null,
         costNote: dto.costNote ?? null,
       },
     });
@@ -686,6 +691,8 @@ export class TeamMatchesService {
         trustState: teamMatch.hostTeam.trustScore?.trustState ?? 'none',
       },
       costNote: teamMatch.costNote,
+      rulesText: [teamMatch.formatNote, teamMatch.genderRule].filter(Boolean).join(' · ') || null,
+      genderRule: teamMatch.genderRule,
       paymentRequired: false,
       viewerState: this.getViewerState(teamMatch, user),
     };
@@ -809,6 +816,12 @@ export class TeamMatchesService {
 function getOrderBy(sort: TeamMatchesQueryDto['sort']): Prisma.V1TeamMatchOrderByWithRelationInput[] {
   if (sort === 'latest') return [{ createdAt: 'desc' }];
   return [{ startAt: 'asc' }, { createdAt: 'desc' }];
+}
+
+function getGenderRuleWhere(genderRule: NonNullable<TeamMatchesQueryDto['genderRule']>) {
+  return genderRule === '무관' || genderRule === '성별 무관'
+    ? { in: ['성별 무관', '무관'] }
+    : genderRule;
 }
 
 function getEligibilityReason(

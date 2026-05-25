@@ -13,6 +13,9 @@ export function TermsClient() {
   const [checkedByTitle, setCheckedByTitle] = useState(() =>
     Object.fromEntries(model.agreements.map((agreement) => [agreement.title, false])),
   );
+  const [openByTitle, setOpenByTitle] = useState<Record<string, boolean>>({});
+  const [locationStatus, setLocationStatus] = useState<'idle' | 'requesting' | 'allowed' | 'denied' | 'unsupported'>('idle');
+  const [locationLabel, setLocationLabel] = useState<string | null>(null);
 
   const requiredAccepted = useMemo(
     () => model.agreements.every((agreement) => !agreement.required || checkedByTitle[agreement.title]),
@@ -25,6 +28,36 @@ export function TermsClient() {
       ...current,
       ...Object.fromEntries(model.agreements.filter((agreement) => agreement.required).map((agreement) => [agreement.title, checked])),
     }));
+  };
+
+  const requestLocation = () => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      setLocationStatus('unsupported');
+      setLocationLabel(null);
+      return;
+    }
+
+    setLocationStatus('requesting');
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocationStatus('allowed');
+        setLocationLabel(`${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`);
+      },
+      () => {
+        setLocationStatus('denied');
+        setLocationLabel(null);
+      },
+      { enableHighAccuracy: false, maximumAge: 300000, timeout: 8000 },
+    );
+  };
+
+  const toggleAgreement = (title: string, nextChecked: boolean, locationBased?: boolean) => {
+    setCheckedByTitle((current) => ({ ...current, [title]: nextChecked }));
+
+    if (locationBased && nextChecked) {
+      requestLocation();
+      setOpenByTitle((current) => ({ ...current, [title]: true }));
+    }
   };
 
   const continueToSignup = () => {
@@ -47,7 +80,6 @@ export function TermsClient() {
       }
     >
       <div className="tm-auth-body">
-        <span className="tm-badge tm-badge-blue">회원가입 전 필수</span>
         <h1 className="tm-text-heading tm-auth-heading">{model.title}</h1>
         <p className="tm-text-body tm-auth-sub">{model.sub}</p>
         <button className="tm-card tm-auth-agree-all tm-auth-agree-button tm-pressable" onClick={() => setRequired(!requiredChecked)} type="button">
@@ -57,21 +89,44 @@ export function TermsClient() {
         <div className="tm-auth-stack">
           {model.agreements.map((item) => {
             const checked = checkedByTitle[item.title];
+            const open = openByTitle[item.title] ?? false;
 
             return (
-              <button
-                key={item.title}
-                className="tm-card tm-auth-agreement tm-auth-agree-button tm-pressable"
-                onClick={() => setCheckedByTitle((current) => ({ ...current, [item.title]: !checked }))}
-                type="button"
-              >
-                <TermsCheck checked={checked} />
-                <div>
-                  <div className="tm-text-body-lg">{item.title}</div>
-                  <div className="tm-text-caption">{item.meta}</div>
+              <div key={item.title} className="tm-card tm-auth-agreement-card">
+                <div className="tm-auth-agreement">
+                  <button
+                    aria-pressed={checked}
+                    className="tm-auth-check-button tm-pressable"
+                    onClick={() => toggleAgreement(item.title, !checked, item.locationBased)}
+                    type="button"
+                  >
+                    <TermsCheck checked={checked} />
+                  </button>
+                  <button
+                    className="tm-auth-agreement-main tm-pressable"
+                    onClick={() => toggleAgreement(item.title, !checked, item.locationBased)}
+                    type="button"
+                  >
+                    <span className="tm-text-body-lg">{item.title}</span>
+                    <span className="tm-text-caption">{item.meta}</span>
+                  </button>
+                  <button
+                    aria-expanded={open}
+                    aria-label={`${item.title} 내용 보기`}
+                    className="tm-auth-agreement-arrow tm-pressable"
+                    onClick={() => setOpenByTitle((current) => ({ ...current, [item.title]: !open }))}
+                    type="button"
+                  >
+                    <ChevronRightIcon size={16} strokeWidth={2} />
+                  </button>
                 </div>
-                <ChevronRightIcon size={16} strokeWidth={2} />
-              </button>
+                {open ? (
+                  <div className="tm-auth-agreement-detail">
+                    <div className="tm-text-caption">{item.detail}</div>
+                    {item.locationBased ? <LocationConsentStatus status={locationStatus} label={locationLabel} checked={checked} /> : null}
+                  </div>
+                ) : null}
+              </div>
             );
           })}
         </div>
@@ -82,4 +137,23 @@ export function TermsClient() {
 
 function TermsCheck({ checked }: { checked: boolean }) {
   return <span className={`tm-auth-check ${checked ? 'tm-auth-check-on' : ''}`}>✓</span>;
+}
+
+function LocationConsentStatus({ status, label, checked }: { status: 'idle' | 'requesting' | 'allowed' | 'denied' | 'unsupported'; label: string | null; checked: boolean }) {
+  if (!checked) {
+    return null;
+  }
+
+  const text =
+    status === 'requesting'
+      ? '현재 위치 권한을 확인하는 중입니다.'
+      : status === 'allowed'
+        ? `위치 확인 완료${label ? ` · ${label}` : ''}`
+        : status === 'denied'
+          ? '위치 권한이 거부되었습니다. 지역 직접 선택으로 계속 이용할 수 있습니다.'
+          : status === 'unsupported'
+            ? '이 브라우저에서는 위치 확인을 지원하지 않습니다.'
+            : '위치 기반 추천을 사용할 준비가 되었습니다.';
+
+  return <div className={`tm-auth-location-status tm-auth-location-status-${status} tm-text-caption`}>{text}</div>;
 }

@@ -27,8 +27,20 @@ export class AuthService {
 
     if (existing) {
       throw new ConflictException({
-        code: 'CONFLICT',
+        code: 'EMAIL_CONFLICT',
         message: 'Email is already registered',
+      });
+    }
+
+    const existingNickname = await this.prisma.v1UserProfile.findFirst({
+      where: { nickname },
+      select: { id: true },
+    });
+
+    if (existingNickname) {
+      throw new ConflictException({
+        code: 'NICKNAME_CONFLICT',
+        message: 'Nickname is already registered',
       });
     }
 
@@ -65,6 +77,7 @@ export class AuthService {
           create: {
             nickname,
             displayName: nickname,
+            gender: dto.gender,
             visibility: 'public',
           },
         },
@@ -90,6 +103,40 @@ export class AuthService {
     });
 
     return this.sessionResponse(user.id, user.email);
+  }
+
+  async checkEmail(emailValue: string) {
+    const email = normalizeEmail(emailValue);
+    if (!email || email.length < 3) {
+      throw new BadRequestException({
+        code: 'VALIDATION_ERROR',
+        message: 'Email is required',
+      });
+    }
+
+    const existing = await this.prisma.v1User.findUnique({
+      where: { email },
+      select: { id: true },
+    });
+
+    return { available: !existing };
+  }
+
+  async checkNickname(nicknameValue: string) {
+    const nickname = nicknameValue?.trim() ?? '';
+    if (nickname.length < 2) {
+      throw new BadRequestException({
+        code: 'VALIDATION_ERROR',
+        message: 'Nickname must be at least 2 characters',
+      });
+    }
+
+    const existing = await this.prisma.v1UserProfile.findFirst({
+      where: { nickname },
+      select: { id: true },
+    });
+
+    return { available: !existing };
   }
 
   async login(dto: LoginDto) {

@@ -11,6 +11,7 @@ export type TeamMatchModel = {
   cost: number;
   opponentCost: number;
   uniform: string;
+  gender: string;
   manner: number;
   wins: number;
   status: 'open' | 'pending' | 'approved' | 'mine';
@@ -40,8 +41,10 @@ export type TeamMatchListViewModel = {
     applyHref: string;
     sort: 'recommended' | 'deadline' | 'grade' | 'price';
     view: 'card' | 'compact';
+    genderRule: 'all' | '성별 무관' | '남' | '여';
     sortOptions: Array<{ label: string; value: 'recommended' | 'deadline' | 'grade' | 'price'; href: string; active?: boolean }>;
     viewOptions: Array<{ label: string; value: 'card' | 'compact'; description: string; href: string; active?: boolean }>;
+    genderOptions: Array<{ label: string; value: 'all' | '성별 무관' | '남' | '여'; href: string; active?: boolean }>;
   };
   sports: Array<{ label: string; count: number; active?: boolean; href?: string }>;
   summary: { count: number; today: number; urgent: number };
@@ -88,6 +91,7 @@ export type TeamMatchCreateViewModel = {
     format: string;
     style: string;
     uniform: string;
+    gender: string;
     cost: number;
     opponentCost: number;
     venue: string;

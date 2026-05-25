@@ -39,6 +39,7 @@ type TeamWithRelations = V1Team & {
     description: string | null;
     activityNote: string | null;
     skillNote: string | null;
+    genderRule: string | null;
   } | null;
   memberships: Array<
     V1TeamMembership & {
@@ -65,6 +66,7 @@ export class TeamsService {
         deletedAt: null,
         ...(query.sportId ? { sportId: query.sportId } : {}),
         ...(query.regionId ? { regionId: query.regionId } : {}),
+        ...(query.genderRule ? { AND: [getTeamGenderRuleWhere(query.genderRule)] } : {}),
         ...(query.joinPolicy ? { joinPolicy: query.joinPolicy } : {}),
         ...(query.query
           ? {
@@ -117,6 +119,7 @@ export class TeamsService {
         introduction: team.profile?.description ?? null,
         activityAreaText: team.profile?.activityNote ?? null,
         skillLevelText: team.profile?.skillNote ?? null,
+        genderRule: team.profile?.genderRule ?? '성별 무관',
         joinPolicy: team.joinPolicy,
         memberGoalCount: null,
       },
@@ -182,6 +185,7 @@ export class TeamsService {
               description: dto.introduction ?? null,
               activityNote: dto.activityAreaText ?? null,
               skillNote: dto.skillLevelText ?? null,
+              genderRule: dto.genderRule ?? null,
             },
           },
         },
@@ -261,6 +265,7 @@ export class TeamsService {
           description: dto.introduction ?? null,
           activityNote: dto.activityAreaText ?? null,
           skillNote: dto.skillLevelText ?? null,
+          genderRule: dto.genderRule ?? null,
         },
         create: {
           teamId: team.id,
@@ -269,6 +274,7 @@ export class TeamsService {
           description: dto.introduction ?? null,
           activityNote: dto.activityAreaText ?? null,
           skillNote: dto.skillLevelText ?? null,
+          genderRule: dto.genderRule ?? null,
         },
       });
 
@@ -369,6 +375,7 @@ export class TeamsService {
                 description: true,
                 activityNote: true,
                 skillNote: true,
+                genderRule: true,
               },
             },
           },
@@ -1003,6 +1010,7 @@ export class TeamsService {
           description: true,
           activityNote: true,
           skillNote: true,
+          genderRule: true,
         },
       },
       memberships: {
@@ -1046,6 +1054,7 @@ export class TeamsService {
       regionName: team.region?.name ?? null,
       region: team.region ? { regionId: team.region.id, name: team.region.name } : null,
       introductionPreview: team.profile?.description ? team.profile.description.slice(0, 120) : null,
+      genderRule: team.profile?.genderRule ?? '성별 무관',
       joinPolicy: team.joinPolicy,
       memberCount: team.memberCount,
       trustState: team.trustScore?.trustState ?? 'none',
@@ -1110,6 +1119,19 @@ function getTeamOrderBy(sort: TeamsQueryDto['sort']): Prisma.V1TeamOrderByWithRe
   if (sort === 'latest') return [{ createdAt: 'desc' }];
   if (sort === 'member_count') return [{ memberCount: 'desc' }, { createdAt: 'desc' }];
   return [{ createdAt: 'desc' }];
+}
+
+function getTeamGenderRuleWhere(genderRule: NonNullable<TeamsQueryDto['genderRule']>): Prisma.V1TeamWhereInput {
+  if (genderRule === '무관' || genderRule === '성별 무관') {
+    return {
+      OR: [
+        { profile: { genderRule: { in: ['성별 무관', '무관'] } } },
+        { profile: { genderRule: null } },
+      ],
+    };
+  }
+
+  return { profile: { genderRule } };
 }
 
 function getJoinReason(

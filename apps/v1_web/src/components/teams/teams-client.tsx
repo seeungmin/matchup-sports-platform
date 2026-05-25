@@ -30,6 +30,7 @@ export function TeamListPageClient() {
   const selectedSort = toTeamSort(searchParams.get('sort'));
   const selectedCondition = toTeamCondition(searchParams.get('condition'));
   const selectedTrust = toTeamTrust(searchParams.get('trust'));
+  const selectedGenderRule = toGenderRuleFilter(searchParams.get('genderRule'));
   const filterOpen = searchParams.get('filter') === '1';
   const initialQuery = searchParams.get('q') ?? '';
   const [searchValue, setSearchValue] = useState(initialQuery);
@@ -42,14 +43,15 @@ export function TeamListPageClient() {
   const sports = useV1MasterSports();
   const allTeams = useV1Teams();
   const teamFilters = useMemo(() => {
-    const filters: { sportId?: string; query?: string; joinPolicy?: 'approval_required'; sort?: 'recommended' | 'latest' | 'trust' } = {};
+    const filters: { sportId?: string; query?: string; joinPolicy?: 'approval_required'; sort?: 'recommended' | 'latest' | 'trust'; genderRule?: string } = {};
     if (selectedSportId) filters.sportId = selectedSportId;
+    if (selectedGenderRule !== 'all') filters.genderRule = selectedGenderRule;
     if (submittedQuery.trim()) filters.query = submittedQuery.trim();
     if (selectedCondition === 'joinable' || selectedSort === 'recruiting') filters.joinPolicy = 'approval_required';
     if (selectedSort === 'recent') filters.sort = 'latest';
     if (selectedSort === 'manner') filters.sort = 'trust';
     return Object.keys(filters).length ? filters : undefined;
-  }, [selectedCondition, selectedSort, selectedSportId, submittedQuery]);
+  }, [selectedCondition, selectedGenderRule, selectedSort, selectedSportId, submittedQuery]);
   const filteredTeams = useV1Teams(
     teamFilters,
     { enabled: Boolean(teamFilters) },
@@ -85,7 +87,7 @@ export function TeamListPageClient() {
         query: submittedQuery,
         search: searchModel,
         filterHref: buildTeamHref(searchParams, { filter: '1' }),
-        filterSheet: buildTeamFilterSheet(searchParams, selectedSort, selectedCondition, selectedTrust, filterOpen),
+        filterSheet: buildTeamFilterSheet(searchParams, selectedSort, selectedCondition, selectedTrust, selectedGenderRule, filterOpen),
         chips: buildTeamSportChips(countItems, base, selectedSportId, sports.data),
         teams: items.map((item, index) => toTeam(item, base.teams[index] ?? base.teams[0])),
         summary: {
@@ -99,7 +101,7 @@ export function TeamListPageClient() {
         query: submittedQuery,
         search: searchModel,
         filterHref: buildTeamHref(searchParams, { filter: '1' }),
-        filterSheet: buildTeamFilterSheet(searchParams, selectedSort, selectedCondition, selectedTrust, filterOpen),
+        filterSheet: buildTeamFilterSheet(searchParams, selectedSort, selectedCondition, selectedTrust, selectedGenderRule, filterOpen),
         chips: buildTeamSportChips(countItems, base, selectedSportId, sports.data),
       };
 
@@ -192,6 +194,7 @@ export function TeamDetailPageClient({ teamId }: { teamId: string }) {
           description: query.data.profile.introduction ?? fallback.team.description,
           activity: query.data.profile.activityAreaText ?? fallback.team.activity,
           condition: query.data.profile.skillLevelText ?? fallback.team.condition,
+          genderRule: query.data.profile.genderRule ?? fallback.team.genderRule,
           trustNote: trustNoteLabel(query.data.trust.trustState, query.data.trust.score),
           schedule: fallback.team.schedule,
           city: fallback.team.city,
@@ -288,6 +291,7 @@ function toTeam(team: V1Team, fallback: TeamModel): TeamModel {
     status: team.joinPolicy === 'closed' ? 'closed' : 'open',
     statusLabel: team.joinPolicy === 'closed' ? '마감' : '모집중',
     trust: toTrustBadge(team.trustState),
+    genderRule: team.genderRule ?? fallback.genderRule,
     intro: team.introductionPreview ?? `${regionName}에서 활동하는 ${sportName} 팀입니다. 가입은 팀 운영 정책에 따라 처리됩니다.`,
   };
 }
@@ -316,6 +320,7 @@ function buildTeamFilterSheet(
   sort: NonNullable<TeamListViewModel['filterSheet']>['sort'],
   condition: NonNullable<TeamListViewModel['filterSheet']>['condition'],
   trust: NonNullable<TeamListViewModel['filterSheet']>['trust'],
+  genderRule: NonNullable<TeamListViewModel['filterSheet']>['genderRule'],
   open: boolean,
 ): NonNullable<TeamListViewModel['filterSheet']> {
   const sortOptions: NonNullable<TeamListViewModel['filterSheet']>['sortOptions'] = [
@@ -334,18 +339,26 @@ function buildTeamFilterSheet(
     { label: '검증됨', value: 'verified', href: buildTeamHref(params, { trust: 'verified', filter: '1' }), active: trust === 'verified' },
     { label: '추정', value: 'estimated', href: buildTeamHref(params, { trust: 'estimated', filter: '1' }), active: trust === 'estimated' },
   ];
+  const genderOptions: NonNullable<TeamListViewModel['filterSheet']>['genderOptions'] = [
+    { label: '전체', value: 'all', href: buildTeamHref(params, { genderRule: null, filter: '1' }), active: genderRule === 'all' },
+    { label: '성별 무관', value: '성별 무관', href: buildTeamHref(params, { genderRule: '성별 무관', filter: '1' }), active: genderRule === '성별 무관' },
+    { label: '남', value: '남', href: buildTeamHref(params, { genderRule: '남', filter: '1' }), active: genderRule === '남' },
+    { label: '여', value: '여', href: buildTeamHref(params, { genderRule: '여', filter: '1' }), active: genderRule === '여' },
+  ];
 
   return {
     open,
     closeHref: buildTeamHref(params, { filter: null }),
-    resetHref: buildTeamHref(params, { sort: null, condition: null, trust: null, filter: '1' }),
+    resetHref: buildTeamHref(params, { sort: null, condition: null, trust: null, genderRule: null, filter: '1' }),
     applyHref: buildTeamHref(params, { filter: null }),
     sort,
     condition,
     trust,
+    genderRule,
     sortOptions,
     conditionOptions,
     trustOptions,
+    genderOptions,
   };
 }
 
@@ -374,6 +387,11 @@ function toTeamTrust(value: string | null): NonNullable<TeamListViewModel['filte
   return 'verified';
 }
 
+function toGenderRuleFilter(value: string | null): 'all' | '성별 무관' | '남' | '여' {
+  if (value === '성별 무관' || value === '남' || value === '여') return value;
+  return 'all';
+}
+
 function toTeamDetail(team: V1TeamDetail, fallback: TeamModel): TeamModel {
   return {
     ...fallback,
@@ -387,6 +405,7 @@ function toTeamDetail(team: V1TeamDetail, fallback: TeamModel): TeamModel {
     status: team.profile.joinPolicy === 'closed' ? 'closed' : team.viewer.joinState === 'requested' ? 'reviewing' : team.viewer.role !== 'none' ? 'mine' : 'open',
     statusLabel: team.profile.joinPolicy === 'closed' ? '마감' : team.viewer.joinState === 'requested' ? '검토중' : team.viewer.role !== 'none' ? '내 팀' : '모집중',
     trust: toTrustBadge(team.trustState ?? team.trust.trustState),
+    genderRule: team.profile.genderRule ?? fallback.genderRule,
     intro: team.profile.introduction ?? fallback.intro,
     manner: hasTrustValue(team.trust.trustState) && team.trust.score !== null ? String(team.trust.score) : '-',
   };

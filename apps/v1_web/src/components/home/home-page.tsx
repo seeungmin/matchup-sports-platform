@@ -67,16 +67,7 @@ export function HomePageView({ model }: { model: HomeViewModel }) {
         <RecommendedMatchRail matches={model.recommendedMatches} />
       )}
 
-      <div style={{ padding: '24px 20px 20px' }}>
-        <SectionTitle title="이번 달 통계" />
-        <div className="tm-kpi-panel">
-          <KPIStat label="참가" value={dash ? '-' : model.stats.joined} unit={dash ? undefined : '회'} />
-          <KPIStat label="신뢰" value={dash ? '-' : model.stats.trustState} />
-          <KPIStat label="대기" value={dash ? '-' : model.stats.pending} />
-        </div>
-      </div>
-
-      <div style={{ padding: '0 20px 24px' }}>
+      <div style={{ padding: '20px 20px 24px' }}>
         <div className="tm-notice-head">
           <div className="tm-text-body-lg">공지사항</div>
           <Link className="tm-btn tm-btn-sm tm-btn-ghost" href="/notices" style={{ alignSelf: 'flex-end', minHeight: 30, padding: '0 4px' }}>

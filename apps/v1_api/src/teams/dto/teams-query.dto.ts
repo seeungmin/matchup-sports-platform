@@ -27,6 +27,10 @@ export class TeamsQueryDto {
   regionId?: string;
 
   @IsOptional()
+  @IsIn(['성별 무관', '남', '여', '무관'])
+  genderRule?: '성별 무관' | '남' | '여' | '무관';
+
+  @IsOptional()
   @IsIn(['approval_required', 'closed'])
   joinPolicy?: 'approval_required' | 'closed';
 

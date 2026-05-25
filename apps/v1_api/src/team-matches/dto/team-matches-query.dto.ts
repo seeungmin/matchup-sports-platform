@@ -27,6 +27,10 @@ export class TeamMatchesQueryDto {
   regionId?: string;
 
   @IsOptional()
+  @IsIn(['성별 무관', '남', '여', '무관'])
+  genderRule?: '성별 무관' | '남' | '여' | '무관';
+
+  @IsOptional()
   @IsIn(['recruiting', 'matched', 'cancelled', 'completed', 'expired'])
   status?: 'recruiting' | 'matched' | 'cancelled' | 'completed' | 'expired';
 

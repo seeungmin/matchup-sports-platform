@@ -17,6 +17,7 @@ import type { TeamMatchCreateStep, TeamMatchCreateViewModel } from './team-match
 import { getTeamMatchCreateViewModel } from './team-matches.view-model';
 
 const storageKey = 'teameet:v1:team-match-draft';
+const defaultGenderRule = '성별 무관';
 
 type TeamMatchDraft = TeamMatchCreateViewModel['draft'];
 
@@ -280,6 +281,7 @@ function draftFromEdit(edit: V1TeamMatchEdit): TeamMatchDraft {
     format: parsed.format,
     style: parsed.style,
     uniform: parsed.uniform,
+    gender: normalizeGenderRule(edit.form.genderRule),
     cost: parsed.cost,
     opponentCost: parsed.opponentCost,
     venue: edit.form.manualPlaceName,
@@ -310,7 +312,13 @@ function buildPayload(draft: TeamMatchDraft, hostTeamId: string, sportId: string
     addressText: draft.address.trim() || null,
     costNote: `총 ${draft.cost.toLocaleString('ko-KR')}원 · 상대팀 ${draft.opponentCost.toLocaleString('ko-KR')}원`,
     rulesText: [draft.grade, draft.format, draft.style, draft.uniform].filter(Boolean).join(' · ') || null,
+    genderRule: normalizeGenderRule(draft.gender),
   };
+}
+
+function normalizeGenderRule(value?: string | null) {
+  if (value === '남' || value === '여') return value;
+  return defaultGenderRule;
 }
 
 function parseNotes(rulesText?: string | null, costNote?: string | null) {

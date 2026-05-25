@@ -35,6 +35,11 @@ export class MutateTeamDto {
   @MaxLength(500)
   skillLevelText?: string | null;
 
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  genderRule?: string | null;
+
   @IsIn(['approval_required', 'closed'])
   joinPolicy!: 'approval_required' | 'closed';
 

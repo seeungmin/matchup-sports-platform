@@ -303,6 +303,7 @@ async function seedTeams(userIds: Record<string, string>, sportIds: Record<strin
           description: '평일 저녁에 함께 뛰는 v1 seed 팀입니다.',
           activityNote: '주 2회 러닝',
           skillNote: '초보부터 중수까지',
+          genderRule: '성별 무관',
         },
       },
       trustScore: {
@@ -339,6 +340,7 @@ async function seedTeams(userIds: Record<string, string>, sportIds: Record<strin
       profile: {
         create: {
           description: '주말 풋살 상대를 찾는 v1 seed 팀입니다.',
+          genderRule: '성별 무관',
         },
       },
     },
@@ -840,8 +842,8 @@ async function seedCoverageTeams(
 
     await prisma.v1TeamProfile.upsert({
       where: { teamId: id },
-      update: { description: `${name} seed coverage`, activityNote: '상태 커버리지', skillNote: '전체 레벨' },
-      create: { teamId: id, description: `${name} seed coverage`, activityNote: '상태 커버리지', skillNote: '전체 레벨' },
+      update: { description: `${name} seed coverage`, activityNote: '상태 커버리지', skillNote: '전체 레벨', genderRule: '성별 무관' },
+      create: { teamId: id, description: `${name} seed coverage`, activityNote: '상태 커버리지', skillNote: '전체 레벨', genderRule: '성별 무관' },
     });
 
     await prisma.v1TeamTrustScore.upsert({

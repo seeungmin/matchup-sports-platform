@@ -1,5 +1,9 @@
+'use client';
+
 import Link from 'next/link';
-import type { ReactNode } from 'react';
+import type { PointerEvent, ReactNode } from 'react';
+import { useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { AppChrome } from '@/components/v1-ui/shell';
 import { Card, EmptyState, KPIStat, ListItem } from '@/components/v1-ui/primitives';
 import { FilterIcon, PlusIcon, SearchIcon } from '@/components/v1-ui/icons';
@@ -27,14 +31,7 @@ export function TeamListPageView({ model }: { model: TeamListViewModel }) {
           <div className="tm-text-label">{model.summary.scope}</div>
           <div className="tm-text-caption tab-num">{model.summary.total}팀 · 모집중 {model.summary.recruiting} · 내 주변 {model.summary.nearby}</div>
         </div>
-        <div className="tm-section-row">
-          <div>
-            <div className="tm-text-label">팀 둘러보기</div>
-            <div className="tm-text-caption" style={{ marginTop: 2 }}>검색/필터 조건을 유지한 팀 목록입니다.</div>
-          </div>
-          <span className="tm-badge tm-badge-blue">검색/필터</span>
-        </div>
-        {model.teams.length ? <div className="tm-team-card-stack">{model.teams.map((team, index) => <TeamCard key={team.id} team={team} selected={index === 0} />)}</div> : <EmptyState title="조건에 맞는 팀이 없어요" sub="다른 종목을 선택하거나 필터를 초기화해 다시 확인해 주세요." />}
+        {model.teams.length ? <div className="tm-team-card-stack">{model.teams.map((team) => <TeamCard key={team.id} team={team} />)}</div> : <EmptyState title="조건에 맞는 팀이 없어요" sub="다른 종목을 선택하거나 필터를 초기화해 다시 확인해 주세요." />}
       </div>
       {model.filterSheet?.open ? <TeamFilterSheet model={model} /> : null}
     </AppChrome>
@@ -54,7 +51,7 @@ export function TeamStatePageView({ model }: { model: TeamStateViewModel }) {
               <div className="tm-text-label">검색어 `{model.query}`</div>
               <div className="tm-text-caption tab-num">{model.summary.total}팀 · 모집중 {model.summary.recruiting}</div>
             </div>
-            <div className="tm-team-card-stack">{model.teams.map((team, index) => <TeamCard key={team.id} team={team} selected={index === 0} />)}</div>
+            <div className="tm-team-card-stack">{model.teams.map((team) => <TeamCard key={team.id} team={team} />)}</div>
           </>
         ) : (
           <>
@@ -112,6 +109,7 @@ export function TeamDetailPageView({ model }: { model: TeamDetailViewModel }) {
   const { team, mode } = model;
   const locked = mode === 'pending' || mode === 'closed';
   const cta = model.ctaLabel ?? (mode === 'mine' ? '팀 관리' : mode === 'pending' ? '신청 상태 보기' : mode === 'closed' ? '모집 알림 받기' : '가입 신청');
+  const ctaTone = mode === 'pending' ? 'tm-btn-warning' : mode === 'closed' ? 'tm-btn-neutral' : 'tm-btn-primary';
   return (
     <AppChrome title="팀 상세" activeTab="teams" bottomNav={false} backHref="/teams">
       <article className="tm-team-detail-body">
@@ -119,6 +117,10 @@ export function TeamDetailPageView({ model }: { model: TeamDetailViewModel }) {
           <TeamLogo team={team} large />
           <h1 className="tm-text-heading" style={{ color: 'var(--static-white)', marginTop: 14 }}>{team.name}</h1>
           <div className="tm-text-caption" style={{ color: 'rgba(255,255,255,.72)', marginTop: 4 }}>{team.sport} · {team.region} · 매너 {team.manner}</div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 12 }}>
+            <span className={`tm-badge ${teamDetailStatusBadgeClass(mode)}`}>{team.statusLabel}</span>
+            <span className="tm-badge tm-badge-grey">{team.members}명</span>
+          </div>
         </Card>
         <SectionTitle title="팀 기본 정보" sub="가입 전 필요한 정보를 확인해 주세요." />
         <Card pad={16}>
@@ -128,6 +130,7 @@ export function TeamDetailPageView({ model }: { model: TeamDetailViewModel }) {
           <InfoRow label="시/도" value={team.city} required />
           <InfoRow label="구/군" value={team.county} />
           <InfoRow label="레벨" value={team.level} />
+          <InfoRow label="성별 조건" value={team.genderRule} />
           <InfoRow label="모집 여부" value={`${team.statusLabel} · ${team.activity}`} />
           <InfoRow label="신뢰 신호" value={team.trustNote} />
           <InfoRow label="정기 일정" value={team.schedule} />
@@ -152,9 +155,16 @@ export function TeamDetailPageView({ model }: { model: TeamDetailViewModel }) {
           <div style={{ display: 'grid', gap: 8, marginTop: 12 }}>{team.membersList.map((member) => <ListItem key={member.name} title={member.name} sub={`${member.role} · ${member.meta}`} trailing={member.status} />)}</div>
         </Card>
       </article>
-      <div className="tm-fixed-cta"><div className="tm-text-caption" style={{ marginBottom: 8 }}>{locked ? '상태를 확인한 뒤 다음 행동을 선택합니다.' : '신청 전 팀 정보와 내 프로필 공개 범위를 확인합니다.'}</div><button className={`tm-btn tm-btn-lg ${locked ? 'tm-btn-neutral' : 'tm-btn-primary'} tm-btn-block`} type="button" disabled={!model.onCta || model.ctaPending} onClick={model.onCta}>{model.ctaPending ? '처리 중' : cta}</button></div>
+      <div className="tm-fixed-cta"><div className="tm-text-caption" style={{ marginBottom: 8 }}>{locked ? '상태를 확인한 뒤 다음 행동을 선택합니다.' : '신청 전 팀 정보와 내 프로필 공개 범위를 확인합니다.'}</div><button className={`tm-btn tm-btn-lg ${ctaTone} tm-btn-block`} type="button" disabled={!model.onCta || model.ctaPending} onClick={model.onCta}>{model.ctaPending ? '처리 중' : cta}</button></div>
     </AppChrome>
   );
+}
+
+function teamDetailStatusBadgeClass(mode: TeamDetailViewModel['mode']) {
+  if (mode === 'pending') return 'tm-badge-orange';
+  if (mode === 'mine') return 'tm-badge-green';
+  if (mode === 'closed') return 'tm-badge-grey';
+  return 'tm-badge-blue';
 }
 
 export function TeamFormPageView({ model }: { model: TeamFormViewModel }) {
@@ -175,6 +185,7 @@ export function TeamFormPageView({ model }: { model: TeamFormViewModel }) {
         <div className="tm-create-two-col"><CreateField label="시/도" value={team.city} onChange={(value) => form?.onFieldChange('city', value)} /><CreateField label="구/군" value={team.county} onChange={(value) => form?.onFieldChange('county', value)} /></div>
         <CreateField label="팀 소개" value={team.description} multiline onChange={(value) => form?.onFieldChange('description', value)} />
         <div className="tm-create-two-col"><CreateField label="레벨" value={team.level} onChange={(value) => form?.onFieldChange('level', value)} /><CreateField label="정원" value={`${team.capacity}`} suffix="명" type="number" onChange={(value) => form?.onFieldChange('capacity', Number(value))} /></div>
+        <GenderRuleSelector value={team.genderRule} onChange={(value) => form?.onFieldChange('genderRule', value)} />
         <CreateField label="활동 방식" value={team.activity} onChange={(value) => form?.onFieldChange('activity', value)} />
         <CreateField label="연락처" value={team.contact} onChange={(value) => form?.onFieldChange('contact', value)} />
         {team.links.map((link, index) => <CreateField key={link.label} label={link.label} value={link.value} onChange={(value) => {
@@ -265,9 +276,8 @@ function TeamSearchBar({ model }: { model: TeamListViewModel }) {
           </div>
         ) : null}
       </form>
-      <Link className="tm-list-filter-button" href={model.filterHref ?? '/teams?filter=1'} aria-label={`필터 ${model.filterCount}개 적용`}>
+      <Link className="tm-list-filter-button" href={model.filterHref ?? '/teams?filter=1'} aria-label="필터">
         <FilterIcon size={21} strokeWidth={2} />
-        <span className="tm-list-filter-count tab-num">{model.filterCount}</span>
       </Link>
     </div>
   );
@@ -280,7 +290,7 @@ function TeamFilterSheet({ model }: { model: TeamListViewModel }) {
   return (
     <>
       <Link className="tm-filter-scrim" href={sheet.closeHref} aria-label="필터 닫기" />
-      <section className="tm-filter-sheet" aria-label="팀 필터">
+      <DraggableFilterSheet closeHref={sheet.closeHref} ariaLabel="팀 필터">
         <div className="tm-filter-sheet-handle" />
         <div className="tm-filter-sheet-head">
           <div>
@@ -292,6 +302,7 @@ function TeamFilterSheet({ model }: { model: TeamListViewModel }) {
         {[
           ['정렬', sheet.sortOptions],
           ['팀 조건', sheet.conditionOptions],
+          ['성별 조건', sheet.genderOptions],
           ['신뢰 신호', sheet.trustOptions],
         ].map(([title, options]) => (
           <div key={title as string} className="tm-filter-section">
@@ -307,17 +318,73 @@ function TeamFilterSheet({ model }: { model: TeamListViewModel }) {
           <Link className="tm-btn tm-btn-lg tm-btn-neutral" href={sheet.closeHref}>닫기</Link>
           <Link className="tm-btn tm-btn-lg tm-btn-primary" href={sheet.applyHref}>적용하기</Link>
         </div>
-      </section>
+      </DraggableFilterSheet>
     </>
   );
 }
 
-function TeamCard({ team, selected }: { team: TeamModel; selected?: boolean }) {
+function DraggableFilterSheet({
+  closeHref,
+  ariaLabel,
+  children,
+}: {
+  closeHref: string;
+  ariaLabel: string;
+  children: ReactNode;
+}) {
+  const router = useRouter();
+  const startYRef = useRef(0);
+  const draggingRef = useRef(false);
+  const [offsetY, setOffsetY] = useState(0);
+
+  const handlePointerDown = (event: PointerEvent<HTMLElement>) => {
+    startYRef.current = event.clientY;
+    draggingRef.current = true;
+    setOffsetY(0);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handlePointerMove = (event: PointerEvent<HTMLElement>) => {
+    if (!draggingRef.current) return;
+    setOffsetY(Math.max(0, event.clientY - startYRef.current));
+  };
+
+  const handlePointerEnd = (event: PointerEvent<HTMLElement>) => {
+    if (!draggingRef.current) return;
+    draggingRef.current = false;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    if (offsetY > 72) {
+      router.push(closeHref);
+      return;
+    }
+    setOffsetY(0);
+  };
+
   return (
-    <Link className={`tm-team-card tm-pressable ${selected ? 'tm-team-card-selected' : ''}`} href={`/teams/${team.id}`}>
+    <div className="tm-filter-layer">
+      <section
+        className="tm-filter-sheet"
+        aria-label={ariaLabel}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerEnd}
+        onPointerCancel={handlePointerEnd}
+        style={{ transform: `translateY(${offsetY}px)` }}
+      >
+        {children}
+      </section>
+    </div>
+  );
+}
+
+function TeamCard({ team }: { team: TeamModel }) {
+  return (
+    <Link className="tm-team-card tm-pressable" href={`/teams/${team.id}`}>
       <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
         <TeamLogo team={team} />
-        <div style={{ flex: 1, minWidth: 0 }}><div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><div className="tm-text-body-lg line-clamp-2">{team.name}</div><span className={`tm-badge ${team.status === 'closed' ? 'tm-badge-grey' : team.status === 'reviewing' ? 'tm-badge-orange' : 'tm-badge-blue'}`}>{team.statusLabel}</span></div><div className="tm-text-caption" style={{ marginTop: 4 }}>{team.sport} · {team.region} · {team.members}명</div><div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>{team.tags.map((tag) => <span key={tag} className="tm-badge tm-badge-grey">{tag}</span>)}</div></div>
+        <div style={{ flex: 1, minWidth: 0 }}><div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><div className="tm-text-body-lg line-clamp-2">{team.name}</div><span className={`tm-badge ${team.status === 'closed' ? 'tm-badge-grey' : team.status === 'reviewing' ? 'tm-badge-orange' : 'tm-badge-blue'}`}>{team.statusLabel}</span></div><div className="tm-text-caption" style={{ marginTop: 4 }}>{team.sport} · {team.region} · {team.members}명</div><div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>{[...team.tags, team.genderRule].map((tag) => <span key={tag} className="tm-badge tm-badge-grey">{tag}</span>)}</div></div>
       </div>
       <div className="tm-team-intro-box">
         <div className="tm-text-label">팀소개</div>
@@ -346,6 +413,21 @@ function InfoChips({ label, items, required }: { label: string; items: string[];
       <div className="tm-text-caption" style={{ color: required ? 'var(--text-strong)' : 'var(--text-caption)', fontWeight: required ? 800 : 600, marginBottom: 8 }}>{label}{required ? '*' : ''}</div>
       <div className="tm-team-form-chip-row">{items.map((item) => <span key={item} className="tm-chip tm-chip-active">{item}</span>)}</div>
       <div className="tm-text-micro" style={{ color: 'var(--blue500)', marginTop: 8 }}>{items.length}개 종목 선택됨</div>
+    </div>
+  );
+}
+
+function GenderRuleSelector({ value, onChange }: { value: string; onChange?: (value: string) => void }) {
+  return (
+    <div className="tm-create-field">
+      <div className="tm-text-label">성별 조건</div>
+      <div className="tm-team-form-chip-row">
+        {['성별 무관', '남', '여'].map((option) => (
+          <button key={option} className={`tm-chip ${value === option ? 'tm-chip-active' : ''}`} type="button" onClick={() => onChange?.(option)}>
+            {option}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

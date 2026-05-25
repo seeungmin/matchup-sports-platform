@@ -137,7 +137,7 @@ export function OnboardingClient({ step }: { step: OnboardingRouteStep }) {
     />
   );
 
-  const skipAction = step === 'sport' || step === 'level' || step === 'region' ? defer : undefined;
+  const skipAction = step === 'region' ? defer : undefined;
   const meta = stepMeta[step];
 
   return (
@@ -241,11 +241,25 @@ function OnboardingFixedAction({
   }
 
   if (step === 'sport') {
-    return <button className="tm-btn tm-btn-lg tm-btn-primary tm-btn-block" disabled={disabled} onClick={() => saveAndGo('sport', '/onboarding/level')} type="button">{pending ? '저장 중' : '실력 입력하기'}</button>;
+    return (
+      <>
+        <button className="tm-btn tm-btn-lg tm-btn-primary tm-btn-block" disabled={disabled} onClick={() => saveAndGo('sport', '/onboarding/level')} type="button">{pending ? '저장 중' : '실력 입력하기'}</button>
+        <div className="tm-auth-fixed-skip-row">
+          <button className="tm-btn tm-btn-sm tm-btn-ghost" disabled={pending} onClick={defer} type="button">나중에 설정하기</button>
+        </div>
+      </>
+    );
   }
 
   if (step === 'level') {
-    return <button className="tm-btn tm-btn-lg tm-btn-primary tm-btn-block" disabled={disabled} onClick={() => saveAndGo('level', '/onboarding/region')} type="button">{pending ? '저장 중' : '지역 선택하기'}</button>;
+    return (
+      <>
+        <button className="tm-btn tm-btn-lg tm-btn-primary tm-btn-block" disabled={disabled} onClick={() => saveAndGo('level', '/onboarding/region')} type="button">{pending ? '저장 중' : '지역 선택하기'}</button>
+        <div className="tm-auth-fixed-skip-row">
+          <button className="tm-btn tm-btn-sm tm-btn-ghost" disabled={pending} onClick={defer} type="button">나중에 설정하기</button>
+        </div>
+      </>
+    );
   }
 
   if (step === 'region') {

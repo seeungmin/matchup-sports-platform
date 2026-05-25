@@ -47,9 +47,8 @@ export function EmailLoginClient() {
       }
     >
       <form className="tm-auth-body" id="v1-email-login-form" onSubmit={submit}>
-        <span className="tm-badge tm-badge-blue">EMAIL LOGIN</span>
         <h1 className="tm-text-heading tm-auth-heading">{model.title}</h1>
-        <p className="tm-text-body tm-auth-sub">{model.sub}</p>
+        {model.sub ? <p className="tm-text-body tm-auth-sub">{model.sub}</p> : null}
         <div className="tm-auth-form">
           <label className="tm-auth-field">
             <span className="tm-text-label">이메일</span>
@@ -64,17 +63,13 @@ export function EmailLoginClient() {
           <button className="tm-btn tm-btn-sm tm-btn-ghost tm-btn-disabled" disabled type="button">비밀번호 찾기</button>
           <Link className="tm-btn tm-btn-sm tm-btn-ghost" href={model.signupHref}>회원가입</Link>
         </div>
-        {error ? (
-          <Card pad={16} className="tm-auth-soft-card">
-            <div className="tm-text-body-lg">로그인 실패</div>
-            <div className="tm-text-caption">{error}</div>
-          </Card>
-        ) : (
+        {error ? <p className="tm-text-caption tm-auth-field-helper tm-auth-field-helper-error">{error}</p> : null}
+        {!error && model.notice ? (
           <Card pad={16} className="tm-auth-soft-card">
             <div className="tm-text-body-lg">{model.notice.title}</div>
             <div className="tm-text-caption">{model.notice.body}</div>
           </Card>
-        )}
+        ) : null}
       </form>
     </AuthFrame>
   );

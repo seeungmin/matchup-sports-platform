@@ -16,6 +16,7 @@ import type { MatchCreateStep, MatchCreateViewModel } from './matches.types';
 import { getMatchCreateViewModel } from './matches.view-model';
 
 const storageKey = 'teameet:v1:match-draft';
+const defaultGenderRule = '성별 무관';
 
 type MatchDraft = MatchCreateViewModel['draft'];
 
@@ -248,6 +249,7 @@ function draftFromEdit(edit: V1MatchEdit): MatchDraft {
     image: edit.form.imageUrl ?? buildDefaultDraft().image,
     capacity: edit.form.capacity,
     rules: edit.form.rulesText ?? '',
+    gender: normalizeGenderRule(edit.form.genderRule),
     venue: edit.form.manualPlaceName,
     address: edit.form.addressText ?? '',
     date: toDateInput(start),
@@ -276,7 +278,13 @@ function buildPayload(draft: MatchDraft, sportId: string, regionId: string): V1M
     manualPlaceName: draft.venue.trim(),
     addressText: draft.address.trim() || null,
     rulesText: [draft.rules, draft.minLevel || draft.maxLevel ? `${draft.minLevel}-${draft.maxLevel}` : ''].filter(Boolean).join(' · ') || null,
+    genderRule: normalizeGenderRule(draft.gender),
   };
+}
+
+function normalizeGenderRule(value?: string | null) {
+  if (value === '남' || value === '여') return value;
+  return defaultGenderRule;
 }
 
 function previousCreateHref(step: MatchCreateStep) {

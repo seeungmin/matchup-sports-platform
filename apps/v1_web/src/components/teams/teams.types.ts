@@ -11,6 +11,7 @@ export type TeamModel = {
   status: TeamStatus;
   statusLabel: string;
   tags: string[];
+  genderRule: string;
   intro: string;
   fit: number;
   manner: string;
@@ -44,9 +45,11 @@ export type TeamListViewModel = {
     sort: 'recommended' | 'recruiting' | 'manner' | 'recent';
     condition: 'beginner' | 'weekly' | 'joinable' | 'women';
     trust: 'verified' | 'estimated';
+    genderRule: 'all' | '성별 무관' | '남' | '여';
     sortOptions: Array<{ label: string; value: 'recommended' | 'recruiting' | 'manner' | 'recent'; href: string; active?: boolean }>;
     conditionOptions: Array<{ label: string; value: 'beginner' | 'weekly' | 'joinable' | 'women'; href: string; active?: boolean }>;
     trustOptions: Array<{ label: string; value: 'verified' | 'estimated'; href: string; active?: boolean }>;
+    genderOptions: Array<{ label: string; value: 'all' | '성별 무관' | '남' | '여'; href: string; active?: boolean }>;
   };
   chips: Array<{ label: string; count?: number; active?: boolean; href?: string }>;
   summary: { scope: string; total: number; recruiting: number; nearby: number };
@@ -69,6 +72,7 @@ export type TeamDetailViewModel = {
     city: string;
     county: string;
     level: string;
+    genderRule: string;
     contact: string;
     links: Array<{ label: string; value: string }>;
     images: Array<{ title: string; count: number; max?: number; example?: boolean }>;
@@ -93,6 +97,7 @@ export type TeamFormViewModel = {
     city: string;
     county: string;
     level: string;
+    genderRule: string;
     activity: string;
     capacity: number;
     contact: string;

@@ -269,6 +269,7 @@ model V1UserProfile {
   id              String    @id @default(uuid())
   userId          String    @unique @map("user_id")
   nickname        String
+  gender          String?
   profileImageUrl String?   @map("profile_image_url")
   bio             String?
   visibility      String    @default("public")
@@ -593,6 +594,7 @@ model V1TeamProfile {
   description   String?
   activityNote  String?   @map("activity_note")
   skillNote     String?   @map("skill_note")
+  genderRule    String?   @map("gender_rule")
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
   deletedAt     DateTime? @map("deleted_at")

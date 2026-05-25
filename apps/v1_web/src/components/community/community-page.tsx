@@ -179,11 +179,12 @@ function ChatRoomRow({ room }: { room: ChatRoomModel }) {
   };
 
   const offset = draggingRef.current ? dragOffset : isOpen ? -actionWidth : 0;
+  const actionsVisible = offset < -1;
 
   return (
     <div className={`tm-chat-row ${room.unread ? 'tm-chat-row-unread' : ''}`}>
       <div
-        className="tm-chat-row-swipe"
+        className={`tm-chat-row-swipe ${actionsVisible ? 'tm-chat-row-swipe-actions-visible' : ''}`}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerEnd}

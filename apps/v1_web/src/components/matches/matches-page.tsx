@@ -1,4 +1,9 @@
+'use client';
+
 import Link from 'next/link';
+import type { PointerEvent, ReactNode } from 'react';
+import { useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { AppChrome } from '@/components/v1-ui/shell';
 import { Card, EmptyState, ListItem } from '@/components/v1-ui/primitives';
 import { BellIcon, ChevronLeftIcon, FilterIcon, PlusIcon, SearchIcon, ShareIcon } from '@/components/v1-ui/icons';
@@ -24,13 +29,6 @@ export function MatchListPageView({ model }: { model: MatchListViewModel }) {
         <div className="tm-match-summary-row">
           <div className="tm-text-label">{model.summary.label}</div>
           <div className="tm-text-caption tab-num">{model.summary.count}개 · 오늘 {model.summary.today} · 마감 {model.summary.urgent}</div>
-        </div>
-        <div className="tm-match-section-head">
-          <div>
-            <div className="tm-text-label">개인 매치</div>
-            <div className="tm-text-caption" style={{ marginTop: 2 }}>종목은 상단에 유지하고 정렬과 보기 방식은 필터에서 조정합니다.</div>
-          </div>
-          <span className="tm-badge tm-badge-blue">필터 {model.filterCount}</span>
         </div>
         <div className="tm-match-card-stack">
           {model.matches.length ? (
@@ -139,6 +137,22 @@ function MatchCreateFloatingButton() {
   );
 }
 
+function matchStatusBadgeClass(mode: MatchDetailViewModel['mode'], status: MatchDetailViewModel['match']['status']) {
+  if (mode === 'pending') return 'tm-badge-orange';
+  if (mode === 'approved') return 'tm-badge-green';
+  if (mode === 'mine') return 'tm-badge-blue';
+  if (status === 'full') return 'tm-badge-grey';
+  return 'tm-badge-grey';
+}
+
+function matchStatusBadgeLabel(mode: MatchDetailViewModel['mode'], status: MatchDetailViewModel['match']['status']) {
+  if (mode === 'pending') return '승인중';
+  if (mode === 'approved') return '승인완료';
+  if (mode === 'mine') return '내 매치';
+  if (status === 'full') return '모집완료';
+  return '모집중';
+}
+
 export function MatchDetailPageView({ model }: { model: MatchDetailViewModel }) {
   const { match, mode } = model;
   const locked = mode === 'pending' || mode === 'approved' || match.status === 'full';
@@ -161,7 +175,12 @@ export function MatchDetailPageView({ model }: { model: MatchDetailViewModel }) 
               </div>
             </div>
             <div>
-              <div className="tm-text-micro" style={{ color: 'rgba(255,255,255,.76)' }}>{match.sport} · {match.level}</div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+                <span className="tm-badge tm-badge-blue">{match.sport}</span>
+                <span className="tm-badge tm-badge-grey">{match.level}</span>
+                <span className="tm-badge tm-badge-grey">{match.gender}</span>
+                <span className={`tm-badge ${matchStatusBadgeClass(mode, match.status)}`}>{matchStatusBadgeLabel(mode, match.status)}</span>
+              </div>
               <h1 className="tm-match-detail-title">{match.title}</h1>
               <div className="tm-text-caption" style={{ color: 'rgba(255,255,255,.76)', marginTop: 6 }}>{match.host} 호스트 · {match.deadline}</div>
             </div>
@@ -171,6 +190,7 @@ export function MatchDetailPageView({ model }: { model: MatchDetailViewModel }) 
           <InfoRow label="날짜와 시간" value={`${match.date} ${match.time}`} />
           <InfoRow label="장소" value={match.venue} sub={match.address} />
           <InfoRow label="인원" value={`${match.current}/${match.capacity}명`} sub={`${match.capacity - match.current}자리 남음`} />
+          <InfoRow label="성별 조건" value={match.gender} />
           <InfoRow label="신청 방식" value={match.actionLabel} sub="v1은 결제 없이 호스트 승인으로만 참가가 확정됩니다." />
           {mode === 'pending' ? <StateCard tone="orange" title="신청 확인을 완료했어요" body="호스트가 승인하면 알림으로 알려드릴게요." /> : null}
           {mode === 'approved' ? <StateCard tone="green" title="승인완료" body="참가가 확정되었습니다. 경기 전 안내를 계속 확인할 수 있습니다." /> : null}
@@ -256,6 +276,7 @@ export function MatchCreatePageView({ model }: { model: MatchCreateViewModel }) 
 }
 
 function MatchSearchBar({ query, filterCount, search, filterHref = '/matches?filter=1' }: { query: string; filterCount: number; search?: MatchListViewModel['search']; filterHref?: string }) {
+  void filterCount;
   return (
     <div className="tm-list-searchbar">
       <form
@@ -302,9 +323,8 @@ function MatchSearchBar({ query, filterCount, search, filterHref = '/matches?fil
           </div>
         ) : null}
       </form>
-      <Link className="tm-list-filter-button" href={filterHref} aria-label={`필터 ${filterCount}개 적용`}>
+      <Link className="tm-list-filter-button" href={filterHref} aria-label="필터">
         <FilterIcon size={21} strokeWidth={2} />
-        <span className="tm-list-filter-count tab-num">{filterCount}</span>
       </Link>
     </div>
   );
@@ -317,12 +337,12 @@ function MatchFilterSheet({ model }: { model: MatchListViewModel }) {
   return (
     <>
       <Link className="tm-filter-scrim" href={sheet.closeHref} aria-label="필터 닫기" />
-      <section className="tm-filter-sheet" aria-label="매치 필터">
+      <DraggableFilterSheet closeHref={sheet.closeHref} ariaLabel="매치 필터">
         <div className="tm-filter-sheet-handle" />
         <div className="tm-filter-sheet-head">
           <div>
             <div className="tm-text-subhead">필터</div>
-            <div className="tm-text-caption" style={{ marginTop: 2 }}>정렬과 보기 방식만 조정</div>
+            <div className="tm-text-caption" style={{ marginTop: 2 }}>정렬 조건을 조정합니다</div>
           </div>
           <Link className="tm-btn tm-btn-sm tm-btn-ghost" href={sheet.resetHref} style={{ color: 'var(--text-caption)' }}>초기화</Link>
         </div>
@@ -335,6 +355,15 @@ function MatchFilterSheet({ model }: { model: MatchListViewModel }) {
           </div>
         </div>
         <div className="tm-filter-section">
+          <div className="tm-text-label">성별 조건</div>
+          <div className="tm-filter-chip-wrap">
+            {sheet.genderOptions.map((option) => (
+              <Link key={option.value} className={`tm-chip ${option.active ? 'tm-chip-active' : ''}`} href={option.href}>{option.label}</Link>
+            ))}
+          </div>
+        </div>
+        {/* 보기 형식은 추후 추가 예정입니다.
+        <div className="tm-filter-section">
           <div className="tm-text-label">보기 방식</div>
           <div className="tm-filter-view-grid">
             {sheet.viewOptions.map((option) => (
@@ -345,12 +374,69 @@ function MatchFilterSheet({ model }: { model: MatchListViewModel }) {
             ))}
           </div>
         </div>
+        */}
         <div className="tm-filter-actions">
           <Link className="tm-btn tm-btn-lg tm-btn-neutral" href={sheet.closeHref}>닫기</Link>
           <Link className="tm-btn tm-btn-lg tm-btn-primary" href={sheet.applyHref}>적용하기</Link>
         </div>
-      </section>
+      </DraggableFilterSheet>
     </>
+  );
+}
+
+function DraggableFilterSheet({
+  closeHref,
+  ariaLabel,
+  children,
+}: {
+  closeHref: string;
+  ariaLabel: string;
+  children: ReactNode;
+}) {
+  const router = useRouter();
+  const startYRef = useRef(0);
+  const draggingRef = useRef(false);
+  const [offsetY, setOffsetY] = useState(0);
+
+  const handlePointerDown = (event: PointerEvent<HTMLElement>) => {
+    startYRef.current = event.clientY;
+    draggingRef.current = true;
+    setOffsetY(0);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handlePointerMove = (event: PointerEvent<HTMLElement>) => {
+    if (!draggingRef.current) return;
+    setOffsetY(Math.max(0, event.clientY - startYRef.current));
+  };
+
+  const handlePointerEnd = (event: PointerEvent<HTMLElement>) => {
+    if (!draggingRef.current) return;
+    draggingRef.current = false;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    if (offsetY > 72) {
+      router.push(closeHref);
+      return;
+    }
+    setOffsetY(0);
+  };
+
+  return (
+    <div className="tm-filter-layer">
+      <section
+        className="tm-filter-sheet"
+        aria-label={ariaLabel}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerEnd}
+        onPointerCancel={handlePointerEnd}
+        style={{ transform: `translateY(${offsetY}px)` }}
+      >
+        {children}
+      </section>
+    </div>
   );
 }
 
@@ -386,6 +472,7 @@ function MatchCardItem({ match, index }: { match: MatchCardModel; index: number 
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           <span className="tm-badge tm-badge-grey">{match.sport}</span>
           <span className="tm-badge tm-badge-grey">{match.level}</span>
+          <span className="tm-badge tm-badge-grey">{match.gender}</span>
           <span className="tm-badge tm-badge-orange">{match.deadline}</span>
         </div>
         <div className="tm-text-body-lg" style={{ marginTop: 10 }}>{match.title}</div>
@@ -447,6 +534,7 @@ function InfoStep({ model, edit }: { model: MatchCreateViewModel; edit: boolean 
       </Card>
       <div className="tm-create-two-col"><CreateField label="최대 인원" value={`${draft.capacity}`} type="number" onChange={(value) => model.form?.onFieldChange('capacity', Number(value))} /><CreateField label="신청 방식" value={draft.actionLabel} /></div>
       <div className="tm-create-two-col"><CreateField label="최소 레벨" value={draft.minLevel} onChange={(value) => model.form?.onFieldChange('minLevel', value)} /><CreateField label="최대 레벨" value={draft.maxLevel} onChange={(value) => model.form?.onFieldChange('maxLevel', value)} /></div>
+      <GenderRuleSelector value={draft.gender} onChange={(value) => model.form?.onFieldChange('gender', value)} />
       <CreateField label="규칙" value={draft.rules} multiline onChange={(value) => model.form?.onFieldChange('rules', value)} />
       {edit ? <StateCard tone="orange" title="변경사항 저장" body="저장에 실패하면 입력한 내용을 유지한 채 다시 시도할 수 있습니다." /> : null}
     </div>
@@ -496,6 +584,21 @@ function CreateField({ label, value, placeholder, suffix, multiline, type = 'tex
         {suffix ? <span className="tm-text-caption">{suffix}</span> : null}
       </div>
     </label>
+  );
+}
+
+function GenderRuleSelector({ value, onChange }: { value: string; onChange?: (value: string) => void }) {
+  return (
+    <div className="tm-create-field">
+      <div className="tm-text-label">성별 조건</div>
+      <div className="tm-team-form-chip-row">
+        {['성별 무관', '남', '여'].map((option) => (
+          <button key={option} className={`tm-chip ${value === option ? 'tm-chip-active' : ''}`} type="button" onClick={() => onChange?.(option)}>
+            {option}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { CurrentUser } from './current-user.decorator';
 import { AuthService } from './auth.service';
 import { DevLoginDto } from './dto/dev-login.dto';
@@ -30,5 +30,15 @@ export class AuthController {
   @Post('register')
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
+  }
+
+  @Get('check-email')
+  checkEmail(@Query('email') email: string) {
+    return this.authService.checkEmail(email);
+  }
+
+  @Get('check-nickname')
+  checkNickname(@Query('nickname') nickname: string) {
+    return this.authService.checkNickname(nickname);
   }
 }

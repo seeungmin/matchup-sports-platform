@@ -46,6 +46,7 @@ export class MatchesService {
       ...(status === 'expired' ? { startAt: { lt: new Date() } } : { status }),
       ...(query.sportId ? { sportId: query.sportId } : {}),
       ...(query.regionId ? { regionId: query.regionId } : {}),
+      ...(query.genderRule ? { genderRule: getGenderRuleWhere(query.genderRule) } : {}),
       ...(query.query
         ? {
             OR: [
@@ -119,6 +120,7 @@ export class MatchesService {
       status: this.getApiStatus(match),
       displayState: this.getDisplayState(match),
       rulesText: [match.levelNote, match.genderRule, match.costNote].filter(Boolean).join(' · ') || null,
+      genderRule: match.genderRule,
       approvalRequired: true,
       paymentRequired: false,
       host: {
@@ -182,6 +184,7 @@ export class MatchesService {
           endAt: dates.endsAt,
           maxParticipants: dto.capacity,
           levelNote: dto.rulesText ?? null,
+          genderRule: dto.genderRule ?? null,
           status: 'recruiting',
         },
       });
@@ -242,6 +245,7 @@ export class MatchesService {
         manualPlaceName: match.placeName,
         addressText: match.placeAddress,
         rulesText: match.levelNote,
+        genderRule: match.genderRule,
       },
       status: this.getApiStatus(match),
       participantCount,
@@ -282,6 +286,7 @@ export class MatchesService {
         endAt: dates.endsAt,
         maxParticipants: dto.capacity,
         levelNote: dto.rulesText ?? null,
+        genderRule: dto.genderRule ?? null,
       },
     });
 
@@ -695,6 +700,8 @@ export class MatchesService {
       participantCount: this.getParticipantCount(match),
       status: this.getApiStatus(match),
       displayState: this.getDisplayState(match),
+      rulesText: [match.levelNote, match.genderRule, match.costNote].filter(Boolean).join(' · ') || null,
+      genderRule: match.genderRule,
       approvalRequired: true,
       paymentRequired: false,
       viewerState: this.getViewer(match, user).state === 'guest' ? 'none' : this.getViewer(match, user).state,
@@ -902,6 +909,12 @@ function getOrderBy(sort: MatchesQueryDto['sort']): Prisma.V1MatchOrderByWithRel
   if (sort === 'latest') return [{ createdAt: 'desc' }];
   if (sort === 'deadline' || sort === 'starts_at') return [{ startAt: 'asc' }, { createdAt: 'desc' }];
   return [{ startAt: 'asc' }, { createdAt: 'desc' }];
+}
+
+function getGenderRuleWhere(genderRule: NonNullable<MatchesQueryDto['genderRule']>) {
+  return genderRule === '무관' || genderRule === '성별 무관'
+    ? { in: ['성별 무관', '무관'] }
+    : genderRule;
 }
 
 function getReasonMessage(reasonCode: string) {

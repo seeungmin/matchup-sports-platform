@@ -204,6 +204,7 @@ export type V1Match = {
     status: string;
   }>;
   rulesText?: string | null;
+  genderRule?: string | null;
   ctaState?: string;
 };
 
@@ -224,6 +225,7 @@ export type V1MatchEdit = {
     manualPlaceName: string;
     addressText?: string | null;
     rulesText?: string | null;
+    genderRule?: string | null;
   };
   status: V1MatchApiStatus;
   participantCount: number;
@@ -263,6 +265,7 @@ export type V1MatchMutationPayload = {
   manualPlaceName: string;
   addressText?: string | null;
   rulesText?: string | null;
+  genderRule?: string | null;
 };
 
 export type V1MatchUpdatePayload = V1MatchMutationPayload & {
@@ -316,6 +319,7 @@ export type V1Team = {
   logoUrl?: string | null;
   coverImageUrl?: string | null;
   introductionPreview?: string | null;
+  genderRule?: string | null;
   viewerRole?: string;
   viewerJoinState?: string;
 };
@@ -359,6 +363,7 @@ export type V1TeamDetail = {
     introduction: string | null;
     activityAreaText: string | null;
     skillLevelText: string | null;
+    genderRule?: string | null;
     joinPolicy: string;
     memberGoalCount: number | null;
   };
@@ -398,6 +403,7 @@ export type V1TeamMutationPayload = {
   introduction?: string | null;
   activityAreaText?: string | null;
   skillLevelText?: string | null;
+  genderRule?: string | null;
   joinPolicy: 'approval_required' | 'closed';
   memberGoalCount?: number | null;
 };
@@ -508,6 +514,7 @@ export type V1TeamMatch = V1Match & {
   displayState?: V1TeamMatchApiStatus;
   costNote?: string | null;
   rulesText?: string | null;
+  genderRule?: string | null;
   paymentRequired?: boolean;
   hostTeamId?: string;
   hostTeamName?: string;
@@ -553,6 +560,7 @@ export type V1TeamMatchMutationPayload = {
   addressText?: string | null;
   costNote?: string | null;
   rulesText?: string | null;
+  genderRule?: string | null;
 };
 
 export type V1TeamMatchUpdatePayload = V1TeamMatchMutationPayload & {
@@ -587,6 +595,7 @@ export type V1TeamMatchEdit = {
     addressText?: string | null;
     costNote?: string | null;
     rulesText?: string | null;
+    genderRule?: string | null;
   };
   status: V1TeamMatchApiStatus;
   version: string;

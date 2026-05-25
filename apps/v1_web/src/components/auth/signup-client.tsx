@@ -3,38 +3,98 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/v1-ui/primitives';
-import { useV1Register } from '@/hooks/use-v1-api';
+import { useV1CheckEmail, useV1CheckNickname, useV1Register } from '@/hooks/use-v1-api';
 import { V1ApiError } from '@/lib/api-client';
 import { saveStoredV1Session } from '@/lib/session-storage';
 import { readSignupTermsAccepted } from '@/lib/signup-terms-storage';
 import { AuthFrame } from './auth-page';
 import { getSignupFormViewModel } from './auth.view-model';
 
-type SignupFieldErrors = Partial<Record<'nickname' | 'email' | 'password' | 'passwordConfirm' | 'terms', string>>;
+type SignupFieldErrors = Partial<Record<'nickname' | 'email' | 'password' | 'passwordConfirm' | 'gender' | 'terms', string>>;
+type SignupGender = 'male' | 'female';
+type DuplicateCheckState = {
+  status: 'idle' | 'available' | 'taken' | 'error';
+  value: string;
+};
 
 export function SignupClient() {
   const model = getSignupFormViewModel();
   const router = useRouter();
   const register = useV1Register();
+  const checkEmail = useV1CheckEmail();
+  const checkNickname = useV1CheckNickname();
   const [nickname, setNickname] = useState('');
   const [email, setEmail] = useState('');
+  const [gender, setGender] = useState<SignupGender | null>(null);
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [requiredTermsAccepted, setRequiredTermsAccepted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<SignupFieldErrors>({});
+  const [nicknameCheck, setNicknameCheck] = useState<DuplicateCheckState>({ status: 'idle', value: '' });
+  const [emailCheck, setEmailCheck] = useState<DuplicateCheckState>({ status: 'idle', value: '' });
 
   useEffect(() => {
     setRequiredTermsAccepted(readSignupTermsAccepted());
   }, []);
 
   const passwordMismatch = passwordConfirm.length > 0 && password !== passwordConfirm;
-  const isBlocked = register.isPending || passwordMismatch || !requiredTermsAccepted;
+  const nicknameVerified = nicknameCheck.status === 'available' && nicknameCheck.value === nickname.trim();
+  const emailVerified = emailCheck.status === 'available' && emailCheck.value === email.trim().toLowerCase();
+  const isBlocked = register.isPending || checkNickname.isPending || checkEmail.isPending || passwordMismatch || !requiredTermsAccepted || !gender || !nicknameVerified || !emailVerified;
   const disabledReason = !requiredTermsAccepted
     ? '필수 약관 동의 후 가입할 수 있습니다.'
     : passwordMismatch
       ? '비밀번호 확인을 먼저 해결해주세요.'
-      : null;
+      : !gender
+        ? '성별을 선택해주세요.'
+        : !nicknameVerified
+          ? '닉네임 중복 확인이 필요합니다.'
+          : !emailVerified
+            ? '이메일 중복 확인이 필요합니다.'
+            : null;
+
+  const runNicknameCheck = () => {
+    const nextNickname = nickname.trim();
+    setError(null);
+    if (nextNickname.length < 2) {
+      setFieldErrors((current) => ({ ...current, nickname: '2자 이상 입력해 주세요.' }));
+      setNicknameCheck({ status: 'idle', value: '' });
+      return;
+    }
+
+    checkNickname.mutate(nextNickname, {
+      onSuccess: (result) => {
+        setNicknameCheck({ status: result.available ? 'available' : 'taken', value: nextNickname });
+        setFieldErrors((current) => ({ ...current, nickname: result.available ? undefined : '이미 사용 중인 닉네임이에요.' }));
+      },
+      onError: () => {
+        setNicknameCheck({ status: 'error', value: nextNickname });
+        setFieldErrors((current) => ({ ...current, nickname: '중복 확인에 실패했습니다. 다시 시도해 주세요.' }));
+      },
+    });
+  };
+
+  const runEmailCheck = () => {
+    const nextEmail = email.trim().toLowerCase();
+    setError(null);
+    if (!nextEmail.includes('@')) {
+      setFieldErrors((current) => ({ ...current, email: '이메일 형식을 확인해 주세요.' }));
+      setEmailCheck({ status: 'idle', value: '' });
+      return;
+    }
+
+    checkEmail.mutate(nextEmail, {
+      onSuccess: (result) => {
+        setEmailCheck({ status: result.available ? 'available' : 'taken', value: nextEmail });
+        setFieldErrors((current) => ({ ...current, email: result.available ? undefined : '이미 가입된 이메일이에요.' }));
+      },
+      onError: () => {
+        setEmailCheck({ status: 'error', value: nextEmail });
+        setFieldErrors((current) => ({ ...current, email: '중복 확인에 실패했습니다. 다시 시도해 주세요.' }));
+      },
+    });
+  };
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -46,13 +106,28 @@ export function SignupClient() {
       return;
     }
 
+    if (!gender) {
+      setFieldErrors({ gender: '성별을 선택해주세요.' });
+      return;
+    }
+
+    if (!nicknameVerified) {
+      setFieldErrors({ nickname: '닉네임 중복 확인이 필요합니다.' });
+      return;
+    }
+
+    if (!emailVerified) {
+      setFieldErrors({ email: '이메일 중복 확인이 필요합니다.' });
+      return;
+    }
+
     if (password !== passwordConfirm) {
       setFieldErrors({ passwordConfirm: '비밀번호가 일치하지 않아요.' });
       return;
     }
 
     register.mutate(
-      { nickname, email, password, requiredTermsAccepted },
+      { nickname, email, password, gender, requiredTermsAccepted },
       {
         onSuccess: (result) => {
           saveStoredV1Session(result.session);
@@ -62,7 +137,8 @@ export function SignupClient() {
           const nextMessage = nextError instanceof Error ? nextError.message : '회원가입에 실패했습니다.';
 
           if (nextError instanceof V1ApiError && nextError.statusCode === 409) {
-            setFieldErrors({ email: '이미 가입된 이메일이에요.' });
+            const duplicateField = nextError.code === 'NICKNAME_CONFLICT' ? 'nickname' : 'email';
+            setFieldErrors({ [duplicateField]: duplicateField === 'nickname' ? '이미 사용 중인 닉네임이에요.' : '이미 가입된 이메일이에요.' });
             setError('이미 가입된 정보가 있어요. 기존 계정으로 로그인하거나 다른 이메일을 사용해주세요.');
             return;
           }
@@ -98,20 +174,17 @@ export function SignupClient() {
       }
     >
       <form className="tm-auth-body" id="v1-signup-form" onSubmit={submit}>
-        <span className={`tm-badge ${error || Object.keys(fieldErrors).length > 0 ? 'tm-badge-orange' : 'tm-badge-blue'}`}>
-          {error || Object.keys(fieldErrors).length > 0 ? 'SIGN UP CHECK' : 'SIGN UP'}
-        </span>
         <h1 className="tm-text-heading tm-auth-heading">{error || Object.keys(fieldErrors).length > 0 ? '가입 전\n확인이 필요해요' : model.title}</h1>
-        {!error && Object.keys(fieldErrors).length === 0 ? <p className="tm-text-body tm-auth-sub">{model.sub}</p> : null}
         <div className="tm-auth-form tm-auth-signup-form">
           <label className="tm-auth-field">
             <span className="tm-text-label">닉네임</span>
             <span className="tm-auth-field-with-action">
               <input
-                className={`tm-input tm-auth-input ${fieldErrors.nickname ? 'tm-auth-input-error' : nickname.length >= 2 ? 'tm-auth-input-success' : ''}`}
+                className={`tm-input tm-auth-input ${fieldErrors.nickname ? 'tm-auth-input-error' : nicknameVerified ? 'tm-auth-input-success' : ''}`}
                 minLength={2}
                 onChange={(event) => {
                   setNickname(event.target.value);
+                  setNicknameCheck({ status: 'idle', value: '' });
                   setFieldErrors((current) => ({ ...current, nickname: undefined }));
                 }}
                 placeholder="사용할 닉네임"
@@ -119,31 +192,59 @@ export function SignupClient() {
                 type="text"
                 value={nickname}
               />
-              <button className="tm-btn tm-btn-md tm-btn-neutral" disabled type="button">중복체크</button>
+              <button className="tm-btn tm-btn-md tm-btn-neutral" disabled={checkNickname.isPending || nickname.trim().length < 2} onClick={runNicknameCheck} type="button">{checkNickname.isPending ? '확인중' : '중복확인'}</button>
             </span>
-            <span className={`tm-text-caption tm-auth-field-helper ${fieldErrors.nickname ? 'tm-auth-field-helper-error' : nickname.length >= 2 ? 'tm-auth-field-helper-success' : ''}`}>
-              {fieldErrors.nickname ?? (nickname.length >= 2 ? '사용 가능한 닉네임이에요.' : '2자 이상 입력해 주세요.')}
-            </span>
+            {fieldErrors.nickname || nicknameVerified ? (
+              <span className={`tm-text-caption tm-auth-field-helper ${fieldErrors.nickname ? 'tm-auth-field-helper-error' : 'tm-auth-field-helper-success'}`}>
+                {fieldErrors.nickname ?? '사용 가능한 닉네임이에요.'}
+              </span>
+            ) : null}
           </label>
           <label className="tm-auth-field">
             <span className="tm-text-label">이메일</span>
-            <input
-              className={`tm-input tm-auth-input ${fieldErrors.email ? 'tm-auth-input-error' : email.includes('@') ? 'tm-auth-input-success' : ''}`}
-              onChange={(event) => {
-                setEmail(event.target.value);
-                setFieldErrors((current) => ({ ...current, email: undefined }));
-              }}
-              placeholder="you@example.com"
-              required
-              type="email"
-              value={email}
-            />
-            {fieldErrors.email || email.includes('@') ? (
+            <span className="tm-auth-field-with-action">
+              <input
+                className={`tm-input tm-auth-input ${fieldErrors.email ? 'tm-auth-input-error' : emailVerified ? 'tm-auth-input-success' : ''}`}
+                onChange={(event) => {
+                  setEmail(event.target.value);
+                  setEmailCheck({ status: 'idle', value: '' });
+                  setFieldErrors((current) => ({ ...current, email: undefined }));
+                }}
+                placeholder="you@example.com"
+                required
+                type="email"
+                value={email}
+              />
+              <button className="tm-btn tm-btn-md tm-btn-neutral" disabled={checkEmail.isPending || !email.includes('@')} onClick={runEmailCheck} type="button">{checkEmail.isPending ? '확인중' : '중복확인'}</button>
+            </span>
+            {fieldErrors.email || emailVerified ? (
               <span className={`tm-text-caption tm-auth-field-helper ${fieldErrors.email ? 'tm-auth-field-helper-error' : 'tm-auth-field-helper-success'}`}>
                 {fieldErrors.email ?? '사용 가능한 이메일이에요.'}
               </span>
             ) : null}
           </label>
+          <div className="tm-auth-field">
+            <span className="tm-text-label">성별</span>
+            <div className="tm-auth-segmented" role="group" aria-label="성별 선택">
+              {[
+                ['male', '남성'],
+                ['female', '여성'],
+              ].map(([value, label]) => (
+                <button
+                  key={value}
+                  className={`tm-auth-segment ${gender === value ? 'tm-auth-segment-active' : ''}`}
+                  type="button"
+                  onClick={() => {
+                    setGender(value as SignupGender);
+                    setFieldErrors((current) => ({ ...current, gender: undefined }));
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            {fieldErrors.gender ? <span className="tm-text-caption tm-auth-field-helper tm-auth-field-helper-error">{fieldErrors.gender}</span> : null}
+          </div>
           <label className="tm-auth-field">
             <span className="tm-text-label">비밀번호</span>
             <input
@@ -174,9 +275,11 @@ export function SignupClient() {
               type="password"
               value={passwordConfirm}
             />
-            <span className={`tm-text-caption tm-auth-field-helper ${fieldErrors.passwordConfirm || passwordMismatch ? 'tm-auth-field-helper-error' : ''}`}>
-              {fieldErrors.passwordConfirm ?? (passwordMismatch ? '비밀번호가 일치하지 않아요.' : '일치하지 않으면 가입 CTA는 비활성화한다.')}
-            </span>
+            {fieldErrors.passwordConfirm || passwordMismatch ? (
+              <span className="tm-text-caption tm-auth-field-helper tm-auth-field-helper-error">
+                {fieldErrors.passwordConfirm ?? '비밀번호가 일치하지 않아요.'}
+              </span>
+            ) : null}
           </label>
         </div>
         {error ? (
@@ -189,12 +292,7 @@ export function SignupClient() {
             <div className="tm-text-body-lg">약관 확인이 필요해요</div>
             <div className="tm-text-caption">{fieldErrors.terms}</div>
           </Card>
-        ) : (
-          <Card pad={16} className="tm-auth-soft-card">
-            <div className="tm-text-body-lg">{model.notice.title}</div>
-            <div className="tm-text-caption">{model.notice.body}</div>
-          </Card>
-        )}
+        ) : null}
       </form>
     </AuthFrame>
   );

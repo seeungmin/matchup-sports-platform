@@ -83,6 +83,7 @@ export function TeamEditPageClient({ teamId }: { teamId: string }) {
       city: query.data.region?.name ?? '',
       county: '',
       level: query.data.profile.skillLevelText ?? '',
+      genderRule: query.data.profile.genderRule ?? '성별 무관',
       activity: query.data.profile.activityAreaText ?? '',
       capacity: query.data.profile.memberGoalCount ?? query.data.memberCount,
     });
@@ -192,7 +193,13 @@ function buildPayload(draft: TeamDraft, sportId: string, regionId: string, joinP
     introduction: draft.description.trim() || null,
     activityAreaText: draft.activity.trim() || null,
     skillLevelText: draft.level.trim() || null,
+    genderRule: normalizeGenderRule(draft.genderRule),
     joinPolicy,
     memberGoalCount: Number(draft.capacity) || null,
   };
+}
+
+function normalizeGenderRule(value?: string | null) {
+  if (value === '남' || value === '여') return value;
+  return '성별 무관';
 }

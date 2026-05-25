@@ -32,7 +32,7 @@ export type EmailLoginViewModel = {
   primary: AuthAction;
   forgot: AuthAction;
   signupHref: string;
-  notice: { title: string; body: string };
+  notice?: { title: string; body: string };
 };
 
 export type AuthExceptionKind = 'provider-denied' | 'missing-email' | 'blocked' | 'account-conflict' | 'location-denied' | 'password-reset';
@@ -51,7 +51,14 @@ export type TermsViewModel = {
   backHref: string;
   title: string;
   sub: string;
-  agreements: Array<{ title: string; meta: string; required: boolean; checked: boolean }>;
+  agreements: Array<{
+    title: string;
+    meta: string;
+    required: boolean;
+    checked: boolean;
+    detail: string;
+    locationBased?: boolean;
+  }>;
   primary: AuthAction;
 };
 

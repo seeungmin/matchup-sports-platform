@@ -101,9 +101,21 @@ export function useV1EmailLogin() {
 export function useV1Register() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (body: { nickname: string; email: string; password: string; requiredTermsAccepted: boolean }) =>
+    mutationFn: (body: { nickname: string; email: string; password: string; gender: 'male' | 'female'; requiredTermsAccepted: boolean }) =>
       v1Post<V1AuthSessionResponse>('/auth/register', body),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: v1Keys.authMe() }),
+  });
+}
+
+export function useV1CheckEmail() {
+  return useMutation({
+    mutationFn: (email: string) => v1Get<{ available: boolean }>('/auth/check-email', { email }),
+  });
+}
+
+export function useV1CheckNickname() {
+  return useMutation({
+    mutationFn: (nickname: string) => v1Get<{ available: boolean }>('/auth/check-nickname', { nickname }),
   });
 }
 
