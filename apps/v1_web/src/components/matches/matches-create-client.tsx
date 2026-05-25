@@ -210,7 +210,7 @@ function usePersistedDraft() {
     const stored = window.localStorage.getItem(storageKey);
     if (!stored) return;
     try {
-      setDraft({ ...buildDefaultDraft(), ...JSON.parse(stored) });
+      setDraft({ ...buildDefaultDraft(), ...normalizeStoredDraft(JSON.parse(stored) as Partial<MatchDraft>) });
     } catch {
       window.localStorage.removeItem(storageKey);
     }
@@ -224,17 +224,40 @@ function usePersistedDraft() {
 }
 
 function buildDefaultDraft(): MatchDraft {
-  const start = new Date();
-  start.setDate(start.getDate() + 7);
-  start.setHours(18, 0, 0, 0);
-  const end = new Date(start);
-  end.setHours(20, 0, 0, 0);
-
   return {
     ...getMatchCreateViewModel('info').draft,
-    date: toDateInput(start),
+    date: '',
+    startTime: '',
+    endTime: '',
+  };
+}
+
+function normalizeStoredDraft(stored: Partial<MatchDraft>): Partial<MatchDraft> {
+  const oldDefaults = {
+    title: '주말 풋살 초보 환영 매치',
+    description: '초보도 편하게 참여할 수 있는 주말 풋살 매치입니다.',
+    rules: '풋살화 착용, 지각 시 미리 연락',
+    venue: '안양천 풋살장',
+    address: '서울 양천구 안양천로 939',
+    date: toDateInput(new Date(new Date().setDate(new Date().getDate() + 7))),
     startTime: '18:00',
     endTime: '20:00',
+    minLevel: '초보',
+    maxLevel: '중수',
+  };
+
+  return {
+    ...stored,
+    title: stored.title === oldDefaults.title ? '' : stored.title,
+    description: stored.description === oldDefaults.description ? '' : stored.description,
+    rules: stored.rules === oldDefaults.rules ? '' : stored.rules,
+    venue: stored.venue === oldDefaults.venue ? '' : stored.venue,
+    address: stored.address === oldDefaults.address ? '' : stored.address,
+    date: stored.date === oldDefaults.date ? '' : stored.date,
+    startTime: stored.startTime === oldDefaults.startTime ? '' : stored.startTime,
+    endTime: stored.endTime === oldDefaults.endTime ? '' : stored.endTime,
+    minLevel: stored.minLevel === oldDefaults.minLevel ? undefined : stored.minLevel,
+    maxLevel: stored.maxLevel === oldDefaults.maxLevel ? undefined : stored.maxLevel,
   };
 }
 
@@ -270,7 +293,7 @@ function buildPayload(draft: MatchDraft, sportId: string, regionId: string): V1M
     regionId: regionId || null,
     title: draft.title.trim(),
     description: draft.description.trim() || null,
-    imageUrl: null,
+    imageUrl: draft.image || null,
     startsAt: startsAt.toISOString(),
     endsAt: endsAt && endsAt > startsAt ? endsAt.toISOString() : null,
     deadlineAt: null,

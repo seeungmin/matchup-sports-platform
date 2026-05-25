@@ -101,6 +101,9 @@ export type TeamFormViewModel = {
     activity: string;
     capacity: number;
     contact: string;
+    logoImage: string;
+    coverImage: string;
+    activityImages: string[];
     links: Array<{ label: string; value: string }>;
   };
   form?: {

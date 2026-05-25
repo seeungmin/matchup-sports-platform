@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import type { PointerEvent, ReactNode } from 'react';
+import type { ChangeEvent, PointerEvent, ReactNode } from 'react';
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppChrome } from '@/components/v1-ui/shell';
@@ -523,32 +523,131 @@ function InfoStep({ model, edit }: { model: MatchCreateViewModel; edit: boolean 
   return (
     <div>
       <h1 className="tm-text-heading">매치 정보</h1>
-      <CreateField label="매치 제목" value={draft.title} onChange={(value) => model.form?.onFieldChange('title', value)} />
-      <CreateField label="설명" value={draft.description} multiline onChange={(value) => model.form?.onFieldChange('description', value)} />
-      <Card pad={0} style={{ marginTop: 14, overflow: 'hidden' }}>
-        <div className="tm-create-image-preview" style={{ backgroundImage: `url(${draft.image})` }}><span className="tm-badge tm-badge-grey">대표 이미지</span></div>
-        <div style={{ padding: 14 }}>
-          <button className="tm-btn tm-btn-md tm-btn-neutral tm-btn-block" type="button">+ 이미지 업로드</button>
-          <div className="tm-text-caption" style={{ marginTop: 8 }}>대표 이미지를 추가하면 목록과 상세 화면에 함께 표시됩니다.</div>
-        </div>
-      </Card>
-      <div className="tm-create-two-col"><CreateField label="최대 인원" value={`${draft.capacity}`} type="number" onChange={(value) => model.form?.onFieldChange('capacity', Number(value))} /><CreateField label="신청 방식" value={draft.actionLabel} /></div>
-      <div className="tm-create-two-col"><CreateField label="최소 레벨" value={draft.minLevel} onChange={(value) => model.form?.onFieldChange('minLevel', value)} /><CreateField label="최대 레벨" value={draft.maxLevel} onChange={(value) => model.form?.onFieldChange('maxLevel', value)} /></div>
+      <CreateField label="제목" value={draft.title} placeholder="예: 주말 저녁 풋살 멤버 모집" onChange={(value) => model.form?.onFieldChange('title', value)} />
+      <CreateField label="설명" value={draft.description} placeholder="예: 초보도 편하게 참여할 수 있는 친선 매치입니다." multiline onChange={(value) => model.form?.onFieldChange('description', value)} />
+      <ImageUploadField image={draft.image} onChange={(value) => model.form?.onFieldChange('image', value)} />
+      <CapacityField value={draft.capacity} onChange={(value) => model.form?.onFieldChange('capacity', value)} />
+      <LevelRangeField levels={model.levels} minLevel={draft.minLevel} maxLevel={draft.maxLevel} onChange={(field, value) => model.form?.onFieldChange(field, value)} />
       <GenderRuleSelector value={draft.gender} onChange={(value) => model.form?.onFieldChange('gender', value)} />
-      <CreateField label="규칙" value={draft.rules} multiline onChange={(value) => model.form?.onFieldChange('rules', value)} />
+      <CreateField label="규칙" value={draft.rules} placeholder="예: 풋살화 착용, 지각 시 미리 연락" multiline onChange={(value) => model.form?.onFieldChange('rules', value)} />
       {edit ? <StateCard tone="orange" title="변경사항 저장" body="저장에 실패하면 입력한 내용을 유지한 채 다시 시도할 수 있습니다." /> : null}
     </div>
   );
 }
 
+function ImageUploadField({ image, onChange }: { image: string; onChange?: (value: string) => void }) {
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') onChange?.(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  return (
+    <Card pad={0} style={{ marginTop: 14, overflow: 'hidden' }}>
+      <div className="tm-create-image-preview" style={{ backgroundImage: `url(${image})` }}>
+        <span className="tm-badge tm-badge-grey">대표 이미지</span>
+      </div>
+      <div style={{ padding: 14 }}>
+        <label className="tm-btn tm-btn-md tm-btn-neutral tm-btn-block">
+          이미지 업로드
+          <input className="sr-only" type="file" accept="image/*" onChange={handleChange} />
+        </label>
+      </div>
+    </Card>
+  );
+}
+
+function CapacityField({ value, onChange }: { value: number; onChange?: (value: number) => void }) {
+  const options = Array.from({ length: 29 }, (_, index) => index + 2);
+  const normalized = Math.min(30, Math.max(2, Number(value) || 2));
+
+  return (
+    <div className="tm-create-field">
+      <div className="tm-text-label">최대 인원</div>
+      <div className="tm-create-stepper">
+        <button className="tm-create-stepper-button" type="button" onClick={() => onChange?.(Math.max(2, normalized - 1))}>-</button>
+        <select className="tm-create-input tm-create-select-control" value={normalized} onChange={(event) => onChange?.(Number(event.target.value))}>
+          {options.map((item) => <option key={item} value={item}>{item}명</option>)}
+        </select>
+        <button className="tm-create-stepper-button" type="button" onClick={() => onChange?.(Math.min(30, normalized + 1))}>+</button>
+      </div>
+    </div>
+  );
+}
+
+function LevelRangeField({
+  levels,
+  minLevel,
+  maxLevel,
+  onChange,
+}: {
+  levels: string[];
+  minLevel: string;
+  maxLevel: string;
+  onChange?: (field: 'minLevel' | 'maxLevel', value: string) => void;
+}) {
+  const fallbackLevel = levels[0] ?? '';
+  const normalizedMinLevel = levels.includes(minLevel) ? minLevel : fallbackLevel;
+  const normalizedMaxLevel = levels.includes(maxLevel) ? maxLevel : normalizedMinLevel;
+  const minIndex = Math.max(0, levels.indexOf(normalizedMinLevel));
+  const maxIndex = Math.max(minIndex, levels.indexOf(normalizedMaxLevel));
+  const minOptions = levels.filter((_, index) => index <= maxIndex);
+  const maxOptions = levels.filter((_, index) => index >= minIndex);
+
+  const handleMinChange = (value: string) => {
+    const nextIndex = levels.indexOf(value);
+    onChange?.('minLevel', value);
+    if (nextIndex > maxIndex) onChange?.('maxLevel', value);
+  };
+
+  const handleMaxChange = (value: string) => {
+    const nextIndex = levels.indexOf(value);
+    onChange?.('maxLevel', value);
+    if (nextIndex < minIndex) onChange?.('minLevel', value);
+  };
+
+  return (
+    <div className="tm-create-two-col">
+      <CreateSelect label="최소 레벨" value={normalizedMinLevel} options={minOptions} onChange={handleMinChange} />
+      <CreateSelect label="최대 레벨" value={normalizedMaxLevel} options={maxOptions} onChange={handleMaxChange} />
+    </div>
+  );
+}
+
+function CreateSelect({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange?: (value: string) => void }) {
+  return (
+    <label className="tm-create-field">
+      <div className="tm-text-label">{label}</div>
+      <select className="tm-create-input tm-create-select-control" value={value} onChange={(event) => onChange?.(event.target.value)}>
+        {options.map((option) => <option key={option} value={option}>{option}</option>)}
+      </select>
+    </label>
+  );
+}
+
 function PlaceTimeStep({ model }: { model: MatchCreateViewModel }) {
   const draft = model.draft;
-  return <div><h1 className="tm-text-heading">장소와 시간</h1><Card pad={16} className="tm-create-selected" style={{ marginTop: 16 }}><div className="tm-text-body-lg">{draft.venue}</div><div className="tm-text-caption" style={{ marginTop: 4 }}>{draft.address}</div></Card><CreateField label="장소 직접 입력" value={draft.venue} placeholder="예: 한강공원 축구장, 동네 체육관 등" onChange={(value) => model.form?.onFieldChange('venue', value)} /><CreateField label="상세 주소" value={draft.address} onChange={(value) => model.form?.onFieldChange('address', value)} /><CreateField label="날짜" value={draft.date} type="date" onChange={(value) => model.form?.onFieldChange('date', value)} /><div className="tm-create-two-col"><CreateField label="시작 시간" value={draft.startTime} type="time" onChange={(value) => model.form?.onFieldChange('startTime', value)} /><CreateField label="종료 시간" value={draft.endTime} type="time" onChange={(value) => model.form?.onFieldChange('endTime', value)} /></div></div>;
+  return (
+    <div>
+      <h1 className="tm-text-heading">장소와 시간</h1>
+      <CreateField label="장소" value={draft.venue} placeholder="예: 한강공원 축구장, 동네 체육관 등" onChange={(value) => model.form?.onFieldChange('venue', value)} />
+      <CreateField label="상세 주소" value={draft.address} placeholder="예: 서울 영등포구 여의동로 330" onChange={(value) => model.form?.onFieldChange('address', value)} />
+      <CreateField label="날짜" value={draft.date} type="date" onChange={(value) => model.form?.onFieldChange('date', value)} />
+      <div className="tm-create-two-col">
+        <CreateField label="시작 시간" value={draft.startTime} type="time" onChange={(value) => model.form?.onFieldChange('startTime', value)} />
+        <CreateField label="종료 시간" value={draft.endTime} type="time" onChange={(value) => model.form?.onFieldChange('endTime', value)} />
+      </div>
+    </div>
+  );
 }
 
 function ConfirmStep({ model }: { model: MatchCreateViewModel }) {
   const draft = model.draft;
-  return <div><h1 className="tm-text-heading">작성된 내용을 확인해주세요</h1><Card pad={0} style={{ marginTop: 16, overflow: 'hidden' }}><div className="tm-create-image-preview" style={{ backgroundImage: `url(${draft.image})` }} /><div style={{ padding: 16 }}><div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}><span className="tm-badge tm-badge-blue">{model.selectedSport}</span><span className="tm-badge tm-badge-grey">{draft.minLevel}-{draft.maxLevel}</span><span className="tm-badge tm-badge-grey">{draft.gender}</span></div><div className="tm-text-subhead" style={{ marginTop: 10 }}>{draft.title}</div><div className="tm-text-caption" style={{ marginTop: 6 }}>{draft.description}</div></div></Card><Card pad={16} style={{ marginTop: 12 }}><InfoRow label="일시" value={`${draft.date} ${draft.startTime}-${draft.endTime}`} /><InfoRow label="장소" value={draft.venue} sub={draft.address} /><InfoRow label="인원/신청 방식" value={`최대 ${draft.capacity}명 · ${draft.actionLabel}`} /><InfoRow label="이미지" value="대표 이미지" sub="목록과 상세 화면에 표시됩니다" /></Card></div>;
+  return <div><h1 className="tm-text-heading">작성된 내용을 확인해주세요</h1><Card pad={0} style={{ marginTop: 16, overflow: 'hidden' }}><div className="tm-create-image-preview" style={{ backgroundImage: `url(${draft.image})` }} /><div style={{ padding: 16 }}><div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}><span className="tm-badge tm-badge-blue">{model.selectedSport}</span><span className="tm-badge tm-badge-grey">{draft.minLevel}-{draft.maxLevel}</span><span className="tm-badge tm-badge-grey">{draft.gender}</span></div><div className="tm-text-subhead" style={{ marginTop: 10 }}>{draft.title}</div><div className="tm-text-caption" style={{ marginTop: 6 }}>{draft.description}</div></div></Card><Card pad={16} style={{ marginTop: 12 }}><InfoRow label="일시" value={`${draft.date} ${draft.startTime}-${draft.endTime}`} /><InfoRow label="장소" value={draft.venue} sub={draft.address} /><InfoRow label="인원" value={`최대 ${draft.capacity}명`} /><InfoRow label="이미지" value="대표 이미지" sub="목록과 상세 화면에 표시됩니다" /></Card></div>;
 }
 
 function MatchComplete({ model }: { model: MatchCreateViewModel }) {

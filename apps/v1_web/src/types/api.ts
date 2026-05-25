@@ -400,6 +400,7 @@ export type V1TeamMutationPayload = {
   name: string;
   logoUrl?: string | null;
   coverImageUrl?: string | null;
+  photos?: string[];
   introduction?: string | null;
   activityAreaText?: string | null;
   skillLevelText?: string | null;
@@ -792,6 +793,19 @@ export type V1Profile = {
   regionName?: string;
   bio?: string;
   trustState?: TrustState;
+};
+
+export type V1MyActivitySummary = {
+  totals: {
+    activityCount: number;
+    teamCount: number;
+    mannerScore: number | null;
+  };
+  monthly: {
+    matchCount: number;
+    mannerScore: number | null;
+    winRate: number | null;
+  };
 };
 
 export type V1Settings = {

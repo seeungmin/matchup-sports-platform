@@ -148,20 +148,20 @@ const detailCopy: Record<MatchDetailViewModel['mode'], Pick<MatchDetailViewModel
 };
 
 const draft = {
-  title: '주말 풋살 초보 환영 매치',
-  description: '초보도 편하게 참여할 수 있는 주말 풋살 매치입니다.',
+  title: '',
+  description: '',
   image: '/mock/generated/futsal-rooftop.webp',
   capacity: 10,
   actionLabel: '승인제 신청',
-  minLevel: '초보',
-  maxLevel: '중수',
+  minLevel: '입문',
+  maxLevel: '고수',
   gender: '성별 무관',
-  rules: '풋살화 착용, 지각 시 미리 연락',
-  venue: '안양천 풋살장',
-  address: '서울 양천구 안양천로 939',
-  date: '2026-05-16',
-  startTime: '18:00',
-  endTime: '20:00',
+  rules: '',
+  venue: '',
+  address: '',
+  date: '',
+  startTime: '',
+  endTime: '',
 };
 
 export function getMatchListViewModel(): MatchListViewModel {

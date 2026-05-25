@@ -86,6 +86,9 @@ export function TeamEditPageClient({ teamId }: { teamId: string }) {
       genderRule: query.data.profile.genderRule ?? '성별 무관',
       activity: query.data.profile.activityAreaText ?? '',
       capacity: query.data.profile.memberGoalCount ?? query.data.memberCount,
+      logoImage: query.data.profile.logoUrl ?? '',
+      coverImage: query.data.profile.coverImageUrl ?? '',
+      activityImages: [],
     });
     setSportId(query.data.sport.sportId);
     setRegionId(query.data.region?.regionId ?? '');
@@ -188,8 +191,9 @@ function buildPayload(draft: TeamDraft, sportId: string, regionId: string, joinP
     sportId,
     regionId,
     name: draft.name.trim(),
-    logoUrl: null,
-    coverImageUrl: null,
+    logoUrl: draft.logoImage || '/mock/generated/team-huddle.webp',
+    coverImageUrl: draft.coverImage || '/mock/generated/futsal-rooftop.webp',
+    photos: draft.activityImages.length ? draft.activityImages : ['/mock/generated/team-huddle.webp'],
     introduction: draft.description.trim() || null,
     activityAreaText: draft.activity.trim() || null,
     skillLevelText: draft.level.trim() || null,

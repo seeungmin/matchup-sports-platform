@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import type { PointerEvent, ReactNode } from 'react';
+import type { ChangeEvent, PointerEvent, ReactNode } from 'react';
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppChrome } from '@/components/v1-ui/shell';
@@ -172,33 +172,31 @@ export function TeamFormPageView({ model }: { model: TeamFormViewModel }) {
   const team = model.team;
   const form = model.form;
   return (
-    <AppChrome title={edit ? '팀 수정' : '팀 만들기'} activeTab="teams" bottomNav={false}>
+    <AppChrome title={edit ? '팀 수정' : '팀 만들기'} activeTab="teams" bottomNav={false} backHref="/teams">
       <div className="tm-create-shell">
         <h1 className="tm-text-heading">{edit ? '팀 정보를 수정해요' : '새 팀을 만들어요'}</h1>
-        <p className="tm-text-body" style={{ marginTop: 8 }}>팀을 소개할 정보와 연락 가능한 채널을 입력해 주세요.</p>
         {form?.error ? <Card pad={14} style={{ marginTop: 14, background: 'var(--red50)' }}><div className="tm-text-label">저장할 수 없어요</div><div className="tm-text-caption" style={{ marginTop: 5 }}>{form.error}</div></Card> : null}
-        <CreateField label="팀 이름" value={team.name} onChange={(value) => form?.onFieldChange('name', value)} />
+        <CreateField label="팀 이름" value={team.name} placeholder="예: 성수 풋살 크루" onChange={(value) => form?.onFieldChange('name', value)} />
         <div className="tm-create-field">
           <div className="tm-text-label">종목 (복수 선택 가능)</div>
           <div className="tm-team-form-chip-row">{(form?.sports.map((sport) => sport.name) ?? ['축구', '풋살', '러닝', '수영']).map((sport) => <button key={sport} className={`tm-chip ${team.sports.includes(sport) ? 'tm-chip-active' : ''}`} type="button" onClick={() => form?.onSportChange(form.sports.find((item) => item.name === sport)?.id ?? '')}>{sport}</button>)}</div>
         </div>
-        <div className="tm-create-two-col"><CreateField label="시/도" value={team.city} onChange={(value) => form?.onFieldChange('city', value)} /><CreateField label="구/군" value={team.county} onChange={(value) => form?.onFieldChange('county', value)} /></div>
-        <CreateField label="팀 소개" value={team.description} multiline onChange={(value) => form?.onFieldChange('description', value)} />
-        <div className="tm-create-two-col"><CreateField label="레벨" value={team.level} onChange={(value) => form?.onFieldChange('level', value)} /><CreateField label="정원" value={`${team.capacity}`} suffix="명" type="number" onChange={(value) => form?.onFieldChange('capacity', Number(value))} /></div>
+        <div className="tm-create-two-col"><CreateField label="시/도" value={team.city} placeholder="예: 서울" onChange={(value) => form?.onFieldChange('city', value)} /><CreateField label="구/군" value={team.county} placeholder="예: 성동구" onChange={(value) => form?.onFieldChange('county', value)} /></div>
+        <CreateField label="팀 소개" value={team.description} placeholder="예: 주 1회 꾸준히 함께 경기할 멤버를 찾습니다." multiline onChange={(value) => form?.onFieldChange('description', value)} />
+        <div className="tm-create-two-col"><TeamLevelSelect value={team.level} onChange={(value) => form?.onFieldChange('level', value)} /><TeamCapacityField value={team.capacity} onChange={(value) => form?.onFieldChange('capacity', value)} /></div>
         <GenderRuleSelector value={team.genderRule} onChange={(value) => form?.onFieldChange('genderRule', value)} />
-        <CreateField label="활동 방식" value={team.activity} onChange={(value) => form?.onFieldChange('activity', value)} />
-        <CreateField label="연락처" value={team.contact} onChange={(value) => form?.onFieldChange('contact', value)} />
-        {team.links.map((link, index) => <CreateField key={link.label} label={link.label} value={link.value} onChange={(value) => {
+        <CreateField label="활동 방식" value={team.activity} placeholder="예: 평일 저녁 · 주 1회" onChange={(value) => form?.onFieldChange('activity', value)} />
+        <CreateField label="연락처" value={team.contact} placeholder="예: 오픈채팅 링크 또는 이메일" onChange={(value) => form?.onFieldChange('contact', value)} />
+        {team.links.map((link, index) => <CreateField key={link.label} label={link.label} value={link.value} placeholder={link.label === 'Instagram' ? '예: https://instagram.com/team-name' : '예: https://open.kakao.com/team-name'} onChange={(value) => {
           const next = [...team.links];
           next[index] = { ...link, value };
           form?.onFieldChange('links', next);
         }} />)}
-        <div className="tm-team-image-grid" style={{ marginTop: 14 }}>
-          <ImageSlot title="로고 이미지" count={edit ? 1 : 0} />
-          <ImageSlot title="커버 이미지" count={edit ? 1 : 0} />
-          <ImageSlot title="활동 사진" count={2} example />
+        <div className="tm-team-image-grid" style={{ marginTop: 18 }}>
+          <TeamImageUploadField title="로고 이미지" image={team.logoImage} fallback="/mock/generated/team-huddle.webp" onChange={(value) => form?.onFieldChange('logoImage', value)} />
+          <TeamImageUploadField title="커버 이미지" image={team.coverImage} fallback="/mock/generated/futsal-rooftop.webp" onChange={(value) => form?.onFieldChange('coverImage', value)} />
+          <TeamPhotoUploadField images={team.activityImages} onChange={(value) => form?.onFieldChange('activityImages', value)} />
         </div>
-        <Card pad={14} style={{ marginTop: 14, background: edit ? 'var(--orange50)' : 'var(--blue50)' }}><div className="tm-text-label">{edit ? '변경사항 저장' : '팀 생성 안내'}</div><div className="tm-text-caption" style={{ marginTop: 5 }}>{edit ? '저장에 실패하면 입력한 내용을 유지한 채 다시 시도할 수 있습니다.' : '팀 생성 후 멤버 초대와 가입 신청 관리를 시작할 수 있습니다.'}</div></Card>
       </div>
       <div className="tm-fixed-cta"><div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 8 }}><Link className="tm-btn tm-btn-lg tm-btn-neutral" href={edit ? '/teams' : '/teams'}>{edit ? '취소' : '이전'}</Link><button className="tm-btn tm-btn-lg tm-btn-primary" type="button" disabled={form?.submitting} onClick={form?.onSubmit}>{form?.submitting ? '저장 중' : edit ? '저장' : '팀 만들기'}</button></div></div>
     </AppChrome>
@@ -432,6 +430,88 @@ function GenderRuleSelector({ value, onChange }: { value: string; onChange?: (va
   );
 }
 
+function TeamLevelSelect({ value, onChange }: { value: string; onChange?: (value: string) => void }) {
+  const options = ['전체 레벨', '입문', '초보', '초보-중수', '중수', '중수-고수', '고수'];
+  const normalized = options.includes(value) ? value : '전체 레벨';
+
+  return (
+    <label className="tm-create-field">
+      <div className="tm-text-label">레벨</div>
+      <select className="tm-create-input tm-create-select-control" value={normalized} onChange={(event) => onChange?.(event.target.value)}>
+        {options.map((option) => <option key={option} value={option}>{option}</option>)}
+      </select>
+    </label>
+  );
+}
+
+function TeamCapacityField({ value, onChange }: { value: number; onChange?: (value: number) => void }) {
+  const options = Array.from({ length: 49 }, (_, index) => index + 2);
+  const normalized = Math.min(50, Math.max(2, Number(value) || 2));
+
+  return (
+    <div className="tm-create-field">
+      <div className="tm-text-label">정원</div>
+      <div className="tm-create-stepper">
+        <button className="tm-create-stepper-button" type="button" onClick={() => onChange?.(Math.max(2, normalized - 1))}>-</button>
+        <select className="tm-create-input tm-create-select-control" value={normalized} onChange={(event) => onChange?.(Number(event.target.value))}>
+          {options.map((item) => <option key={item} value={item}>{item}명</option>)}
+        </select>
+        <button className="tm-create-stepper-button" type="button" onClick={() => onChange?.(Math.min(50, normalized + 1))}>+</button>
+      </div>
+    </div>
+  );
+}
+
+function TeamImageUploadField({ title, image, fallback, onChange }: { title: string; image: string; fallback: string; onChange?: (value: string) => void }) {
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') onChange?.(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  return (
+    <div className="tm-team-image-slot">
+      <div className="tm-text-label">{title}</div>
+      <div className="tm-team-upload-preview" style={{ backgroundImage: `url(${image || fallback})` }} />
+      <label className="tm-btn tm-btn-sm tm-btn-neutral tm-btn-block" style={{ marginTop: 10 }}>
+        이미지 업로드
+        <input className="sr-only" type="file" accept="image/*" onChange={handleChange} />
+      </label>
+    </div>
+  );
+}
+
+function TeamPhotoUploadField({ images, onChange }: { images: string[]; onChange?: (value: string[]) => void }) {
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files ?? []);
+    if (!files.length) return;
+    Promise.all(files.map((file) => new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
+      reader.readAsDataURL(file);
+    }))).then((nextImages) => onChange?.([...images, ...nextImages.filter(Boolean)].slice(0, 6)));
+  };
+
+  return (
+    <div className="tm-team-image-slot">
+      <div className="tm-text-label">활동 사진</div>
+      {images.length ? (
+        <div className="tm-team-photo-grid">
+          {images.map((image, index) => <div key={`${image}-${index}`} className="tm-team-photo-preview" style={{ backgroundImage: `url(${image})` }} />)}
+        </div>
+      ) : null}
+      <label className="tm-btn tm-btn-sm tm-btn-neutral tm-btn-block" style={{ marginTop: 10 }}>
+        이미지 업로드
+        <input className="sr-only" type="file" accept="image/*" multiple onChange={handleChange} />
+      </label>
+    </div>
+  );
+}
+
 function ImageSlot({ title, count, max, example }: { title: string; count: number; max?: number; example?: boolean }) {
   const slots = Array.from({ length: Math.max(count, 1) });
   return (
@@ -466,6 +546,6 @@ function MemberCard({ title, sub, status, pending, locked, onPromote, onDemote, 
   );
 }
 
-function CreateField({ label, value, suffix, multiline, type = 'text', onChange }: { label: string; value: string; suffix?: string; multiline?: boolean; type?: string; onChange?: (value: string) => void }) {
-  return <label className="tm-create-field"><div className="tm-text-label">{label}</div><div className={`tm-create-input ${multiline ? 'tm-create-input-multiline' : ''}`}>{onChange ? (multiline ? <textarea className="tm-create-native-input" value={value} onChange={(event) => onChange(event.target.value)} /> : <input className="tm-create-native-input" type={type} value={value} onChange={(event) => onChange(event.target.value)} />) : <span className="tm-text-body" style={{ color: 'var(--text-strong)' }}>{value}</span>}{suffix ? <span className="tm-text-caption">{suffix}</span> : null}</div></label>;
+function CreateField({ label, value, placeholder, suffix, multiline, type = 'text', onChange }: { label: string; value: string; placeholder?: string; suffix?: string; multiline?: boolean; type?: string; onChange?: (value: string) => void }) {
+  return <label className="tm-create-field"><div className="tm-text-label">{label}</div><div className={`tm-create-input ${multiline ? 'tm-create-input-multiline' : ''}`}>{onChange ? (multiline ? <textarea className="tm-create-native-input" value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} /> : <input className="tm-create-native-input" type={type} value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} />) : <span className="tm-text-body" style={{ color: value ? 'var(--text-strong)' : 'var(--text-caption)' }}>{value || placeholder}</span>}{suffix ? <span className="tm-text-caption">{suffix}</span> : null}</div></label>;
 }
