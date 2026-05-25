@@ -17,6 +17,8 @@ import type {
   V1ChatRoomMeUpdate,
   V1DevLoginResponse,
   V1Home,
+  V1MasterRegionsResponse,
+  V1MasterSportsResponse,
   V1Match,
   V1MatchApplicationEligibility,
   V1MatchApplicationsPage,
@@ -142,14 +144,24 @@ export function useV1DeferOnboarding() {
 export function useV1MasterSports() {
   return useQuery({
     queryKey: v1Keys.masterSports(),
-    queryFn: () => v1Get<V1Sport[]>('/master/sports'),
+    queryFn: async () => {
+      const response = await v1Get<V1Sport[] | V1MasterSportsResponse>('/master/sports');
+      return Array.isArray(response) ? response : response.sports;
+    },
   });
 }
 
 export function useV1MasterRegions() {
   return useQuery({
     queryKey: v1Keys.masterRegions(),
-    queryFn: () => v1Get<V1Region[]>('/master/regions'),
+    queryFn: async () => {
+      const response = await v1Get<V1Region[] | V1MasterRegionsResponse>('/master/regions');
+      const regions = Array.isArray(response) ? response : response.regions;
+      return regions.flatMap((region) => [
+        { ...region, parentId: region.parentId ?? null },
+        ...(region.children ?? []).map((child) => ({ ...child, parentId: child.parentId ?? region.id })),
+      ]);
+    },
   });
 }
 

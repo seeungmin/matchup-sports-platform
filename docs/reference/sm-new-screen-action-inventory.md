@@ -12,7 +12,7 @@ DB source: docs/reference/sm-new-db-v1-table-decision-checklist.md
 Not for: final endpoint contract, Prisma migration, DTO finalization
 ```
 
-이 문서는 SM New API 설계 전에 17개 `1차 디자인 완료` 섹션의 화면, 버튼, 입력, 상태,
+이 문서는 SM New API 설계 전에 18개 `1차 디자인 완료` 섹션의 화면, 버튼, 입력, 상태,
 테이블 영향, API 영향을 빠짐없이 고정하기 위한 action inventory다.
 
 ## 2. Applied Decisions
@@ -237,6 +237,18 @@ Not for: final endpoint contract, Prisma migration, DTO finalization
 | Edge cases | permission, stale, duplicate, destructive confirm | cross-domain | standard error/status codes |
 | Handoff matrix | API readiness | cross-domain | endpoint docs must list actor, state, audit, idempotency |
 
+### 4.18 `reviews-post-event-sm-final`
+
+| Screen | Action/Input | Tables | API impact |
+|---|---|---|---|
+| Review inbox | completed schedule card tap | matches, team_matches, match_participants, team_match_applications, reviews | list reviewable completed schedules only |
+| Target select | participant/team card tap | users, teams, match_participants, team_match_applications | eligible review targets by completed schedule |
+| Star rating | 1-5 star tap | reviews | required rating value |
+| Selectable tag | predefined tag chips, exactly one selected | review_tags, review_tag_selections | no free-text review body in v1 |
+| Submit | selected review send | reviews, review_tag_selections, user_reputation_summaries | create one review per reviewer/target/schedule with one selected tag, idempotent conflict handling |
+| Complete state | done CTA | reviews | verified post-event signal shown in profile/reputation surfaces |
+| Exceptions | cancelled schedule, not participant, already submitted, deadline expired, no-show dispute | matches, team_matches, reviews, status_change_logs | lock CTA with explicit reason and preserve existing review state |
+
 ## 5. API Design Implications
 
 - List APIs need cursor pagination, query/filter/sort, and context preservation.
@@ -255,4 +267,3 @@ Not for: final endpoint contract, Prisma migration, DTO finalization
 | Desktop API separate endpoints | reuse mobile/domain APIs first | No |
 | Settings v1 scope | include notification prefs, profile visibility, logout/delete; defer password/email if auth implementation is not ready | Later |
 | Team member destructive powers | owner can do all; manager power needs permission matrix detail | Later |
-

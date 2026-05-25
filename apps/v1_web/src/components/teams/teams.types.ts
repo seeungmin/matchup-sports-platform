@@ -13,16 +13,42 @@ export type TeamModel = {
   tags: string[];
   intro: string;
   fit: number;
-  manner: number;
-  trust: 'verified' | 'estimated' | 'sample';
+  manner: string;
+  trust: 'verified' | 'estimated' | 'none';
   next: string;
 };
 
 export type TeamListViewModel = {
   query: string;
   placeholder: string;
+  search?: {
+    value: string;
+    placeholder: string;
+    recentItems: Array<{ id: string; query: string }>;
+    isOpen: boolean;
+    isLoading?: boolean;
+    onFocus: () => void;
+    onBlur: () => void;
+    onChange: (value: string) => void;
+    onSubmit: () => void;
+    onClear: () => void;
+    onSelectRecent: (query: string) => void;
+  };
   filterCount: number;
-  chips: Array<{ label: string; active?: boolean }>;
+  filterHref?: string;
+  filterSheet?: {
+    open: boolean;
+    closeHref: string;
+    resetHref: string;
+    applyHref: string;
+    sort: 'recommended' | 'recruiting' | 'manner' | 'recent';
+    condition: 'beginner' | 'weekly' | 'joinable' | 'women';
+    trust: 'verified' | 'estimated';
+    sortOptions: Array<{ label: string; value: 'recommended' | 'recruiting' | 'manner' | 'recent'; href: string; active?: boolean }>;
+    conditionOptions: Array<{ label: string; value: 'beginner' | 'weekly' | 'joinable' | 'women'; href: string; active?: boolean }>;
+    trustOptions: Array<{ label: string; value: 'verified' | 'estimated'; href: string; active?: boolean }>;
+  };
+  chips: Array<{ label: string; count?: number; active?: boolean; href?: string }>;
   summary: { scope: string; total: number; recruiting: number; nearby: number };
   teams: TeamModel[];
 };

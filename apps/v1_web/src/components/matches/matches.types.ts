@@ -18,8 +18,32 @@ export type MatchCardModel = {
 
 export type MatchListViewModel = {
   query: string;
+  search?: {
+    value: string;
+    placeholder: string;
+    recentItems: Array<{ id: string; query: string }>;
+    isOpen: boolean;
+    isLoading?: boolean;
+    onFocus: () => void;
+    onBlur: () => void;
+    onChange: (value: string) => void;
+    onSubmit: () => void;
+    onClear: () => void;
+    onSelectRecent: (query: string) => void;
+  };
   filterCount: number;
-  sports: Array<{ label: string; count: number; active?: boolean }>;
+  filterHref?: string;
+  filterSheet?: {
+    open: boolean;
+    closeHref: string;
+    resetHref: string;
+    applyHref: string;
+    sort: 'recommended' | 'deadline' | 'latest';
+    view: 'card' | 'compact';
+    sortOptions: Array<{ label: string; value: 'recommended' | 'deadline' | 'latest'; href: string; active?: boolean }>;
+    viewOptions: Array<{ label: string; value: 'card' | 'compact'; description: string; href: string; active?: boolean }>;
+  };
+  sports: Array<{ label: string; count: number; active?: boolean; href?: string }>;
   summary: {
     label: string;
     count: number;

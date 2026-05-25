@@ -11,7 +11,7 @@ export function DesignFrame({ children, title }: DesignFrameProps) {
   return (
     <main className="design-page">
       <TokensCSS />
-      {title ? <h1 className="design-page-title">{title}</h1> : null}
+      {title ? <span className="sr-only">{title}</span> : null}
       <div className="design-artboard">
         <DesignInteractions>{children}</DesignInteractions>
       </div>

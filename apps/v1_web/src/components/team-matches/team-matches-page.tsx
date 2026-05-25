@@ -18,13 +18,14 @@ export function TeamMatchListPageView({ model }: { model: TeamMatchListViewModel
       topBar={false}
       floatingSlot={<TeamMatchCreateFloatingButton />}
     >
-      <TeamMatchSearchBar filterCount={model.filterCount} />
+      <TeamMatchSearchBar filterCount={model.filterCount} search={model.search} query={model.query} filterHref={model.filterHref} />
       <div className="tm-match-list">
-        <div className="tm-sport-chip-row">{model.sports.map((sport) => <button key={sport.label} className={`tm-chip ${sport.active ? 'tm-chip-active' : ''}`} type="button">{sport.label} <span className="tab-num">{sport.count}</span></button>)}</div>
+        <div className="tm-sport-chip-row">{model.sports.map((sport) => sport.href ? <Link key={sport.label} className={`tm-chip ${sport.active ? 'tm-chip-active' : ''}`} href={sport.href}>{sport.label} <span className="tab-num">{sport.count}</span></Link> : <button key={sport.label} className={`tm-chip ${sport.active ? 'tm-chip-active' : ''}`} type="button">{sport.label} <span className="tab-num">{sport.count}</span></button>)}</div>
         <div className="tm-match-summary-row"><div className="tm-text-label">서울 전체 · 팀매치</div><div className="tm-text-caption tab-num">{model.summary.count}개 · 오늘 {model.summary.today} · 마감 {model.summary.urgent}</div></div>
         <div className="tm-match-section-head"><div><div className="tm-text-label">팀매치</div><div className="tm-text-caption" style={{ marginTop: 2 }}>종목은 상단에 유지하고 정렬과 보기 방식은 필터에서 조정합니다.</div></div><span className="tm-badge tm-badge-blue">필터 {model.filterCount}</span></div>
-        <div className="tm-match-card-stack">{model.matches.map((match, index) => <TeamMatchCard key={match.id} match={match} index={index} />)}</div>
+        {model.matches.length ? <div className="tm-match-card-stack">{model.matches.map((match, index) => <TeamMatchCard key={match.id} match={match} index={index} />)}</div> : <EmptyState title="조건에 맞는 팀매치가 없어요" sub="다른 종목을 선택하거나 필터를 초기화해 다시 확인해 주세요." />}
       </div>
+      {model.filterSheet?.open ? <TeamMatchFilterSheet model={model} /> : null}
     </AppChrome>
   );
 }
@@ -38,9 +39,9 @@ export function TeamMatchStatePageView({ model }: { model: TeamMatchStateViewMod
         <EmptyState title={model.title} sub={model.description} />
         {model.state === 'error' ? (
           <Card pad={16} style={{ marginTop: 18, background: 'var(--grey50)' }}>
-            <div className="tm-text-label">아직 재시도 API가 연결되지 않았어요</div>
+            <div className="tm-text-label">목록으로 돌아가 다시 확인해 주세요</div>
             <div className="tm-text-caption" style={{ marginTop: 6, lineHeight: 1.55 }}>
-              지금은 목록으로 돌아가 상태를 확인할 수 있고, 실제 재시도 mutation은 API 바인딩 후 연결합니다.
+              새로고침 후에도 같은 문제가 반복되면 잠시 뒤 다시 시도해 주세요.
             </div>
             <Link className="tm-btn tm-btn-md tm-btn-neutral tm-btn-block" href="/team-matches" style={{ marginTop: 14 }}>목록으로 돌아가기</Link>
           </Card>
@@ -61,7 +62,7 @@ function TeamMatchFilterPageView({ model }: { model: TeamMatchStateViewModel }) 
         <Card pad={16}>
           <div className="tm-text-body-lg">종목</div>
           <div className="tm-sport-chip-row" style={{ marginTop: 12 }}>
-            {model.sports.map((sport) => <button key={sport.label} className={`tm-chip ${sport.active ? 'tm-chip-active' : ''}`} type="button">{sport.label}</button>)}
+            {model.sports.map((sport) => sport.href ? <Link key={sport.label} className={`tm-chip ${sport.active ? 'tm-chip-active' : ''}`} href={sport.href}>{sport.label}</Link> : <button key={sport.label} className={`tm-chip ${sport.active ? 'tm-chip-active' : ''}`} type="button">{sport.label}</button>)}
           </div>
         </Card>
         <Card pad={16}>
@@ -154,18 +155,100 @@ export function TeamMatchCreatePageView({ model }: { model: TeamMatchCreateViewM
   );
 }
 
-function TeamMatchSearchBar({ filterCount }: { filterCount: number }) {
+function TeamMatchSearchBar({ filterCount, search, query, filterHref = '/team-matches?filter=1' }: { filterCount: number; search?: TeamMatchListViewModel['search']; query: string; filterHref?: string }) {
   return (
     <div className="tm-list-searchbar">
-      <Link className="tm-list-search-input" href="/search" aria-label="팀매치 검색">
-        <span className="tm-list-search-text">지역, 팀 이름, 경기조건 검색</span>
-        <SearchIcon size={19} strokeWidth={2} />
-      </Link>
-      <Link className="tm-list-filter-button" href="/team-matches/filter" aria-label={`필터 ${filterCount}개 적용`}>
+      <form
+        className="tm-list-search-form"
+        onBlur={(event) => {
+          if (!(event.relatedTarget instanceof Node) || !event.currentTarget.contains(event.relatedTarget)) {
+            search?.onBlur();
+          }
+        }}
+        onSubmit={(event) => {
+          event.preventDefault();
+          search?.onSubmit();
+        }}
+      >
+        <div className={`tm-list-search-input tm-list-search-input-field ${search?.isOpen ? 'tm-list-search-input-active' : ''}`} aria-label="팀매치 검색">
+          <input
+            aria-label="팀매치 검색어"
+            className="tm-list-search-field"
+            onChange={(event) => search?.onChange(event.target.value)}
+            onFocus={search?.onFocus}
+            placeholder={search?.placeholder ?? '지역, 팀 이름, 경기조건 검색'}
+            value={search?.value ?? query}
+          />
+          {search?.value ? (
+            <button className="tm-list-search-clear" type="button" aria-label="검색어 지우기" onClick={search.onClear}>×</button>
+          ) : null}
+          <button className="tm-list-search-submit" type="submit" aria-label="검색">
+            <SearchIcon size={19} strokeWidth={2} />
+          </button>
+        </div>
+        {search?.isOpen ? (
+          <div className="tm-list-search-dropdown">
+            <div className="tm-list-search-dropdown-title">최근 검색</div>
+            {search.isLoading ? <div className="tm-list-search-empty">불러오는 중</div> : null}
+            {!search.isLoading && search.recentItems.length === 0 ? <div className="tm-list-search-empty">최근 검색어가 없습니다</div> : null}
+            {search.recentItems.map((item) => (
+              <button key={item.id} className="tm-list-search-recent" type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => search.onSelectRecent(item.query)}>
+                <span>{item.query}</span>
+                <SearchIcon size={16} strokeWidth={2} />
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </form>
+      <Link className="tm-list-filter-button" href={filterHref} aria-label={`필터 ${filterCount}개 적용`}>
         <FilterIcon size={21} strokeWidth={2} />
         <span className="tm-list-filter-count tab-num">{filterCount}</span>
       </Link>
     </div>
+  );
+}
+
+function TeamMatchFilterSheet({ model }: { model: TeamMatchListViewModel }) {
+  const sheet = model.filterSheet;
+  if (!sheet) return null;
+
+  return (
+    <>
+      <Link className="tm-filter-scrim" href={sheet.closeHref} aria-label="필터 닫기" />
+      <section className="tm-filter-sheet" aria-label="팀매치 필터">
+        <div className="tm-filter-sheet-handle" />
+        <div className="tm-filter-sheet-head">
+          <div>
+            <div className="tm-text-subhead">필터</div>
+            <div className="tm-text-caption" style={{ marginTop: 2 }}>정렬과 보기 방식만 조정</div>
+          </div>
+          <Link className="tm-btn tm-btn-sm tm-btn-ghost" href={sheet.resetHref} style={{ color: 'var(--text-caption)' }}>초기화</Link>
+        </div>
+        <div className="tm-filter-section">
+          <div className="tm-text-label">정렬</div>
+          <div className="tm-filter-chip-wrap">
+            {sheet.sortOptions.map((option) => (
+              <Link key={option.value} className={`tm-chip ${option.active ? 'tm-chip-active' : ''}`} href={option.href}>{option.label}</Link>
+            ))}
+          </div>
+        </div>
+        <div className="tm-filter-section">
+          <div className="tm-text-label">보기 방식</div>
+          <div className="tm-filter-view-grid">
+            {sheet.viewOptions.map((option) => (
+              <Link key={option.value} className={`tm-filter-view-option ${option.active ? 'tm-filter-view-option-active' : ''}`} href={option.href}>
+                <span className="tm-text-label">{option.label}</span>
+                <span className="tm-text-micro">{option.description}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+        <div className="tm-filter-actions">
+          <Link className="tm-btn tm-btn-lg tm-btn-neutral" href={sheet.closeHref}>닫기</Link>
+          <Link className="tm-btn tm-btn-lg tm-btn-primary" href={sheet.applyHref}>적용하기</Link>
+        </div>
+      </section>
+    </>
   );
 }
 
@@ -178,7 +261,7 @@ function TeamStep({ model }: { model: TeamMatchCreateViewModel }) {
 }
 
 function SportStep({ model }: { model: TeamMatchCreateViewModel }) {
-  return <div><h1 className="tm-text-heading">어떤 종목인가요?</h1><p className="tm-text-body" style={{ marginTop: 8 }}>팀매치 목록의 종목 chip과 같은 기준으로 생성 후 필터에 반영됩니다.</p><div className="tm-create-sport-grid">{model.sports.map((sport) => <button key={sport} className={`tm-card tm-pressable ${sport === model.selectedSport ? 'tm-create-selected' : ''}`} style={{ padding: 16, textAlign: 'left' }} type="button" onClick={() => model.form?.onSelectSport(sport)}><div className="tm-text-body-lg">{sport}</div><div className="tm-text-caption" style={{ marginTop: 5 }}>{sport === model.selectedSport ? '선택됨' : '선택 가능'}</div></button>)}</div></div>;
+  return <div><h1 className="tm-text-heading">어떤 종목인가요?</h1><p className="tm-text-body" style={{ marginTop: 8 }}>상대 팀과 함께 진행할 종목을 선택해 주세요.</p><div className="tm-create-sport-grid">{model.sports.map((sport) => <button key={sport} className={`tm-card tm-pressable ${sport === model.selectedSport ? 'tm-create-selected' : ''}`} style={{ padding: 16, textAlign: 'left' }} type="button" onClick={() => model.form?.onSelectSport(sport)}><div className="tm-text-body-lg">{sport}</div><div className="tm-text-caption" style={{ marginTop: 5 }}>{sport === model.selectedSport ? '선택됨' : '선택 가능'}</div></button>)}</div></div>;
 }
 
 function InfoStep({ model, edit }: { model: TeamMatchCreateViewModel; edit: boolean }) {

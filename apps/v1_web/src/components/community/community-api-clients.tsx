@@ -21,6 +21,12 @@ import { getChatListViewModel, getChatRoomViewModel } from './community.view-mod
 
 type ChatCategory = ChatRoomModel['type'] | '전체';
 
+const CHAT_AVATARS = {
+  개인매치: '/mock/profile/profile-01.svg',
+  팀매치: '/mock/profile/profile-03.svg',
+  팀: '/mock/profile/profile-02.svg',
+} satisfies Record<ChatRoomModel['type'], string>;
+
 export function ChatListPageClient() {
   const [selectedCategory, setSelectedCategory] = useState<ChatCategory>('전체');
   const [leaveTarget, setLeaveTarget] = useState<ChatRoomModel | null>(null);
@@ -87,16 +93,22 @@ export function ChatRoomPageClient({ roomId }: { roomId: string }) {
   }, [lastMessageId]);
 
   const fallback = getChatRoomViewModel();
+  const isError = room.isError || messages.isError;
+  const isLoading = room.isPending || messages.isPending;
+  const messageItems = messages.data ? items.map(toChatMessageModel) : fallback.messages;
   const model: ChatRoomViewModel = {
     title: room.data?.title ?? fallback.title,
     context: room.data
       ? {
           title: room.data.linkedTarget.title,
-          sub: room.data.roomType === 'match' ? '개인매치 채팅' : '팀매치 채팅',
+          sub: room.data.roomType === 'match' ? '개인매치 채팅' : room.data.roomType === 'team' ? '팀 채팅' : '팀매치 채팅',
           href: room.data.linkedTarget.route ?? '/chat',
         }
       : fallback.context,
-    messages: items.length ? items.map(toChatMessageModel) : fallback.messages,
+    messages: messages.data ? messageItems : isLoading ? [] : fallback.messages,
+    status: isLoading ? 'loading' : isError ? 'error' : 'ready',
+    emptyTitle: isError ? '채팅방을 불러오지 못했어요' : messages.data && items.length === 0 ? '아직 메시지가 없어요' : undefined,
+    emptyBody: isError ? '네트워크 상태를 확인하고 다시 시도해 주세요.' : messages.data && items.length === 0 ? '첫 메시지를 보내 대화를 시작할 수 있습니다.' : undefined,
     draft,
     sending: send.isPending,
     onDraftChange: setDraft,
@@ -110,6 +122,12 @@ export function ChatRoomPageClient({ roomId }: { roomId: string }) {
         },
       );
     },
+    onRetry: isError
+      ? () => {
+          room.refetch();
+          messages.refetch();
+        }
+      : undefined,
   };
 
   return <ChatRoomPageView model={model} />;
@@ -117,6 +135,7 @@ export function ChatRoomPageClient({ roomId }: { roomId: string }) {
 
 export function NotificationsPageClient() {
   const router = useRouter();
+  const [readAllToastVisible, setReadAllToastVisible] = useState(false);
   const query = useV1Notifications({ limit: 50 });
   const read = useV1ReadNotification();
   const readAll = useV1ReadAllNotifications();
@@ -125,7 +144,17 @@ export function NotificationsPageClient() {
     unreadCount: typeof query.data?.unreadCount === 'number' ? query.data.unreadCount : 0,
     notifications,
     readAllPending: readAll.isPending,
-    onReadAll: () => readAll.mutate({}),
+    readAllToastVisible,
+    onReadAll: () =>
+      readAll.mutate(
+        {},
+        {
+          onSuccess: () => {
+            setReadAllToastVisible(true);
+            window.setTimeout(() => setReadAllToastVisible(false), 2200);
+          },
+        },
+      ),
     onOpen: (notification) => {
       if (!notification.unread) {
         router.push(notification.href);
@@ -141,7 +170,7 @@ export function NotificationsPageClient() {
 }
 
 function toChatRoomModel(room: V1ChatRoom): ChatRoomModel {
-  const type = room.roomType === 'match' ? '개인매치' : '팀매치';
+  const type = room.roomType === 'match' ? '개인매치' : room.roomType === 'team' ? '팀' : '팀매치';
   return {
     id: room.roomId,
     title: room.title,
@@ -152,6 +181,7 @@ function toChatRoomModel(room: V1ChatRoom): ChatRoomModel {
     unread: room.unreadCount,
     pinned: room.pinned,
     initials: room.title.slice(0, 1) || '채',
+    avatarUrl: CHAT_AVATARS[type],
   };
 }
 
@@ -168,7 +198,7 @@ function toNotificationModel(notification: V1Notification): NotificationModel {
   const href = normalizeNotificationHref(notification.target?.route);
   return {
     id: notification.notificationId,
-    group: isToday(notification.createdAt) ? '오늘' : '어제',
+    group: formatNotificationGroup(notification.createdAt),
     title: notification.title,
     body: notification.body ?? '',
     time: formatRelative(notification.createdAt),
@@ -184,10 +214,17 @@ function normalizeNotificationHref(route?: string | null) {
   return route;
 }
 
-function isToday(value: string) {
+function formatNotificationGroup(value: string) {
   const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
   const now = new Date();
-  return date.toDateString() === now.toDateString();
+  if (date.toDateString() === now.toDateString()) return '오늘';
+
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) return '어제';
+
+  return date.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
 }
 
 function formatRelative(value?: string) {

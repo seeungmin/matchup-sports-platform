@@ -20,16 +20,16 @@ export function AuthProductPage({ mode }: { mode: AuthMode }) {
           <Badge tone="blue">SM New v1</Badge>
           <h1 className="v1-title" style={{ marginTop: 12 }}>{title}</h1>
           <p className="v1-body" style={{ marginTop: 8 }}>
-            v1은 기존 앱을 대체하지 않는 별도 런타임입니다. 실제 소셜 인증 UI는 API contract layer 이후 연결합니다.
+            로그인 후 관심 종목과 활동 지역을 설정하면 더 맞는 매치를 추천받을 수 있습니다.
           </p>
         </section>
 
         <Section title="지원 상태">
           <div className="v1-list">
-            <StatusRow label="현재 사용자 조회" value="auth/me 연결 예정" done />
-            <StatusRow label="온보딩 저장" value="v1 onboarding API 연결 예정" done />
+            <StatusRow label="현재 사용자" value="로그인 상태 확인" done />
+            <StatusRow label="온보딩 저장" value="관심 종목과 활동 지역 저장" done />
             <StatusRow label="소셜 제공자 실패" value="오류 상태 copy 필요" />
-            <StatusRow label="중복 계정/차단 계정" value="API 에러 코드 바인딩 필요" />
+            <StatusRow label="중복 계정/차단 계정" value="계정 상태에 따라 안내합니다" />
           </div>
         </Section>
 
@@ -132,7 +132,7 @@ export function AdminProductPage({ mode }: { mode: AdminMode }) {
 
         <Section title={mode === 'audit' ? '최근 감사 이벤트' : '운영 체크'}>
           <div className="v1-list">
-            <StatusRow label="API 상태" value="health/admin endpoint 바인딩 예정" done />
+            <StatusRow label="서비스 상태" value="주요 서비스 상태를 확인합니다" done />
             <StatusRow label="감사 로그" value="사유, 주체, 결과를 표시" done />
             <StatusRow label="운영 mutation" value="부분 실패와 사유 입력 필요" />
           </div>
@@ -150,7 +150,7 @@ export function PublicMarketingProductPage() {
           <Badge tone="blue">teameet v1</Badge>
           <h1 className="v1-title" style={{ marginTop: 12 }}>같이 운동할 사람과 팀을 찾는 곳</h1>
           <p className="v1-body" style={{ marginTop: 8 }}>
-            공개 소개 화면은 샘플 통계만 사용합니다. 실제 모집, 팀 신뢰도, 결제 가능 여부처럼 보이는 표현은 앱 데이터 연결 후에만 노출합니다.
+            공개 소개 화면에서는 실제 제공 범위와 주요 진입 경로를 안내합니다. 모집, 팀 신뢰도, 결제 가능 여부는 앱 안에서 확인할 수 있습니다.
           </p>
         </section>
 

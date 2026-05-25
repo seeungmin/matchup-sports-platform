@@ -497,26 +497,71 @@ async function seedChatAndNotifications(
     create: { teamMatchId, status: 'active' },
   });
 
-  await prisma.v1Notification.upsert({
-    where: { id: '00000000-0000-4000-8000-000000000501' },
-    update: {
-      recipientUserId: userIds['applicant@teameet.v1'],
-      targetType: V1NotificationTargetType.match,
-      targetId: matchId,
-      title: '매치 신청 상태 안내',
-      body: '신청한 매치가 접수되었습니다.',
-      deepLink: `/matches/${matchId}`,
-    },
-    create: {
+  const notifications = [
+    {
       id: '00000000-0000-4000-8000-000000000501',
+      recipientUserId: userIds['host@teameet.v1'],
+      targetType: V1NotificationTargetType.match,
+      targetId: matchId,
+      title: '매치 참가 확정',
+      body: '성수 풋살파크 · 10명 · 현장 준비 필요',
+      deepLink: `/matches/${matchId}`,
+      readAt: null,
+      createdAt: new Date('2026-05-24T08:05:00.000Z'),
+    },
+    {
+      id: '00000000-0000-4000-8000-000000000502',
+      recipientUserId: userIds['host@teameet.v1'],
+      targetType: V1NotificationTargetType.team_match,
+      targetId: teamMatchId,
+      title: '팀매치 신청 도착',
+      body: '상대팀 신청이 들어왔습니다. 조건을 확인해 주세요.',
+      deepLink: `/team-matches/${teamMatchId}`,
+      readAt: null,
+      createdAt: new Date('2026-05-24T07:50:00.000Z'),
+    },
+    {
+      id: '00000000-0000-4000-8000-000000000503',
+      recipientUserId: userIds['host@teameet.v1'],
+      targetType: V1NotificationTargetType.chat,
+      targetId: matchRoom.id,
+      title: '새 메시지',
+      body: '주말 풋살 매치 채팅방에 새 메시지가 있습니다.',
+      deepLink: `/chat/rooms/${matchRoom.id}`,
+      readAt: new Date('2026-05-24T08:10:00.000Z'),
+      createdAt: new Date('2026-05-23T10:00:00.000Z'),
+    },
+    {
+      id: '00000000-0000-4000-8000-000000000504',
+      recipientUserId: userIds['host@teameet.v1'],
+      targetType: V1NotificationTargetType.notice,
+      targetId: '00000000-0000-4000-8000-000000000001',
+      title: '공지 업데이트',
+      body: '이번 주 고정 공지가 업데이트되었습니다.',
+      deepLink: '/notices/00000000-0000-4000-8000-000000000001',
+      readAt: new Date('2026-05-24T08:12:00.000Z'),
+      createdAt: new Date('2026-05-21T08:30:00.000Z'),
+    },
+    {
+      id: '00000000-0000-4000-8000-000000000505',
       recipientUserId: userIds['applicant@teameet.v1'],
       targetType: V1NotificationTargetType.match,
       targetId: matchId,
       title: '매치 신청 상태 안내',
       body: '신청한 매치가 접수되었습니다.',
       deepLink: `/matches/${matchId}`,
+      readAt: null,
+      createdAt: new Date('2026-05-24T08:00:00.000Z'),
     },
-  });
+  ];
+
+  for (const notification of notifications) {
+    await prisma.v1Notification.upsert({
+      where: { id: notification.id },
+      update: notification,
+      create: notification,
+    });
+  }
 }
 
 async function seedAdmin(userIds: Record<string, string>) {
@@ -1140,6 +1185,126 @@ async function seedCoverageTeamMatches(
   }
 }
 
+async function seedHostChatDemoData(
+  userIds: Record<string, string>,
+  sportIds: Record<string, string>,
+  regionId: string,
+  matchId: string,
+  teamMatchId: string,
+  ownerTeamId: string,
+) {
+  const upsertParticipant = async (chatRoomId: string, userId: string, pinnedAt: Date | null = null) =>
+    prisma.v1ChatRoomParticipant.upsert({
+      where: { chatRoomId_userId: { chatRoomId, userId } },
+      update: { status: 'active', leftAt: null, pinnedAt },
+      create: { chatRoomId, userId, status: 'active', pinnedAt },
+    });
+
+  const upsertMessage = async (id: string, chatRoomId: string, senderUserId: string, body: string, sentAt: Date) =>
+    prisma.v1ChatMessage.upsert({
+      where: { id },
+      update: { chatRoomId, senderUserId, body, status: 'sent', sentAt, hiddenAt: null, deletedAt: null },
+      create: { id, chatRoomId, senderUserId, body, status: 'sent', sentAt },
+    });
+
+  const primaryMatchRoom = await prisma.v1ChatRoom.upsert({
+    where: { matchId },
+    update: { status: 'active', lastMessageAt: new Date('2026-05-18T09:00:00.000Z') },
+    create: { matchId, status: 'active', lastMessageAt: new Date('2026-05-18T09:00:00.000Z') },
+  });
+  await upsertParticipant(primaryMatchRoom.id, userIds['host@teameet.v1'], seedNow);
+  await upsertParticipant(primaryMatchRoom.id, userIds['applicant@teameet.v1']);
+  await upsertMessage('00000000-0000-4000-8000-000000000401', primaryMatchRoom.id, userIds['applicant@teameet.v1'], '오늘 20시에 바로 시작합니다', new Date('2026-05-18T08:40:00.000Z'));
+  await upsertMessage('00000000-0000-4000-8000-000000000402', primaryMatchRoom.id, userIds['host@teameet.v1'], '네, 조끼랑 물 챙겨갈게요', new Date('2026-05-18T08:52:00.000Z'));
+  await upsertMessage('00000000-0000-4000-8000-000000000403', primaryMatchRoom.id, userIds['applicant@teameet.v1'], '오늘 경기 준비물 확인해 주세요', new Date('2026-05-18T09:00:00.000Z'));
+
+  const extraMatch = await prisma.v1Match.upsert({
+    where: { id: '00000000-0000-4000-8000-000000000202' },
+    update: { title: '강동 러닝 번개', status: 'recruiting' },
+    create: {
+      id: '00000000-0000-4000-8000-000000000202',
+      hostUserId: userIds['host@teameet.v1'],
+      sportId: sportIds.running,
+      regionId,
+      title: '강동 러닝 번개',
+      description: '채팅 목록 확인용 v1 seed 개인매치입니다.',
+      placeName: '강동 한강공원 입구',
+      placeAddress: '서울 강동구',
+      startAt: new Date('2026-05-24T10:00:00.000Z'),
+      endAt: new Date('2026-05-24T11:00:00.000Z'),
+      maxParticipants: 8,
+      levelNote: '입문-초보',
+      genderRule: '무관',
+      costNote: '무료',
+      status: 'recruiting',
+      participants: {
+        create: {
+          userId: userIds['host@teameet.v1'],
+          role: V1MatchParticipantRole.host,
+          status: 'active',
+          approvedAt: seedNow,
+        },
+      },
+    },
+  });
+  const extraMatchRoom = await prisma.v1ChatRoom.upsert({
+    where: { matchId: extraMatch.id },
+    update: { status: 'active', lastMessageAt: new Date('2026-05-18T08:40:00.000Z') },
+    create: { matchId: extraMatch.id, status: 'active', lastMessageAt: new Date('2026-05-18T08:40:00.000Z') },
+  });
+  await upsertParticipant(extraMatchRoom.id, userIds['host@teameet.v1']);
+  await upsertParticipant(extraMatchRoom.id, userIds['applicant@teameet.v1']);
+  await upsertMessage('00000000-0000-4000-8000-000000000421', extraMatchRoom.id, userIds['host@teameet.v1'], '오늘 페이스는 어느 정도인가요?', new Date('2026-05-18T08:20:00.000Z'));
+  const extraMatchRead = await upsertMessage('00000000-0000-4000-8000-000000000422', extraMatchRoom.id, userIds['applicant@teameet.v1'], '출발은 한강공원 입구에서 해요', new Date('2026-05-18T08:30:00.000Z'));
+  await upsertMessage('00000000-0000-4000-8000-000000000423', extraMatchRoom.id, userIds['host@teameet.v1'], '10분 전에 도착할게요', new Date('2026-05-18T08:40:00.000Z'));
+  await prisma.v1ChatRoomParticipant.update({ where: { chatRoomId_userId: { chatRoomId: extraMatchRoom.id, userId: userIds['host@teameet.v1'] } }, data: { lastReadMessageId: extraMatchRead.id } });
+
+  const primaryTeamMatchRoom = await prisma.v1ChatRoom.upsert({
+    where: { teamMatchId },
+    update: { status: 'active', lastMessageAt: new Date('2026-05-17T21:10:00.000Z') },
+    create: { teamMatchId, status: 'active', lastMessageAt: new Date('2026-05-17T21:10:00.000Z') },
+  });
+  await upsertParticipant(primaryTeamMatchRoom.id, userIds['host@teameet.v1']);
+  await upsertParticipant(primaryTeamMatchRoom.id, userIds['owner@teameet.v1']);
+  await upsertMessage('00000000-0000-4000-8000-000000000411', primaryTeamMatchRoom.id, userIds['owner@teameet.v1'], '경기장 도착은 30분 전이면 됩니다', new Date('2026-05-17T20:50:00.000Z'));
+  const teamMatchRead = await upsertMessage('00000000-0000-4000-8000-000000000412', primaryTeamMatchRoom.id, userIds['host@teameet.v1'], '저희는 파란색으로 맞추겠습니다', new Date('2026-05-17T21:00:00.000Z'));
+  await upsertMessage('00000000-0000-4000-8000-000000000413', primaryTeamMatchRoom.id, userIds['owner@teameet.v1'], '상대팀 유니폼은 흰색입니다', new Date('2026-05-17T21:10:00.000Z'));
+  await prisma.v1ChatRoomParticipant.update({ where: { chatRoomId_userId: { chatRoomId: primaryTeamMatchRoom.id, userId: userIds['host@teameet.v1'] } }, data: { lastReadMessageId: teamMatchRead.id } });
+
+  const extraTeamMatch = await prisma.v1TeamMatch.upsert({
+    where: { id: '00000000-0000-4000-8000-000000000302' },
+    update: { title: '잠실 교환매치', status: 'recruiting' },
+    create: {
+      id: '00000000-0000-4000-8000-000000000302',
+      hostTeamId: ownerTeamId,
+      createdByUserId: userIds['owner@teameet.v1'],
+      sportId: sportIds.futsal,
+      regionId,
+      title: '잠실 교환매치',
+      description: '채팅 목록 확인용 v1 seed 팀매치입니다.',
+      placeName: '잠실 풋살장',
+      placeAddress: '서울 송파구',
+      startAt: new Date('2026-05-25T10:00:00.000Z'),
+      endAt: new Date('2026-05-25T12:00:00.000Z'),
+      formatNote: '6:6',
+      genderRule: '무관',
+      costNote: '구장비 N분의 1',
+      status: 'recruiting',
+    },
+  });
+  const extraTeamMatchRoom = await prisma.v1ChatRoom.upsert({
+    where: { teamMatchId: extraTeamMatch.id },
+    update: { status: 'active', lastMessageAt: new Date('2026-05-16T20:30:00.000Z') },
+    create: { teamMatchId: extraTeamMatch.id, status: 'active', lastMessageAt: new Date('2026-05-16T20:30:00.000Z') },
+  });
+  await upsertParticipant(extraTeamMatchRoom.id, userIds['host@teameet.v1']);
+  await upsertParticipant(extraTeamMatchRoom.id, userIds['owner@teameet.v1']);
+  await upsertMessage('00000000-0000-4000-8000-000000000431', extraTeamMatchRoom.id, userIds['host@teameet.v1'], '교환매치 조건 확인했습니다', new Date('2026-05-16T20:10:00.000Z'));
+  const extraTeamMatchRead = await upsertMessage('00000000-0000-4000-8000-000000000432', extraTeamMatchRoom.id, userIds['owner@teameet.v1'], '공은 저희가 준비하겠습니다', new Date('2026-05-16T20:20:00.000Z'));
+  await upsertMessage('00000000-0000-4000-8000-000000000433', extraTeamMatchRoom.id, userIds['host@teameet.v1'], '심판 섭외는 제가 할게요', new Date('2026-05-16T20:30:00.000Z'));
+  await prisma.v1ChatRoomParticipant.update({ where: { chatRoomId_userId: { chatRoomId: extraTeamMatchRoom.id, userId: userIds['host@teameet.v1'] } }, data: { lastReadMessageId: extraTeamMatchRead.id } });
+}
+
 async function seedCoverageChatNotificationsAndAdmin(userIds: Record<string, string>) {
   const archivedRoom = await prisma.v1ChatRoom.upsert({
     where: { matchId: '00000000-0000-4000-8000-000000001303' },
@@ -1327,6 +1492,7 @@ async function main() {
   const teamMatch = await seedTeamMatches(userIds, sportIds, regions.seoulSongpa.id, ownerTeam.id, applicantTeam.id);
 
   await seedChatAndNotifications(userIds, match.id, teamMatch.id);
+  await seedHostChatDemoData(userIds, sportIds, regions.seoulSongpa.id, match.id, teamMatch.id, ownerTeam.id);
   await seedAdmin(userIds);
 
   const coverageUserIds = { ...userIds, ...(await seedCoverageUsers()) };

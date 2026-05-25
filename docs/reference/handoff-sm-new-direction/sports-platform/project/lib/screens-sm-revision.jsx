@@ -3470,6 +3470,123 @@ const SMRevisionProfileReviewMobileGridSM2 = () => (
   ]}/>
 );
 
+const SM_REVIEW_TAGS = ['시간 약속', '매너가 좋아요', '팀워크', '소통이 빨라요', '다시 함께하고 싶어요', '실력 차이를 배려해요'];
+
+const SMRevisionPostEventReviewInboxMobile = () => (
+  <SMRevisionShell title="리뷰" notificationNew={false} bottom navActive="my">
+    <div style={{ padding: '18px 20px 96px' }}>
+      <div className="tm-text-heading">끝난 일정의 리뷰를 남겨주세요</div>
+      <div className="tm-text-body" style={{ marginTop: 6 }}>경기 종료 후 서로에게 별점과 대표 선택 항목 하나만 남기는 흐름입니다.</div>
+      <SectionTitle title="작성 대기" sub="내가 참가했고 일정이 종료된 매치만 노출합니다."/>
+      {[
+        ['성수 풋살파크 개인 매치', '어제 20:00 · 8명 중 5명 미작성', '개인매치'],
+        ['마포 러너스 vs 성동 FC', '5월 21일 · 상대팀 리뷰 가능', '팀매치'],
+      ].map(([title, sub, type], index) => (
+        <Card key={title} pad={16} interactive style={{ marginBottom: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+            <div style={{ width: 46, height: 46, borderRadius: 16, background: index === 0 ? 'var(--blue50)' : 'var(--grey100)', color: index === 0 ? 'var(--blue500)' : 'var(--text-muted)', display: 'grid', placeItems: 'center' }}>
+              <Icon name="star" size={20}/>
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="tm-text-body-lg">{title}</div>
+              <div className="tm-text-caption" style={{ marginTop: 4 }}>{sub}</div>
+              <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+                <Badge tone={index === 0 ? 'blue' : 'grey'} size="sm">{type}</Badge>
+                <Badge tone="grey" size="sm">종료 확인</Badge>
+              </div>
+            </div>
+            <SBtn size="sm" variant={index === 0 ? 'primary' : 'neutral'}>리뷰</SBtn>
+          </div>
+        </Card>
+      ))}
+      <SectionTitle title="최근 완료" sub="내가 이미 남긴 리뷰는 수정 기간과 상태를 함께 보여줍니다."/>
+      <Card pad={16}>
+        <div className="tm-text-body-lg">강남 토요 풋살</div>
+        <div className="tm-text-caption" style={{ marginTop: 4 }}>리뷰 완료 · 수정 가능 18시간 남음</div>
+      </Card>
+    </div>
+  </SMRevisionShell>
+);
+
+const SMRevisionPostEventReviewSelectMobile = () => (
+  <SMRevisionShell title="리뷰 남기기" back notificationNew={false} bottom={false}>
+    <div style={{ padding: '18px 20px 118px' }}>
+      <Card pad={16}>
+        <div className="tm-text-caption">완료된 일정</div>
+        <div className="tm-text-body-lg" style={{ marginTop: 4 }}>성수 풋살파크 개인 매치</div>
+        <div className="tm-text-caption" style={{ marginTop: 4 }}>상대에게 공개되는 건 선택한 신호뿐입니다.</div>
+      </Card>
+      <SectionTitle title="누구에게 남길까요?"/>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        {[
+          ['민준', IMG.av1, true],
+          ['서연', IMG.av2, false],
+          ['지훈', IMG.av3, false],
+          ['하린', IMG.av4, false],
+        ].map(([name, image, active]) => (
+          <button key={name} className="tm-pressable" style={{ minHeight: 98, border: `1px solid ${active ? 'var(--blue500)' : 'var(--grey100)'}`, borderRadius: 16, background: active ? 'var(--blue50)' : 'var(--bg)', padding: 12, textAlign: 'left' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 38, height: 38, borderRadius: 14, background: `url(${image}) center/cover` }}/>
+              <div>
+                <div className="tm-text-body-lg">{name}</div>
+                <div className="tm-text-caption">참가자</div>
+              </div>
+            </div>
+          </button>
+        ))}
+      </div>
+      <SectionTitle title="별점"/>
+      <Card pad={16}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
+          {[1,2,3,4,5].map((n) => <Icon key={n} name="star" size={32} color={n <= 4 ? 'var(--blue500)' : 'var(--grey200)'} stroke={2}/>)}
+        </div>
+        <div className="tm-text-caption" style={{ textAlign: 'center', marginTop: 10 }}>4점 · 좋은 경기였어요</div>
+      </Card>
+      <SectionTitle title="선택형 리뷰" sub="본문 입력 없이 대표 항목 하나를 선택합니다."/>
+      <Card pad={16}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          {SM_REVIEW_TAGS.map((tag, index) => <HapticChip key={tag} active={index === 1}>{tag}</HapticChip>)}
+        </div>
+      </Card>
+    </div>
+    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '14px 20px 22px', background: 'var(--bg)', borderTop: '1px solid var(--grey100)' }}>
+      <SBtn full size="lg">선택한 리뷰 보내기</SBtn>
+    </div>
+  </SMRevisionShell>
+);
+
+const SMRevisionPostEventReviewCompleteMobile = () => (
+  <SMRevisionShell title="" notificationNew={false} bottom={false}>
+    <div style={{ padding: '72px 20px 118px', textAlign: 'center' }}>
+      <div style={{ width: 72, height: 72, borderRadius: 26, background: 'var(--blue50)', color: 'var(--blue500)', display: 'grid', placeItems: 'center', margin: '0 auto' }}>
+        <Icon name="star" size={34}/>
+      </div>
+      <div className="tm-text-heading" style={{ marginTop: 22 }}>리뷰를 보냈습니다</div>
+      <div className="tm-text-body" style={{ marginTop: 8 }}>상대의 평판에는 검증된 일정 리뷰로 반영됩니다. 텍스트 없이 별점과 선택 항목만 저장됩니다.</div>
+      <Card pad={16} style={{ marginTop: 24, textAlign: 'left' }}>
+        <div className="tm-text-label">보낸 신호</div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
+          {['별점 4', '매너가 좋아요'].map((tag) => <Badge key={tag} tone="blue" size="sm">{tag}</Badge>)}
+        </div>
+      </Card>
+    </div>
+    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '14px 20px 22px', background: 'var(--bg)', borderTop: '1px solid var(--grey100)' }}>
+      <SBtn full size="lg">완료</SBtn>
+    </div>
+  </SMRevisionShell>
+);
+
+const SMRevisionPostEventReviewRules = () => (
+  <SMRevisionRuleBoard title="14 리뷰 · 일정 종료 후 상호 평가" items={[
+    { title: '진입 조건', body: '개인매치/팀매치 일정이 종료되고 참가가 확정된 사용자에게만 리뷰 요청을 노출한다.' },
+    { title: '작성 방식', body: '자유 텍스트를 받지 않는다. 별점과 대표 선택 항목 하나만 저장해 작성 부담과 운영 리스크를 줄인다.' },
+    { title: '대상 선택', body: '개인매치는 참가자별, 팀매치는 상대 팀 또는 확정 참가자 단위로 평가 대상을 선택한다.' },
+    { title: '상호 리뷰', body: '서로 리뷰할 수 있지만 상대가 작성했는지 여부는 제출 전 압박 신호로 노출하지 않는다.' },
+    { title: '평판 반영', body: '완료된 일정 기반 리뷰만 verified 신호로 반영하고 sample/estimated와 분리한다.' },
+    { title: '예외 상태', body: '취소된 일정, 노쇼 신고 중, 미참가자, 이미 제출한 대상, 기한 만료는 CTA를 잠근다.' },
+  ]}/>
+);
+
 const SM3_TEAM_BROWSE_ACTIONS_RESTORED = [
   ['검색 입력', '상단 검색바 focus/type', '검색 실행 버튼 활성화, query 유지', '검색 결과 목록. 빠른 입력은 마지막 query만 반영', 'search'],
   ['검색 실행', 'blue search icon tap', 'loading row 후 결과 갱신', 'empty/error/permission이면 복구 CTA와 context 유지', 'submit'],
@@ -3814,6 +3931,10 @@ Object.assign(window, {
   SMRevisionReviewWriteMobileSM2,
   SMRevisionProfileStateMobileSM2,
   SMRevisionProfileReviewMobileGridSM2,
+  SMRevisionPostEventReviewInboxMobile,
+  SMRevisionPostEventReviewSelectMobile,
+  SMRevisionPostEventReviewCompleteMobile,
+  SMRevisionPostEventReviewRules,
   SMRevisionPaymentMobile,
   SMRevisionLandingMobile,
   SMRevisionAdminMobile,

@@ -39,9 +39,9 @@ export class HomeService {
         { key: 'teams', enabled: true, route: '/teams', disabledReason: null },
         {
           key: 'my_team',
-          enabled: Boolean(myTeamRoute),
-          route: myTeamRoute,
-          disabledReason: myTeamRoute ? null : 'joined_team_required',
+          enabled: true,
+          route: myTeamRoute ?? (user ? '/my/teams' : '/login?redirect=/my/teams'),
+          disabledReason: null,
         },
       ],
       recommendations: recommendations.map((item) => ({

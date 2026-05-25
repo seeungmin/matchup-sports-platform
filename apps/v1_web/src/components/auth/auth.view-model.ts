@@ -28,8 +28,8 @@ export function getEmailLoginViewModel(): EmailLoginViewModel {
     forgot: { label: '비밀번호 찾기', href: '/auth/password-reset', tone: 'neutral' },
     signupHref: '/terms',
     notice: {
-      title: 'Mock login 유지',
-      body: 'seeded preview 계정은 이전 화면의 Mock login으로 계속 사용할 수 있습니다. 이메일 로그인은 실제 가입 계정에 연결됩니다.',
+      title: '로그인 안내',
+      body: '이메일로 가입한 계정은 이메일 로그인으로 이용할 수 있습니다. 간편 로그인은 선택한 계정으로 바로 시작합니다.',
     },
   };
 }
@@ -84,11 +84,11 @@ export function getAuthExceptionViewModel(kind: AuthExceptionKind): AuthExceptio
     'password-reset': {
       backHref: '/login/email',
       badge: '비밀번호 찾기',
-      title: '비밀번호 재설정은 준비 중이에요',
-      body: '이메일/SMS 발송 인프라가 연결되기 전까지는 재설정 링크를 보낸 것처럼 처리하지 않습니다. 현재는 Mock login 또는 새 이메일 회원가입으로 복구할 수 있습니다.',
+      title: '이메일 로그인으로 다시 시도해 주세요',
+      body: '비밀번호를 잊었다면 이메일 가입 정보를 확인한 뒤 다시 로그인해 주세요. 계정 접근이 어려우면 새 이메일 계정으로 가입할 수 있습니다.',
       tone: 'orange',
       primary: { label: '이메일 로그인으로 돌아가기', href: '/login/email' },
-      secondary: { label: 'Mock login 사용하기', href: '/login', tone: 'neutral' },
+      secondary: { label: '간편 로그인으로 이동', href: '/login', tone: 'neutral' },
     },
   };
 

@@ -151,21 +151,171 @@ export const v1ChatMessagesFixture: CursorPage<V1ChatMessage> = {
   nextCursor: null,
 };
 
+v1ChatRoomsFixture.items = [
+  {
+    roomId: 'chat-match-1',
+    roomType: 'match',
+    title: '성수 풋살 5:5',
+    status: 'active',
+    linkedTarget: { type: 'match', id: 'match-1', title: '성수 풋살 5:5', route: '/matches/match-1' },
+    lastMessage: { messageId: 'chat-match-1-m3', contentPreview: '오늘 경기 준비물 확인해 주세요', sentAt: '2026-05-18T09:00:00.000Z' },
+    unreadCount: 2,
+    pinned: true,
+    muted: false,
+  },
+  {
+    roomId: 'chat-match-2',
+    roomType: 'match',
+    title: '강동 러닝 번개',
+    status: 'active',
+    linkedTarget: { type: 'match', id: 'match-2', title: '강동 러닝 번개', route: '/matches/match-2' },
+    lastMessage: { messageId: 'chat-match-2-m3', contentPreview: '나: 10분 전에 도착할게요', sentAt: '2026-05-18T08:40:00.000Z' },
+    unreadCount: 0,
+    pinned: false,
+    muted: false,
+  },
+  {
+    roomId: 'chat-team-1',
+    roomType: 'team',
+    title: '성수 러너스 FC',
+    status: 'active',
+    linkedTarget: { type: 'team', id: 'team-1', title: '성수 러너스 FC', route: '/teams/team-1' },
+    lastMessage: { messageId: 'chat-team-1-m3', contentPreview: '새 멤버 신청이 들어왔어요', sentAt: '2026-05-18T08:20:00.000Z' },
+    unreadCount: 4,
+    pinned: false,
+    muted: false,
+  },
+  {
+    roomId: 'chat-team-2',
+    roomType: 'team',
+    title: '강동 위클리 풋살',
+    status: 'active',
+    linkedTarget: { type: 'team', id: 'team-2', title: '강동 위클리 풋살', route: '/teams/team-2' },
+    lastMessage: { messageId: 'chat-team-2-m3', contentPreview: '나: 회비 공지 올려둘게요', sentAt: '2026-05-17T22:00:00.000Z' },
+    unreadCount: 0,
+    pinned: false,
+    muted: false,
+  },
+  {
+    roomId: 'chat-team-match-1',
+    roomType: 'team_match',
+    title: '마포 FC 팀매치',
+    status: 'active',
+    linkedTarget: { type: 'team_match', id: 'team-match-1', title: '마포 FC 팀매치', route: '/team-matches/team-match-1' },
+    lastMessage: { messageId: 'chat-team-match-1-m3', contentPreview: '상대팀 유니폼은 흰색입니다', sentAt: '2026-05-17T21:10:00.000Z' },
+    unreadCount: 1,
+    pinned: false,
+    muted: false,
+  },
+  {
+    roomId: 'chat-team-match-2',
+    roomType: 'team_match',
+    title: '잠실 교환매치',
+    status: 'active',
+    linkedTarget: { type: 'team_match', id: 'team-match-2', title: '잠실 교환매치', route: '/team-matches/team-match-2' },
+    lastMessage: { messageId: 'chat-team-match-2-m3', contentPreview: '나: 심판 섭외는 제가 할게요', sentAt: '2026-05-16T20:30:00.000Z' },
+    unreadCount: 0,
+    pinned: false,
+    muted: false,
+  },
+];
+
+export const v1ChatMessagesByRoomFixture: Record<string, CursorPage<V1ChatMessage>> = {
+  'chat-match-1': {
+    items: [
+      { messageId: 'chat-match-1-m3', sender: { userId: 'user-2', displayName: '상대팀장', profileImageUrl: null }, content: '오늘 경기 준비물 확인해 주세요', status: 'sent', sentAt: '2026-05-18T09:00:00.000Z', mine: false },
+      { messageId: 'chat-match-1-m2', sender: { userId: 'user-1', displayName: '나', profileImageUrl: null }, content: '네, 조끼랑 물 챙겨갈게요', status: 'sent', sentAt: '2026-05-18T08:52:00.000Z', mine: true },
+      { messageId: 'chat-match-1-m1', sender: { userId: 'user-2', displayName: '상대팀장', profileImageUrl: null }, content: '오늘 20시에 바로 시작합니다', status: 'sent', sentAt: '2026-05-18T08:40:00.000Z', mine: false },
+    ],
+    nextCursor: null,
+  },
+  'chat-match-2': {
+    items: [
+      { messageId: 'chat-match-2-m3', sender: { userId: 'user-1', displayName: '나', profileImageUrl: null }, content: '10분 전에 도착할게요', status: 'sent', sentAt: '2026-05-18T08:40:00.000Z', mine: true },
+      { messageId: 'chat-match-2-m2', sender: { userId: 'user-3', displayName: '러닝메이트', profileImageUrl: null }, content: '출발은 한강공원 입구에서 해요', status: 'sent', sentAt: '2026-05-18T08:30:00.000Z', mine: false },
+      { messageId: 'chat-match-2-m1', sender: { userId: 'user-1', displayName: '나', profileImageUrl: null }, content: '오늘 페이스는 어느 정도인가요?', status: 'sent', sentAt: '2026-05-18T08:20:00.000Z', mine: true },
+    ],
+    nextCursor: null,
+  },
+  'chat-team-1': {
+    items: [
+      { messageId: 'chat-team-1-m3', sender: { userId: 'user-4', displayName: '운영진', profileImageUrl: null }, content: '새 멤버 신청이 들어왔어요', status: 'sent', sentAt: '2026-05-18T08:20:00.000Z', mine: false },
+      { messageId: 'chat-team-1-m2', sender: { userId: 'user-5', displayName: '민준', profileImageUrl: null }, content: '이번 주 정기전 참석 가능합니다', status: 'sent', sentAt: '2026-05-18T08:00:00.000Z', mine: false },
+      { messageId: 'chat-team-1-m1', sender: { userId: 'user-1', displayName: '나', profileImageUrl: null }, content: '참석 여부 오늘 안에 남겨주세요', status: 'sent', sentAt: '2026-05-18T07:50:00.000Z', mine: true },
+    ],
+    nextCursor: null,
+  },
+  'chat-team-2': {
+    items: [
+      { messageId: 'chat-team-2-m3', sender: { userId: 'user-1', displayName: '나', profileImageUrl: null }, content: '회비 공지 올려둘게요', status: 'sent', sentAt: '2026-05-17T22:00:00.000Z', mine: true },
+      { messageId: 'chat-team-2-m2', sender: { userId: 'user-6', displayName: '서연', profileImageUrl: null }, content: '다음 주 대관비 먼저 확인해볼게요', status: 'sent', sentAt: '2026-05-17T21:50:00.000Z', mine: false },
+      { messageId: 'chat-team-2-m1', sender: { userId: 'user-1', displayName: '나', profileImageUrl: null }, content: '이번 달 회비 정리하겠습니다', status: 'sent', sentAt: '2026-05-17T21:40:00.000Z', mine: true },
+    ],
+    nextCursor: null,
+  },
+  'chat-team-match-1': {
+    items: [
+      { messageId: 'chat-team-match-1-m3', sender: { userId: 'user-7', displayName: '마포FC', profileImageUrl: null }, content: '상대팀 유니폼은 흰색입니다', status: 'sent', sentAt: '2026-05-17T21:10:00.000Z', mine: false },
+      { messageId: 'chat-team-match-1-m2', sender: { userId: 'user-1', displayName: '나', profileImageUrl: null }, content: '저희는 파란색으로 맞추겠습니다', status: 'sent', sentAt: '2026-05-17T21:00:00.000Z', mine: true },
+      { messageId: 'chat-team-match-1-m1', sender: { userId: 'user-7', displayName: '마포FC', profileImageUrl: null }, content: '경기장 도착은 30분 전이면 됩니다', status: 'sent', sentAt: '2026-05-17T20:50:00.000Z', mine: false },
+    ],
+    nextCursor: null,
+  },
+  'chat-team-match-2': {
+    items: [
+      { messageId: 'chat-team-match-2-m3', sender: { userId: 'user-1', displayName: '나', profileImageUrl: null }, content: '심판 섭외는 제가 할게요', status: 'sent', sentAt: '2026-05-16T20:30:00.000Z', mine: true },
+      { messageId: 'chat-team-match-2-m2', sender: { userId: 'user-8', displayName: '잠실팀', profileImageUrl: null }, content: '공은 저희가 준비하겠습니다', status: 'sent', sentAt: '2026-05-16T20:20:00.000Z', mine: false },
+      { messageId: 'chat-team-match-2-m1', sender: { userId: 'user-1', displayName: '나', profileImageUrl: null }, content: '교환매치 조건 확인했습니다', status: 'sent', sentAt: '2026-05-16T20:10:00.000Z', mine: true },
+    ],
+    nextCursor: null,
+  },
+};
+
 export const v1NotificationsFixture = {
   items: [
     {
       notificationId: 'notification-1',
-      type: 'match_application',
-      title: '매치 신청이 접수되었습니다',
-      body: '호스트 승인을 기다리고 있습니다.',
+      type: 'match',
+      title: '매치 참가 확정',
+      body: '성수 풋살파크 · 10명 · 현장 준비 필요',
       target: { type: 'match', id: 'match-1', route: '/matches/match-1' },
       status: 'created',
       readAt: null,
-      createdAt: '2026-05-18T09:00:00.000Z',
+      createdAt: '2026-05-24T08:05:00.000Z',
+    },
+    {
+      notificationId: 'notification-2',
+      type: 'team_match',
+      title: '팀매치 신청 도착',
+      body: '상대팀 신청이 들어왔습니다. 조건을 확인해 주세요.',
+      target: { type: 'team_match', id: 'team-match-1', route: '/team-matches/team-match-1' },
+      status: 'created',
+      readAt: null,
+      createdAt: '2026-05-24T07:50:00.000Z',
+    },
+    {
+      notificationId: 'notification-3',
+      type: 'chat',
+      title: '새 메시지',
+      body: '주말 풋살 매치 채팅방에 새 메시지가 있습니다.',
+      target: { type: 'chat', id: 'chat-1', route: '/chat/rooms/chat-1' },
+      status: 'read',
+      readAt: '2026-05-24T08:10:00.000Z',
+      createdAt: '2026-05-23T10:00:00.000Z',
+    },
+    {
+      notificationId: 'notification-4',
+      type: 'notice',
+      title: '공지 업데이트',
+      body: '이번 주 고정 공지가 업데이트되었습니다.',
+      target: { type: 'notice', id: 'notice-1', route: '/notices/notice-1' },
+      status: 'read',
+      readAt: '2026-05-24T08:12:00.000Z',
+      createdAt: '2026-05-21T08:30:00.000Z',
     },
   ],
   nextCursor: null,
-  unreadCount: 1,
+  unreadCount: 2,
 };
 
 export const v1ProfileFixture: V1Profile = {

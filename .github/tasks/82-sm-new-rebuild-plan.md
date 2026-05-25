@@ -183,7 +183,7 @@ SMNewViewerGuide > 1차 디자인 완료
 SM_FIRST_DESIGN_COMPLETE_SECTIONS
 ```
 
-This mode contains 17 sections:
+This mode contains 18 sections:
 
 | No | Section id | Product area | v1 implementation stance |
 |---:|---|---|---|
@@ -204,6 +204,7 @@ This mode contains 17 sections:
 | 15 | `desktop-web` | Desktop responsive treatment | Implement only after mobile core is stable |
 | 16 | `admin-ops-sm-revision` | Admin operations | Implement minimum admin/audit only |
 | 17 | `common-flows-motion` | Shared states, motion, interaction rules | Apply as UI/QA rules, not a separate backend scope |
+| 18 | `reviews-post-event-sm-final` | 14 Review, post-event mutual rating | Implement as rating + one selectable tag after completed schedules |
 
 The practical v1 product slice is:
 
@@ -217,6 +218,7 @@ team browse/join
 team match
 linked chat
 notifications
+post-event reviews
 my/profile/trust
 basic settings
 admin minimum
@@ -240,7 +242,7 @@ full desktop-specific rebuild
 advanced motion polish
 ```
 
-This means the 17 design sections are valid as the planning baseline, but not
+This means the 18 design sections are valid as the planning baseline, but not
 every visual surface becomes a full v1 backend feature. Deferred surfaces must
 still have honest UI treatment: disabled state, read-only state, or explicit
 test-only/no-real-transaction copy.

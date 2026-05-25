@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useV1ChatRooms, useV1Home } from '@/hooks/use-v1-api';
 import type { V1Home, V1HomeRecommendation, V1HomeShortcut, V1Match, V1Notice } from '@/types/api';
 import { HomePageView } from './home-page';
@@ -9,6 +10,7 @@ import { getHomeViewModel } from './home.view-model';
 export function HomePageClient() {
   const query = useV1Home();
   const chatRooms = useV1ChatRooms();
+  const weather = useCurrentLocationWeather();
   const fallback = getHomeViewModel();
   const chatUnreadCount = chatRooms.data?.items.reduce((sum, room) => sum + room.unreadCount, 0) ?? 0;
 
@@ -20,16 +22,31 @@ export function HomePageClient() {
           network: true,
           hasNewNotification: false,
           chatUnreadCount,
+          weather: weather ?? fallback.weather,
           retry: () => void query.refetch(),
         }}
       />
     );
   }
 
-  return <HomePageView model={query.data ? toHomeModel(query.data, fallback, () => void query.refetch(), chatUnreadCount) : { ...fallback, chatUnreadCount }} />;
+  return (
+    <HomePageView
+      model={
+        query.data
+          ? toHomeModel(query.data, fallback, () => void query.refetch(), chatUnreadCount, weather)
+          : { ...fallback, chatUnreadCount, weather: weather ?? fallback.weather }
+      }
+    />
+  );
 }
 
-function toHomeModel(home: V1Home, fallback: HomeViewModel, retry: () => void, chatUnreadCount: number): HomeViewModel {
+function toHomeModel(
+  home: V1Home,
+  fallback: HomeViewModel,
+  retry: () => void,
+  chatUnreadCount: number,
+  weather: HomeViewModel['weather'] | null,
+): HomeViewModel {
   const recommendedMatches = normalizeMatches(home, fallback);
   const unreadCount = home.notifications?.unreadCount ?? 0;
   const viewerName = home.viewer?.authenticated ? home.viewer.displayName : null;
@@ -46,6 +63,7 @@ function toHomeModel(home: V1Home, fallback: HomeViewModel, retry: () => void, c
     featuredMatch: normalizeFeaturedMatch(home, recommendedMatches, fallback),
     recommendedMatches,
     quickActions: normalizeShortcuts(home.shortcuts, fallback.quickActions),
+    weather: weather ?? fallback.weather,
     notices: normalizeNotices(home, fallback),
   };
 }
@@ -119,8 +137,11 @@ function normalizeNotices(home: V1Home, fallback: HomeViewModel) {
 function normalizeShortcuts(shortcuts: V1HomeShortcut[] | undefined, fallback: HomeQuickAction[]) {
   if (!shortcuts?.length) return fallback;
 
-  return fallback.map((action) => {
-    const shortcut = shortcuts.find((item) => item.key === shortcutKeyFromLabel(action.label));
+  const fallbackKeys: V1HomeShortcut['key'][] = ['matches', 'team_matches', 'teams', 'my_team'];
+
+  return fallback.map((action, index) => {
+    const shortcutKey = action.key ?? fallbackKeys[index] ?? shortcutKeyFromLabel(action.label);
+    const shortcut = shortcuts.find((item) => item.key === shortcutKey);
     if (!shortcut) return action;
 
     return {
@@ -130,6 +151,91 @@ function normalizeShortcuts(shortcuts: V1HomeShortcut[] | undefined, fallback: H
       sub: shortcut.enabled ? action.sub : disabledReasonLabel(shortcut.disabledReason),
     };
   });
+}
+
+function useCurrentLocationWeather() {
+  const [weather, setWeather] = useState<HomeViewModel['weather'] | null>(null);
+
+  useEffect(() => {
+    if (!('geolocation' in navigator)) {
+      setWeather((current) => current ?? { city: '현재 위치', temp: '-', cond: '위치 권한 필요', wind: '-' });
+      return;
+    }
+
+    let cancelled = false;
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const params = new URLSearchParams({
+            latitude: latitude.toFixed(4),
+            longitude: longitude.toFixed(4),
+            current: 'temperature_2m,apparent_temperature,weather_code,wind_speed_10m',
+            wind_speed_unit: 'ms',
+            timezone: 'auto',
+          });
+          const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`);
+          if (!response.ok) throw new Error(`Weather request failed: ${response.status}`);
+          const body = (await response.json()) as OpenMeteoCurrentWeatherResponse;
+          const current = body.current;
+          if (!current) throw new Error('Weather response missing current conditions');
+
+          if (!cancelled) {
+            setWeather({
+              city: '현재 위치',
+              temp: Math.round(current.temperature_2m),
+              cond: weatherCodeLabel(current.weather_code),
+              wind: roundOne(current.wind_speed_10m),
+              feelsLike: Math.round(current.apparent_temperature),
+              status: '실시간 위치 기준',
+            });
+          }
+        } catch {
+          if (!cancelled) {
+            setWeather((current) => current ?? { city: '현재 위치', temp: '-', cond: '날씨 불러오기 실패', wind: '-' });
+          }
+        }
+      },
+      () => {
+        if (!cancelled) {
+          setWeather((current) => current ?? { city: '현재 위치', temp: '-', cond: '위치 권한 필요', wind: '-' });
+        }
+      },
+      { enableHighAccuracy: false, maximumAge: 10 * 60 * 1000, timeout: 8000 },
+    );
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return weather;
+}
+
+type OpenMeteoCurrentWeatherResponse = {
+  current?: {
+    temperature_2m: number;
+    apparent_temperature: number;
+    weather_code: number;
+    wind_speed_10m: number;
+  };
+};
+
+function roundOne(value: number) {
+  return Math.round(value * 10) / 10;
+}
+
+function weatherCodeLabel(code: number) {
+  if (code === 0) return '맑음';
+  if ([1, 2].includes(code)) return '대체로 맑음';
+  if (code === 3) return '흐림';
+  if ([45, 48].includes(code)) return '안개';
+  if ([51, 53, 55, 56, 57].includes(code)) return '이슬비';
+  if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return '비';
+  if ([71, 73, 75, 77, 85, 86].includes(code)) return '눈';
+  if ([95, 96, 99].includes(code)) return '뇌우';
+  return '날씨 확인됨';
 }
 
 function toHomeRecommendation(match: V1HomeRecommendation, fallback: HomeMatchCard): HomeMatchCard {
@@ -202,12 +308,11 @@ function shortcutKeyFromLabel(label: string): V1HomeShortcut['key'] {
 
 function disabledReasonLabel(reason: string | null) {
   if (reason === 'joined_team_required') return '가입 팀 필요';
-  return '준비 중';
+  return '이용 불가';
 }
 
 function trustStateLabel(value: string) {
   if (value === 'verified') return '검증됨';
   if (value === 'estimated') return '추정';
-  if (value === 'sample') return '샘플';
-  return '신뢰 정보 없음';
+  return '-';
 }

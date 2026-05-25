@@ -5,11 +5,11 @@ import { Badge } from '@/components/ui/badge';
 const trustLabel = {
   verified: '검증됨',
   estimated: '추정',
-  sample: '샘플',
+  sample: '-',
 };
 
 export function TeamCard({ team, href = '#' }: { team: TeamCardType; href?: string }) {
-  const trustTone = team.trust === 'verified' ? 'green' : team.trust === 'sample' ? 'orange' : 'blue';
+  const trustTone = team.trust === 'verified' ? 'green' : team.trust === 'sample' ? 'grey' : 'blue';
 
   return (
     <Link href={href} className="v1-card v1-card-pad v1-card-link">

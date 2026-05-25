@@ -86,7 +86,7 @@ export function HomeProductPage() {
           </div>
         </Section>
 
-        <Section title="활동 요약" subtitle="현재 값은 v1 화면 검증용 샘플입니다.">
+        <Section title="활동 요약" subtitle="최근 매치 참여와 신청 상태를 확인하세요.">
           <div className="v1-grid-2">
             {activityRows.map((row) => (
               <div key={row.label} className="v1-card v1-card-pad">
@@ -145,7 +145,7 @@ export function MatchesProductPage({ kind = 'personal' }: { kind?: 'personal' | 
         </Section>
         <StateNote
           title="예외 상태"
-          body="empty, error, filter, stale, pending 상태는 이 목록 컴포넌트의 상태 variant로 흡수하고 QA fixture route는 별도 유지합니다."
+          body="조건에 맞는 항목이 없거나 목록을 불러오지 못한 경우에도 현재 선택한 조건을 유지합니다."
         />
       </main>
     </AppShell>
@@ -171,7 +171,7 @@ export function TeamsProductPage() {
             ))}
           </div>
         </Section>
-        <StateNote title="신뢰 라벨" body="검증됨, 추정, 샘플을 구분해서 실제 평판처럼 보이지 않게 표시합니다." />
+        <StateNote title="신뢰 라벨" body="검증됨, 추정 상태만 표시하고 값 없음은 -로 표시합니다." />
       </main>
     </AppShell>
   );
@@ -291,13 +291,13 @@ export function MyProductPage() {
     <AppShell>
       <main className="v1-main">
         <section className="v1-card v1-card-pad">
-          <Badge tone="orange">샘플 신뢰 상태</Badge>
+          <Badge tone="grey">신뢰 -</Badge>
           <h2 className="v1-item-title" style={{ marginTop: 10 }}>{profile.displayName}님</h2>
           <p className="v1-body" style={{ marginTop: 4 }}>{profile.bio}</p>
           <div className="v1-meta">
             <Badge tone="blue">참가 12회</Badge>
             <Badge tone="green">노쇼 0회</Badge>
-            <Badge tone="orange">샘플</Badge>
+            <Badge tone="grey">-</Badge>
           </div>
         </section>
 

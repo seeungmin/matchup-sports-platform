@@ -78,6 +78,7 @@ inventory and must stay visible in publishing work.
 | 11 | `desktop-web` | responsive desktop treatment for core pages | no desktop-specific implementation confirmed | Pending | Implement after mobile core pages are stable. Same APIs, wider layout. Keyboard/focus state must be covered. |
 | 12 | `admin-ops-sm-revision` | admin minimum dashboard/status/audit pages | `/admin`, `/admin/audit` | Imported | API exists for admin minimum. Non-minimum admin actions remain blocked/deferred. |
 | 13 | `common-flows-motion` | shared list/detail/form/mutation states across all domains | scattered state routes exist | Pending | Loading, empty, error, retry, stale, duplicate submit, permission denied, destructive confirm, optimistic navigation must become shared UI patterns. |
+| 14 | `reviews-post-event-sm-final` | completed schedule review inbox, target select, star rating, one selectable review tag, complete state | no dedicated v1 review route yet | Reference added | Reviews unlock only after completed personal/team match schedules. No free-text body; persist star rating plus one selected tag. |
 
 ## Existing Route Coverage Snapshot
 
@@ -188,7 +189,7 @@ Missing or unclear:
 
 ## Acceptance Criteria
 
-- Every one of the 17 first-complete design sections has either an implemented v1 page, a documented state variant, or an explicit deferred decision.
+- Every one of the 18 first-complete design sections has either an implemented v1 page, a documented state variant, or an explicit deferred decision.
 - Duplicate design screens are represented as state variants, not accidental duplicate product pages.
 - Missing routes are tracked before API hook work starts.
 - Payment/support/admin/public/desktop gaps are honest and do not imply completed functionality.
@@ -626,6 +627,11 @@ Validation notes:
   http://localhost:8121/api/v1/auth/dev-login` with `host@teameet.v1`
   returned `201`, and the host v1 web proxy on `3014` returned `201` for the
   same mock login route.
+- Home follow-up fixed the quick-action binding so `my_team` uses the API
+  shortcut key instead of the localized label text, allowing joined users to
+  navigate to `/teams/:teamId`. The home weather strip now requests browser
+  geolocation and uses Open-Meteo current conditions for the user's actual
+  coordinates, with permission/API failure states shown honestly.
 - Current auth/session contract: guest `/home` remains allowed through the
   visible "로그인 없이 시작하기" path, while authenticated-only surfaces use the
   shared `RequireAuth` client gate and preserve a sanitized relative
@@ -654,3 +660,11 @@ Validation notes:
   production-grade httpOnly cookie/JWT auth. Password reset has a truthful
   route-backed exception surface but no email/SMS delivery yet.
 - State fixture routes such as `/matches/empty` and `/search/error` are useful for QA but should not become user navigation destinations unless deliberately exposed.
+- `/notifications` now follows the first-design SM2 notification structure:
+  back title with unread count, top-right read-all action, date groups, and
+  read/unread card state without the extra explanatory toolbar or per-card
+  action label.
+- Notification mock/seed data now covers today/yesterday groups, mixed
+  read/unread states, match/team-match/chat/notice deep links, individual read,
+  and read-all behavior so the SM2 notification page can be checked against
+  realistic v1 data.

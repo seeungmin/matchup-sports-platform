@@ -32,7 +32,7 @@ export function DevLoginPanel() {
   return (
     <div className="tm-auth-stack" style={{ marginTop: 12 }}>
       <select
-        aria-label="Mock login user"
+        aria-label="간편 로그인 계정"
         className="tm-input tm-auth-input"
         disabled={devLogin.isPending}
         onChange={(event) => setSelectedEmail(event.target.value)}
@@ -45,9 +45,9 @@ export function DevLoginPanel() {
         ))}
       </select>
       <button className="tm-btn tm-btn-lg tm-btn-neutral tm-btn-block" disabled={devLogin.isPending} onClick={submit} type="button">
-        {devLogin.isPending ? 'Signing in...' : 'Mock login'}
+        {devLogin.isPending ? '로그인 중...' : '간편 로그인'}
       </button>
-      {devLogin.isError ? <p className="tm-text-caption tm-auth-field-helper tm-auth-field-helper-error">Seed user login failed. Run the v1 seed first.</p> : null}
+      {devLogin.isError ? <p className="tm-text-caption tm-auth-field-helper tm-auth-field-helper-error">간편 로그인에 실패했습니다. 계정을 다시 선택해 주세요.</p> : null}
     </div>
   );
 }

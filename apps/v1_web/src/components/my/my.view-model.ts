@@ -21,8 +21,8 @@ export const myUser = {
   stats: [
     { label: '참여 매치', value: 87, unit: '회' },
     { label: '소속 팀', value: 3, unit: '팀' },
-    { label: '매너 점수', value: '4.9' },
-    { label: '신뢰', value: '샘플' },
+    { label: '매너 점수', value: '-' },
+    { label: '신뢰', value: '-' },
   ],
   monthly: [
     { label: '이번 달 경기', value: 12, unit: '회' },

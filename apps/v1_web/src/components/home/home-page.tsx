@@ -116,7 +116,7 @@ function QuickAction({ item }: { item: HomeQuickAction }) {
 
   if (item.disabled || !item.href) {
     return (
-      <button className="tm-pressable tm-quick-action" disabled type="button" aria-label={`${item.label} 준비 중`}>
+      <button className="tm-pressable tm-quick-action" disabled type="button" aria-label={`${item.label} 이용 불가`}>
         {content}
       </button>
     );

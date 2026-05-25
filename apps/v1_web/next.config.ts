@@ -14,6 +14,7 @@ const internalApiOrigin =
 const nextConfig: NextConfig = {
   output: isProd ? 'standalone' : undefined,
   basePath: basePath || undefined,
+  allowedDevOrigins: ['127.0.0.1', 'localhost'],
   experimental: {
     optimizePackageImports: ['@tanstack/react-query'],
   },

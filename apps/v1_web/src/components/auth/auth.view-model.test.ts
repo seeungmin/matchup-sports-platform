@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { getEmailLoginViewModel, getLoginViewModel, getSignupCompleteViewModel, getSignupFormViewModel } from './auth.view-model';
 
 describe('auth view models', () => {
-  it('keeps the seeded mock login entry path available for v1 preview', () => {
+  it('keeps the quick login entry path available for v1', () => {
     const model = getLoginViewModel();
 
     expect(model.emailHref).toBe('/login/email');
@@ -16,7 +16,7 @@ describe('auth view models', () => {
     expect(model.primary.disabled).toBeUndefined();
     expect(model.primary.href).toBeUndefined();
     expect(model.primary.label).toBe('로그인');
-    expect(model.notice.body).toContain('Mock login');
+    expect(model.notice.body).toContain('간편 로그인');
   });
 
   it('keeps signup on a submit-driven real API flow', () => {

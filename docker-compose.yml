@@ -178,7 +178,7 @@ services:
   v1_api:
     <<: *app-base
     container_name: teameet_v1_api_dev
-    command: sh -c "cd /app/apps/v1_api && pnpm db:generate && pnpm db:push && pnpm dev"
+    command: sh -c "cd /app/apps/v1_api && pnpm db:generate && pnpm db:push && pnpm db:seed && pnpm dev"
     environment:
       TZ: Asia/Seoul
       DATABASE_URL: postgresql://teameet_v1_user:teameet_v1_password@v1_postgres:5432/teameet_v1_dev

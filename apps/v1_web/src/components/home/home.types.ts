@@ -14,6 +14,7 @@ export type HomeMatchCard = {
 };
 
 export type HomeQuickAction = {
+  key?: 'matches' | 'team_matches' | 'teams' | 'my_team';
   label: string;
   sub: string;
   href?: string;
@@ -56,6 +57,8 @@ export type HomeViewModel = {
     temp: number | string;
     cond: string;
     wind: number | string;
+    feelsLike?: number | string;
+    status?: string;
   };
   notices: HomeNotice[];
 };

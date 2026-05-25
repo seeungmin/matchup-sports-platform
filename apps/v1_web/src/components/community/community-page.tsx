@@ -1,5 +1,9 @@
+'use client';
+
 import Link from 'next/link';
-import type { ReactNode } from 'react';
+import type { MouseEvent, PointerEvent, ReactNode } from 'react';
+import { useRef, useState } from 'react';
+import { Pin, Send, X } from 'lucide-react';
 import { AppChrome } from '@/components/v1-ui/shell';
 import { BellIcon, ChatIcon, ChevronRightIcon, MatchIcon, PlusIcon } from '@/components/v1-ui/icons';
 import type { ChatListViewModel, ChatRoomModel, ChatRoomViewModel, NotificationModel, NotificationsViewModel } from './community.types';
@@ -58,26 +62,53 @@ export function ChatRoomPageView({ model }: { model: ChatRoomViewModel }) {
             <ChevronRightIcon size={18} stroke="var(--text-caption)" />
           </Link>
         </div>
-        <div className="tm-chat-thread">{model.messages.map((message) => <div key={message.id} className={`tm-chat-bubble tm-chat-bubble-${message.who}`}><div className="tm-text-micro">{message.label}</div><div className="tm-text-body">{message.body}</div></div>)}</div>
+        <div className="tm-chat-thread">
+          {model.status === 'loading' ? <ChatEmptyState title="메시지를 불러오는 중입니다" body="잠시만 기다려 주세요." /> : null}
+          {model.status !== 'loading' && model.messages.length === 0 ? <ChatEmptyState title={model.emptyTitle ?? '아직 메시지가 없어요'} body={model.emptyBody ?? '첫 메시지를 보내 대화를 시작할 수 있습니다.'} onRetry={model.onRetry} /> : null}
+          {model.messages.map((message) => <div key={message.id} className={`tm-chat-bubble tm-chat-bubble-${message.who}`}><div className="tm-text-micro">{message.label}</div><div className="tm-text-body">{message.body}</div></div>)}
+        </div>
       </div>
-      <div className="tm-chat-inputbar"><button className="tm-btn tm-btn-icon tm-btn-neutral" type="button" aria-label="이미지 추가"><PlusIcon size={20} strokeWidth={2.2} /></button><input className="tm-chat-input-placeholder tm-create-native-input" value={model.draft ?? ''} onChange={(event) => model.onDraftChange?.(event.target.value)} placeholder="메시지 입력" /><button className="tm-btn tm-btn-icon tm-btn-neutral" type="button" aria-label="전송" disabled={!model.onSend || model.sending || !model.draft?.trim()} onClick={model.onSend}>{model.sending ? '...' : '전송'}</button></div>
+      <div className="tm-chat-inputbar"><button className="tm-btn tm-btn-icon tm-btn-neutral" type="button" aria-label="이미지 추가" disabled={model.status === 'error'}><PlusIcon size={20} strokeWidth={2.2} /></button><input className="tm-chat-input-placeholder tm-create-native-input" value={model.draft ?? ''} onChange={(event) => model.onDraftChange?.(event.target.value)} placeholder="메시지 입력" disabled={model.status === 'error'} /><button className="tm-btn tm-btn-icon tm-btn-primary" type="button" aria-label="전송" disabled={!model.onSend || model.sending || model.status === 'error' || !model.draft?.trim()} onClick={model.onSend}>{model.sending ? '...' : <Send size={20} strokeWidth={2.2} />}</button></div>
     </AppChrome>
   );
 }
 
 export function NotificationsPageView({ model }: { model: NotificationsViewModel }) {
-  const groups = ['오늘', '어제'] as const;
+  const groups = Array.from(new Set(model.notifications.map((notification) => notification.group)));
   const allRead = model.unreadCount === 0;
   return (
-    <AppChrome title={`알림 ${model.unreadCount}`} activeTab="my" bottomNav={false} backHref="/home">
+    <AppChrome
+      title={<span>알림 <span className={`tm-notification-count ${allRead ? 'tm-notification-count-muted' : ''}`}>{model.unreadCount}</span></span>}
+      activeTab="my"
+      bottomNav={false}
+      backHref="/home"
+      showNotifications={false}
+      topbarActions={(
+        <button
+          className="tm-btn tm-btn-sm tm-btn-ghost"
+          type="button"
+          disabled={allRead || !model.onReadAll || model.readAllPending}
+          onClick={model.onReadAll}
+        >
+          {model.readAllPending ? '처리중' : '모두읽음'}
+        </button>
+      )}
+    >
       <div className="tm-notification-list">
-        <div className="tm-notification-toolbar"><span className="tm-text-caption">{model.unreadCount > 0 ? '읽지 않은 알림이 있습니다. 알림을 열면 읽음 처리 후 이동합니다.' : '모든 알림을 확인했습니다.'}</span><button className="tm-btn tm-btn-sm tm-btn-ghost" type="button" disabled={allRead || !model.onReadAll || model.readAllPending} onClick={model.onReadAll}>{model.readAllPending ? '처리중' : '모두읽음'}</button></div>
-        {allRead ? <div className="tm-notification-toast">모든 알림을 읽음 처리했습니다</div> : null}
         {groups.map((group) => {
           const items = model.notifications.filter((notification) => notification.group === group);
-          return <section key={group} style={{ marginTop: 18 }}><div className="tm-text-label" style={{ marginBottom: 8 }}>{group}</div><div style={{ display: 'grid', gap: 8 }}>{items.map((notification) => <NotificationCard key={notification.id} notification={notification} onOpen={model.onOpen} />)}</div></section>;
+          if (items.length === 0) return null;
+          return (
+            <section key={group} className="tm-notification-section">
+              <div className="tm-text-label">{group}</div>
+              <div className="tm-notification-stack">
+                {items.map((notification) => <NotificationCard key={notification.id} notification={notification} onOpen={model.onOpen} />)}
+              </div>
+            </section>
+          );
         })}
       </div>
+      {model.readAllToastVisible ? <div className="tm-notification-toast" role="status">모든 알림을 읽음 처리했습니다</div> : null}
     </AppChrome>
   );
 }
@@ -99,21 +130,81 @@ function ChatEmptyState({ title, body, href, onRetry }: { title: string; body: s
 }
 
 function ChatRoomRow({ room }: { room: ChatRoomModel }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [dragOffset, setDragOffset] = useState(0);
+  const startXRef = useRef(0);
+  const dragOffsetRef = useRef(0);
+  const draggingRef = useRef(false);
+  const movedRef = useRef(false);
+  const actionWidth = 144;
+
+  const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    startXRef.current = event.clientX;
+    draggingRef.current = true;
+    movedRef.current = false;
+    const initialOffset = isOpen ? -actionWidth : 0;
+    dragOffsetRef.current = initialOffset;
+    setDragOffset(initialOffset);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    if (!draggingRef.current) return;
+    const deltaX = event.clientX - startXRef.current;
+    if (Math.abs(deltaX) > 4) movedRef.current = true;
+    const baseOffset = isOpen ? -actionWidth : 0;
+    const nextOffset = Math.max(-actionWidth, Math.min(0, baseOffset + deltaX));
+    dragOffsetRef.current = nextOffset;
+    setDragOffset(nextOffset);
+  };
+
+  const handlePointerEnd = (event: PointerEvent<HTMLDivElement>) => {
+    if (!draggingRef.current) return;
+    draggingRef.current = false;
+    const deltaX = event.clientX - startXRef.current;
+    const shouldOpen = deltaX < -16 || (deltaX <= 16 && dragOffsetRef.current < -actionWidth / 2);
+    setIsOpen(shouldOpen);
+    const settledOffset = shouldOpen ? -actionWidth : 0;
+    dragOffsetRef.current = settledOffset;
+    setDragOffset(settledOffset);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  };
+
+  const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (!movedRef.current) return;
+    event.preventDefault();
+    movedRef.current = false;
+  };
+
+  const offset = draggingRef.current ? dragOffset : isOpen ? -actionWidth : 0;
+
   return (
     <div className={`tm-chat-row ${room.unread ? 'tm-chat-row-unread' : ''}`}>
-      <div className="tm-chat-row-swipe">
-        <Link className="tm-chat-row-main" href={`/chat/${room.id}`}>
-          <div className="tm-chat-avatar">{room.initials}</div>
+      <div
+        className="tm-chat-row-swipe"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerEnd}
+        onPointerCancel={handlePointerEnd}
+      >
+        <div className="tm-chat-row-actions" aria-label={`${room.title} 채팅방 작업`}>
+          <button className="tm-chat-row-action" type="button" disabled={room.actionPending} onClick={room.onTogglePin}><Pin size={18} strokeWidth={2.1} /><span>{room.pinned ? '고정해제' : '고정'}</span></button>
+          <button className="tm-chat-row-action tm-chat-row-action-danger" type="button" disabled={room.actionPending} onClick={room.onRequestLeave}><X size={18} strokeWidth={2.2} /><span>나가기</span></button>
+        </div>
+        <Link className="tm-chat-row-main" href={`/chat/${room.id}`} onClick={handleClick} style={{ transform: `translateX(${offset}px)` }}>
+          <div className="tm-chat-avatar" style={room.avatarUrl ? { backgroundImage: `url(${room.avatarUrl})` } : undefined}>{room.avatarUrl ? null : room.initials}</div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}><div className="tm-text-body-lg line-clamp-2">{room.title}</div>{room.pinned ? <span className="tm-badge tm-badge-blue">고정</span> : null}</div>
-            <div className="tm-text-caption line-clamp-2" style={{ marginTop: 3 }}>{room.type} · {room.last}</div>
+            <div className="tm-chat-last-line" style={{ marginTop: 3 }}>
+              <span className="tm-chat-room-type">{room.type}</span>
+              <span className={`tm-chat-last-message line-clamp-2 ${room.unread > 0 ? 'tm-chat-last-message-unread' : ''}`}>{room.last}</span>
+              {room.unread > 0 ? <span className="tm-chat-inline-unread">{room.unread}</span> : null}
+            </div>
           </div>
-          <div className="tm-chat-row-meta"><div className="tm-text-micro">{room.time}</div>{room.unread > 0 ? <div className="tm-chat-unread">{room.unread}</div> : null}</div>
+          <div className="tm-chat-row-meta"><div className="tm-text-micro">{room.time}</div></div>
         </Link>
-        <div className="tm-chat-row-actions" aria-label={`${room.title} 채팅방 작업`}>
-          <button className="tm-chat-row-action" type="button" disabled={room.actionPending} onClick={room.onTogglePin}>{room.pinned ? '고정해제' : '고정'}</button>
-          <button className="tm-chat-row-action tm-chat-row-action-danger" type="button" disabled={room.actionPending} onClick={room.onRequestLeave}>나가기</button>
-        </div>
       </div>
     </div>
   );
@@ -129,8 +220,8 @@ function NotificationCard({ notification, onOpen }: { notification: Notification
       <div className="tm-notification-icon"><BellIcon size={18} /></div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div className="tm-text-body-lg">{notification.title}</div>
-        <div className="tm-text-caption" style={{ marginTop: 4 }}>{notification.body}</div>
-        <div className="tm-notification-meta"><span>{notification.time}</span><span>{notification.actionLabel}</span></div>
+        <div className="tm-text-caption line-clamp-2" style={{ marginTop: 3 }}>{notification.body}</div>
+        <div className="tm-notification-meta">{notification.time}</div>
       </div>
     </Link>
   );

@@ -22,7 +22,7 @@ export function TeamListPageView({ model }: { model: TeamListViewModel }) {
     >
       <TeamSearchBar model={model} />
       <div className="tm-team-list">
-        <div className="tm-sport-chip-row">{model.chips.map((chip) => <button key={chip.label} className={`tm-chip ${chip.active ? 'tm-chip-active' : ''}`} type="button">{chip.label}</button>)}</div>
+        <div className="tm-sport-chip-row">{model.chips.map((chip) => chip.href ? <Link key={chip.label} className={`tm-chip ${chip.active ? 'tm-chip-active' : ''}`} href={chip.href}>{chip.label}{typeof chip.count === 'number' ? <span className="tab-num"> {chip.count}</span> : null}</Link> : <button key={chip.label} className={`tm-chip ${chip.active ? 'tm-chip-active' : ''}`} type="button">{chip.label}{typeof chip.count === 'number' ? <span className="tab-num"> {chip.count}</span> : null}</button>)}</div>
         <div className="tm-team-summary-bar">
           <div className="tm-text-label">{model.summary.scope}</div>
           <div className="tm-text-caption tab-num">{model.summary.total}팀 · 모집중 {model.summary.recruiting} · 내 주변 {model.summary.nearby}</div>
@@ -34,8 +34,9 @@ export function TeamListPageView({ model }: { model: TeamListViewModel }) {
           </div>
           <span className="tm-badge tm-badge-blue">검색/필터</span>
         </div>
-        <div className="tm-team-card-stack">{model.teams.map((team, index) => <TeamCard key={team.id} team={team} selected={index === 0} />)}</div>
+        {model.teams.length ? <div className="tm-team-card-stack">{model.teams.map((team, index) => <TeamCard key={team.id} team={team} selected={index === 0} />)}</div> : <EmptyState title="조건에 맞는 팀이 없어요" sub="다른 종목을 선택하거나 필터를 초기화해 다시 확인해 주세요." />}
       </div>
+      {model.filterSheet?.open ? <TeamFilterSheet model={model} /> : null}
     </AppChrome>
   );
 }
@@ -60,9 +61,9 @@ export function TeamStatePageView({ model }: { model: TeamStateViewModel }) {
             <EmptyState title={model.title} sub={model.description} />
             {model.state === 'error' ? (
               <Card pad={16} style={{ marginTop: 18, background: 'var(--grey50)' }}>
-                <div className="tm-text-label">아직 재시도 API가 연결되지 않았어요</div>
+                <div className="tm-text-label">목록으로 돌아가 다시 확인해 주세요</div>
                 <div className="tm-text-caption" style={{ marginTop: 6, lineHeight: 1.55 }}>
-                  지금은 목록으로 돌아가 상태를 확인할 수 있고, 실제 재시도 mutation은 API 바인딩 후 연결합니다.
+                  새로고침 후에도 같은 문제가 반복되면 잠시 뒤 다시 시도해 주세요.
                 </div>
                 <Link className="tm-btn tm-btn-md tm-btn-neutral tm-btn-block" href="/teams" style={{ marginTop: 14 }}>목록으로 돌아가기</Link>
               </Card>
@@ -85,7 +86,7 @@ function TeamFilterPageView({ model }: { model: TeamStateViewModel }) {
         <Card pad={16}>
           <div className="tm-text-body-lg">빠른 조건</div>
           <div className="tm-sport-chip-row" style={{ marginTop: 12 }}>
-            {model.chips.map((chip) => <button key={chip.label} className={`tm-chip ${chip.active ? 'tm-chip-active' : ''}`} type="button">{chip.label}</button>)}
+            {model.chips.map((chip) => chip.href ? <Link key={chip.label} className={`tm-chip ${chip.active ? 'tm-chip-active' : ''}`} href={chip.href}>{chip.label}{typeof chip.count === 'number' ? <span className="tab-num"> {chip.count}</span> : null}</Link> : <button key={chip.label} className={`tm-chip ${chip.active ? 'tm-chip-active' : ''}`} type="button">{chip.label}{typeof chip.count === 'number' ? <span className="tab-num"> {chip.count}</span> : null}</button>)}
           </div>
         </Card>
         <Card pad={16}>
@@ -119,7 +120,7 @@ export function TeamDetailPageView({ model }: { model: TeamDetailViewModel }) {
           <h1 className="tm-text-heading" style={{ color: 'var(--static-white)', marginTop: 14 }}>{team.name}</h1>
           <div className="tm-text-caption" style={{ color: 'rgba(255,255,255,.72)', marginTop: 4 }}>{team.sport} · {team.region} · 매너 {team.manner}</div>
         </Card>
-        <SectionTitle title="팀 기본 정보" sub="필수값과 선택값을 구분해 확인합니다." />
+        <SectionTitle title="팀 기본 정보" sub="가입 전 필요한 정보를 확인해 주세요." />
         <Card pad={16}>
           <InfoRow label="팀명" value={team.name} required />
           <InfoChips label="종목 (복수 선택 가능)" items={team.sports} required />
@@ -131,12 +132,12 @@ export function TeamDetailPageView({ model }: { model: TeamDetailViewModel }) {
           <InfoRow label="신뢰 신호" value={team.trustNote} />
           <InfoRow label="정기 일정" value={team.schedule} />
         </Card>
-        <SectionTitle title="SNS 및 링크" sub="저장된 연락처와 외부 링크만 표시합니다." />
+        <SectionTitle title="SNS 및 링크" sub="팀에서 공개한 연락처와 링크입니다." />
         <Card pad={16}>
           <InfoRow label="연락처" value={team.contact} />
           {team.links.map((link) => <InfoRow key={link.label} label={link.label} value={link.value} muted={link.value.includes('없음')} />)}
         </Card>
-        <SectionTitle title="이미지" sub="업로드 이미지와 예시 이미지를 분리합니다." />
+        <SectionTitle title="이미지" sub="팀 분위기를 확인할 수 있는 사진입니다." />
         <div className="tm-team-image-grid">
           {team.images.map((image) => <ImageSlot key={image.title} {...image} />)}
         </div>
@@ -164,7 +165,7 @@ export function TeamFormPageView({ model }: { model: TeamFormViewModel }) {
     <AppChrome title={edit ? '팀 수정' : '팀 만들기'} activeTab="teams" bottomNav={false}>
       <div className="tm-create-shell">
         <h1 className="tm-text-heading">{edit ? '팀 정보를 수정해요' : '새 팀을 만들어요'}</h1>
-        <p className="tm-text-body" style={{ marginTop: 8 }}>목록과 상세에 저장되는 정보만 노출하고, 예시 이미지는 제출 데이터에 포함하지 않습니다.</p>
+        <p className="tm-text-body" style={{ marginTop: 8 }}>팀을 소개할 정보와 연락 가능한 채널을 입력해 주세요.</p>
         {form?.error ? <Card pad={14} style={{ marginTop: 14, background: 'var(--red50)' }}><div className="tm-text-label">저장할 수 없어요</div><div className="tm-text-caption" style={{ marginTop: 5 }}>{form.error}</div></Card> : null}
         <CreateField label="팀 이름" value={team.name} onChange={(value) => form?.onFieldChange('name', value)} />
         <div className="tm-create-field">
@@ -184,9 +185,9 @@ export function TeamFormPageView({ model }: { model: TeamFormViewModel }) {
         <div className="tm-team-image-grid" style={{ marginTop: 14 }}>
           <ImageSlot title="로고 이미지" count={edit ? 1 : 0} />
           <ImageSlot title="커버 이미지" count={edit ? 1 : 0} />
-          <ImageSlot title="예시 이미지" count={2} example />
+          <ImageSlot title="활동 사진" count={2} example />
         </div>
-        <Card pad={14} style={{ marginTop: 14, background: edit ? 'var(--orange50)' : 'var(--blue50)' }}><div className="tm-text-label">{edit ? '변경사항 저장' : '생성 후 상태'}</div><div className="tm-text-caption" style={{ marginTop: 5 }}>{edit ? '팀장 또는 운영진 권한 확인 후 저장됩니다. 현재 화면은 저장 API 연결 전 입력 유지 상태입니다.' : '생성 직후 팀장은 관리자 권한을 갖고 멤버 초대를 시작합니다. 현재 화면은 저장 API 연결 전 준비 상태입니다.'}</div></Card>
+        <Card pad={14} style={{ marginTop: 14, background: edit ? 'var(--orange50)' : 'var(--blue50)' }}><div className="tm-text-label">{edit ? '변경사항 저장' : '팀 생성 안내'}</div><div className="tm-text-caption" style={{ marginTop: 5 }}>{edit ? '저장에 실패하면 입력한 내용을 유지한 채 다시 시도할 수 있습니다.' : '팀 생성 후 멤버 초대와 가입 신청 관리를 시작할 수 있습니다.'}</div></Card>
       </div>
       <div className="tm-fixed-cta"><div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 8 }}><Link className="tm-btn tm-btn-lg tm-btn-neutral" href={edit ? '/teams' : '/teams'}>{edit ? '취소' : '이전'}</Link><button className="tm-btn tm-btn-lg tm-btn-primary" type="button" disabled={form?.submitting} onClick={form?.onSubmit}>{form?.submitting ? '저장 중' : edit ? '저장' : '팀 만들기'}</button></div></div>
     </AppChrome>
@@ -221,15 +222,93 @@ export function TeamMembersPageView({ model }: { model: TeamMembersViewModel }) 
 function TeamSearchBar({ model }: { model: TeamListViewModel }) {
   return (
     <div className="tm-list-searchbar">
-      <Link className="tm-list-search-input" href="/teams/search" aria-label="팀 검색">
-        <span className="tm-list-search-text">{model.query || model.placeholder}</span>
-        <SearchIcon size={19} strokeWidth={2} />
-      </Link>
-      <Link className="tm-list-filter-button" href="/teams/filter" aria-label={`필터 ${model.filterCount}개 적용`}>
+      <form
+        className="tm-list-search-form"
+        onBlur={(event) => {
+          if (!(event.relatedTarget instanceof Node) || !event.currentTarget.contains(event.relatedTarget)) {
+            model.search?.onBlur();
+          }
+        }}
+        onSubmit={(event) => {
+          event.preventDefault();
+          model.search?.onSubmit();
+        }}
+      >
+        <div className={`tm-list-search-input tm-list-search-input-field ${model.search?.isOpen ? 'tm-list-search-input-active' : ''}`} aria-label="팀 검색">
+          <input
+            aria-label="팀 검색어"
+            className="tm-list-search-field"
+            onChange={(event) => model.search?.onChange(event.target.value)}
+            onFocus={model.search?.onFocus}
+            placeholder={model.search?.placeholder ?? model.placeholder}
+            readOnly={!model.search}
+            value={model.search?.value ?? model.query}
+          />
+          {model.search?.value ? (
+            <button className="tm-list-search-clear" type="button" aria-label="검색어 지우기" onClick={model.search.onClear}>×</button>
+          ) : null}
+          <button className="tm-list-search-submit" type="submit" aria-label="검색">
+            <SearchIcon size={19} strokeWidth={2} />
+          </button>
+        </div>
+        {model.search?.isOpen ? (
+          <div className="tm-list-search-dropdown">
+            <div className="tm-list-search-dropdown-title">최근 검색</div>
+            {model.search.isLoading ? <div className="tm-list-search-empty">불러오는 중</div> : null}
+            {!model.search.isLoading && model.search.recentItems.length === 0 ? <div className="tm-list-search-empty">최근 검색어가 없습니다</div> : null}
+            {model.search.recentItems.map((item) => (
+              <button key={item.id} className="tm-list-search-recent" type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => model.search?.onSelectRecent(item.query)}>
+                <span>{item.query}</span>
+                <SearchIcon size={16} strokeWidth={2} />
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </form>
+      <Link className="tm-list-filter-button" href={model.filterHref ?? '/teams?filter=1'} aria-label={`필터 ${model.filterCount}개 적용`}>
         <FilterIcon size={21} strokeWidth={2} />
         <span className="tm-list-filter-count tab-num">{model.filterCount}</span>
       </Link>
     </div>
+  );
+}
+
+function TeamFilterSheet({ model }: { model: TeamListViewModel }) {
+  const sheet = model.filterSheet;
+  if (!sheet) return null;
+
+  return (
+    <>
+      <Link className="tm-filter-scrim" href={sheet.closeHref} aria-label="필터 닫기" />
+      <section className="tm-filter-sheet" aria-label="팀 필터">
+        <div className="tm-filter-sheet-handle" />
+        <div className="tm-filter-sheet-head">
+          <div>
+            <div className="tm-text-subhead">필터</div>
+            <div className="tm-text-caption" style={{ marginTop: 2 }}>정렬과 팀 조건을 sheet에서 조정합니다.</div>
+          </div>
+          <Link className="tm-btn tm-btn-sm tm-btn-ghost" href={sheet.resetHref} style={{ color: 'var(--text-caption)' }}>초기화</Link>
+        </div>
+        {[
+          ['정렬', sheet.sortOptions],
+          ['팀 조건', sheet.conditionOptions],
+          ['신뢰 신호', sheet.trustOptions],
+        ].map(([title, options]) => (
+          <div key={title as string} className="tm-filter-section">
+            <div className="tm-text-label">{title as string}</div>
+            <div className="tm-filter-chip-wrap">
+              {(options as Array<{ label: string; value: string; href: string; active?: boolean }>).map((option) => (
+                <Link key={option.value} className={`tm-chip ${option.active ? 'tm-chip-active' : ''}`} href={option.href}>{option.label}</Link>
+              ))}
+            </div>
+          </div>
+        ))}
+        <div className="tm-filter-actions">
+          <Link className="tm-btn tm-btn-lg tm-btn-neutral" href={sheet.closeHref}>닫기</Link>
+          <Link className="tm-btn tm-btn-lg tm-btn-primary" href={sheet.applyHref}>적용하기</Link>
+        </div>
+      </section>
+    </>
   );
 }
 
@@ -277,14 +356,14 @@ function ImageSlot({ title, count, max, example }: { title: string; count: numbe
     <div className="tm-team-image-slot">
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
         <div className="tm-text-label">{title}</div>
-        <span className={`tm-badge ${example ? 'tm-badge-orange' : 'tm-badge-blue'}`}>{example ? '예시 이미지' : '기존 이미지'}</span>
+        <span className={`tm-badge ${example ? 'tm-badge-orange' : 'tm-badge-blue'}`}>{example ? '활동 사진' : '기존 이미지'}</span>
       </div>
       <div className="tm-team-thumb-row">
-        {slots.map((_, index) => <div key={index} className={`tm-team-thumb ${example ? 'tm-team-thumb-example' : ''}`}>{count === 0 ? '업로드 전' : example ? `예시 이미지 ${index + 1}` : `업로드된 이미지 ${index + 1}`}</div>)}
+        {slots.map((_, index) => <div key={index} className={`tm-team-thumb ${example ? 'tm-team-thumb-example' : ''}`}>{count === 0 ? '업로드 전' : example ? `활동 사진 ${index + 1}` : `업로드된 이미지 ${index + 1}`}</div>)}
         <button className="tm-btn tm-btn-sm tm-btn-neutral" type="button">추가</button>
       </div>
       <div className="tm-text-micro" style={{ marginTop: 8, color: 'var(--text-caption)' }}>{max ? `${count}/${max} · ` : ''}선택된 파일 없음</div>
-      <div className="tm-text-micro" style={{ marginTop: 4, color: 'var(--text-caption)' }}>{example ? '예시 이미지는 제출 데이터에 포함되지 않아요.' : '업로드한 이미지만 저장됩니다.'}</div>
+      <div className="tm-text-micro" style={{ marginTop: 4, color: 'var(--text-caption)' }}>{example ? '팀 활동을 보여주는 사진을 추가해 주세요.' : '업로드한 이미지만 저장됩니다.'}</div>
     </div>
   );
 }

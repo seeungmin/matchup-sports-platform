@@ -137,9 +137,9 @@ export function ProfileEditPageView({ model }: { model: ProfileEditViewModel }) 
           </div>
         </section>
         {model.fields.map((field) => <CreateField key={field.label} {...field} />)}
-        <Card pad={14} style={{ marginTop: 14, background: 'var(--blue50)' }}><div className="tm-text-label">저장 준비 상태</div><div className="tm-text-caption" style={{ marginTop: 5 }}>프로필 저장 API 연결 전에는 입력값을 화면에만 유지합니다.</div></Card>
+        <Card pad={14} style={{ marginTop: 14, background: 'var(--blue50)' }}><div className="tm-text-label">프로필 저장</div><div className="tm-text-caption" style={{ marginTop: 5 }}>저장에 실패하면 입력한 내용을 유지한 채 다시 시도할 수 있습니다.</div></Card>
       </div>
-      <div className="tm-fixed-cta"><button className="tm-btn tm-btn-lg tm-btn-neutral tm-btn-block" type="button" disabled>저장 준비중</button></div>
+      <div className="tm-fixed-cta"><button className="tm-btn tm-btn-lg tm-btn-neutral tm-btn-block" type="button" disabled>저장 불가</button></div>
     </AppChrome>
   );
 }
@@ -204,7 +204,7 @@ export function WithdrawalPageView() {
           <ListItem title="보관 데이터" sub="법적 보관 기간 이후 삭제됩니다" trailing="필수" />
         </Card>
       </div>
-      <div className="tm-fixed-cta"><button className="tm-btn tm-btn-lg tm-btn-neutral tm-btn-block" type="button" disabled>탈퇴 요청 준비중</button></div>
+      <div className="tm-fixed-cta"><button className="tm-btn tm-btn-lg tm-btn-neutral tm-btn-block" type="button" disabled>탈퇴 요청 불가</button></div>
     </AppChrome>
   );
 }
@@ -243,7 +243,7 @@ function MyMatchCard({ match, manage }: { match: MyMatch; manage?: boolean }) {
       <p className="tm-text-caption" style={{ margin: '10px 0 0', lineHeight: 1.5 }}>{match.note}</p>
       <div className="tm-my-card-actions">
         <Link className="tm-btn tm-btn-sm tm-btn-neutral" href={match.href}>상세</Link>
-        {manage ? <button className="tm-btn tm-btn-sm tm-btn-neutral" type="button" disabled>관리 준비중</button> : <button className={`tm-btn tm-btn-sm ${canReview ? 'tm-btn-primary' : 'tm-btn-neutral'}`} type="button" disabled={!canReview}>{canReview ? '리뷰' : '리뷰 대기'}</button>}
+        {manage ? <button className="tm-btn tm-btn-sm tm-btn-neutral" type="button" disabled>관리 불가</button> : <button className={`tm-btn tm-btn-sm ${canReview ? 'tm-btn-primary' : 'tm-btn-neutral'}`} type="button" disabled={!canReview}>{canReview ? '리뷰' : '리뷰 대기'}</button>}
       </div>
     </Card>
   );

@@ -160,9 +160,13 @@ type WeatherStripProps = {
   temp: number | string;
   cond: string;
   wind: number | string;
+  feelsLike?: number | string;
+  status?: string;
 };
 
-export function WeatherStrip({ city, temp, cond, wind }: WeatherStripProps) {
+export function WeatherStrip({ city, temp, cond, wind, feelsLike, status }: WeatherStripProps) {
+  const displayedFeelsLike = feelsLike ?? temp;
+
   return (
     <div className="tm-weather-strip">
       <div className="tm-weather-sun" />
@@ -171,7 +175,7 @@ export function WeatherStrip({ city, temp, cond, wind }: WeatherStripProps) {
           {city} {temp}° · {cond}
         </div>
         <div className="tm-text-micro" style={{ color: 'var(--text-muted)', marginTop: 1 }}>
-          체감 17° · 바람 {wind}m/s · 운동하기 좋아요
+          체감 {displayedFeelsLike}° · 바람 {wind}m/s{status ? ` · ${status}` : ''}
         </div>
       </div>
     </div>

@@ -98,7 +98,7 @@ export function MatchFormProductPage({ kind = 'personal', step = 'start' }: { ki
           <p className="v1-body" style={{ marginTop: 6 }}>
             {step === 'complete'
               ? '모집글이 등록되었습니다. 상세 화면과 연결 채팅으로 이어지는 상태를 확인합니다.'
-              : `디자인 시안의 단계형 작성 흐름을 v1 화면 구조로 옮긴 상태입니다. 저장 hook 상태: ${mutationState}`}
+              : `작성 중인 내용을 확인하고 저장할 수 있습니다. 현재 상태: ${mutationState}`}
           </p>
         </section>
 
@@ -142,7 +142,7 @@ export function MatchCollectionProductPage({ mode }: { mode: 'joined' | 'created
   return (
     <AppShell>
       <main className="v1-main">
-        <Section title={title} subtitle="목록, 승인 대기, 마감 같은 중복 시안은 같은 리스트 컴포넌트의 상태 variant로 관리합니다.">
+        <Section title={title} subtitle="신청 대기, 승인 완료, 마감 상태를 한곳에서 확인할 수 있습니다.">
           <div className="v1-list">
             {items.map((match) => (
               <Link key={match.id} className="v1-card v1-card-pad v1-card-link" href={`/matches/${match.id}`}>
@@ -172,11 +172,11 @@ export function TeamDetailProductPage({ mode = 'detail' }: { mode?: 'detail' | '
     <AppShell>
       <main className="v1-main">
         <section className="v1-card v1-card-pad">
-          <Badge tone={item.trust === 'verified' ? 'green' : 'orange'}>{trustLabel(item.trust)}</Badge>
+          <Badge tone={item.trust === 'sample' ? 'grey' : item.trust === 'verified' ? 'green' : 'orange'}>{trustLabel(item.trust)}</Badge>
           <h2 className="v1-item-title" style={{ marginTop: 10 }}>{mode === 'new' ? '팀 만들기' : item.name}</h2>
           <p className="v1-body" style={{ marginTop: 6 }}>
             {isEdit
-              ? `팀명, 종목, 활동 지역, 가입 승인 방식을 한 화면에서 수정합니다. 저장 hook 상태: ${updateTeam.status}`
+              ? `팀명, 종목, 활동 지역, 가입 승인 방식을 한 화면에서 수정합니다. 저장 상태: ${updateTeam.status}`
               : `${item.region} · ${item.sport} · ${item.members}`}
           </p>
         </section>
@@ -207,7 +207,7 @@ export function MyTeamsProductPage({ members = false }: { members?: boolean }) {
               <Link key={item.id} className="v1-card v1-card-pad v1-card-link" href={`/my/teams/${item.id}`}>
                 <div className="v1-row">
                   <div>
-                    <Badge tone={item.trust === 'verified' ? 'green' : 'orange'}>{trustLabel(item.trust)}</Badge>
+                    <Badge tone={item.trust === 'sample' ? 'grey' : item.trust === 'verified' ? 'green' : 'orange'}>{trustLabel(item.trust)}</Badge>
                     <p className="v1-item-title" style={{ marginTop: 8 }}>{item.name}</p>
                     <p className="v1-caption" style={{ marginTop: 4 }}>{item.region} · {item.members}</p>
                   </div>
@@ -233,10 +233,10 @@ function TeamOverview({ mode, team }: { mode: 'detail' | 'members' | 'edit' | 'n
                 <div>
                   <p className="v1-item-title">{label}</p>
                   <p className="v1-caption" style={{ marginTop: 4 }}>
-                    {index === 0 ? '권한 변경은 owner만 가능합니다.' : index === 1 ? '가입 신청을 승인하거나 거절합니다.' : '최근 활동 기준 샘플 목록입니다.'}
+                    {index === 0 ? '권한 변경은 owner만 가능합니다.' : index === 1 ? '가입 신청을 승인하거나 거절합니다.' : '최근 활동 기준 멤버 목록입니다.'}
                   </p>
                 </div>
-                <Badge tone={index === 1 ? 'blue' : 'grey'}>{index === 1 ? '2명' : 'sample'}</Badge>
+                <Badge tone={index === 1 ? 'blue' : 'grey'}>{index === 1 ? '2명' : '-'}</Badge>
               </div>
             </div>
           ))}
@@ -259,7 +259,7 @@ function TeamFormSummary({ team }: { team: MockTeam }) {
         <div className="v1-stack">
           <InfoRow icon={<Users size={18} />} label="가입 방식" value="승인 필요" />
           <InfoRow icon={<MapPin size={18} />} label="활동 지역" value={team.region} />
-          <InfoRow icon={<ShieldCheck size={18} />} label="신뢰 표시" value="검증/추정/샘플 구분 유지" />
+          <InfoRow icon={<ShieldCheck size={18} />} label="신뢰 표시" value="값 없음은 -로 표시" />
         </div>
       </div>
     </Section>
@@ -283,7 +283,7 @@ function statusLabel(status: string) {
 }
 
 function trustLabel(trust: string) {
-  return trust === 'verified' ? '검증됨' : trust === 'estimated' ? '추정' : '샘플';
+  return trust === 'verified' ? '검증됨' : trust === 'estimated' ? '추정' : '-';
 }
 
 function stepIndex(step: FormStep, isTeam: boolean) {

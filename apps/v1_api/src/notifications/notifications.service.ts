@@ -17,7 +17,7 @@ export class NotificationsService {
     const where: Prisma.V1NotificationWhereInput = {
       recipientUserId: user.id,
       ...(query.status === 'read' ? { readAt: { not: null } } : {}),
-      ...(query.status === 'unread' || !query.status || query.status === 'created' ? { readAt: null } : {}),
+      ...(query.status === 'unread' || query.status === 'created' ? { readAt: null } : {}),
       ...(query.type ? { targetType: query.type as never } : {}),
     };
     const [items, unreadCount] = await Promise.all([

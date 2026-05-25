@@ -27,13 +27,14 @@ const tabs: Array<{
 ];
 
 type AppChromeProps = {
-  title: string;
+  title: ReactNode;
   children: ReactNode;
   floatingSlot?: ReactNode;
   activeTab?: V1NavTab;
   showSearch?: boolean;
   showNotifications?: boolean;
   hasNewNotification?: boolean;
+  topbarActions?: ReactNode;
   bottomNav?: boolean;
   topBar?: boolean;
   backHref?: string;
@@ -47,6 +48,7 @@ export function AppChrome({
   showSearch = false,
   showNotifications = true,
   hasNewNotification = false,
+  topbarActions,
   bottomNav = true,
   topBar = true,
   backHref,
@@ -70,17 +72,21 @@ export function AppChrome({
             <div className="tm-text-body-lg" style={{ color: 'var(--text-strong)' }}>{title}</div>
           </div>
           <div className="tm-topbar-actions">
-            {showSearch ? (
-              <Link className="tm-btn tm-btn-icon tm-btn-ghost" href="/search" aria-label="검색">
-                <SearchIcon size={21} strokeWidth={2} />
-              </Link>
-            ) : null}
-            {showNotifications ? (
-              <Link className="tm-btn tm-btn-icon tm-btn-ghost" href="/notifications" aria-label="알림">
-                <BellIcon size={21} strokeWidth={2} />
-                {hasNewNotification ? <span className="tm-unread-dot" /> : null}
-              </Link>
-            ) : null}
+            {topbarActions ?? (
+              <>
+                {showSearch ? (
+                  <Link className="tm-btn tm-btn-icon tm-btn-ghost" href="/search" aria-label="검색">
+                    <SearchIcon size={21} strokeWidth={2} />
+                  </Link>
+                ) : null}
+                {showNotifications ? (
+                  <Link className="tm-btn tm-btn-icon tm-btn-ghost" href="/notifications" aria-label="알림">
+                    <BellIcon size={21} strokeWidth={2} />
+                    {hasNewNotification ? <span className="tm-unread-dot" /> : null}
+                  </Link>
+                ) : null}
+              </>
+            )}
           </div>
         </header>
       ) : null}

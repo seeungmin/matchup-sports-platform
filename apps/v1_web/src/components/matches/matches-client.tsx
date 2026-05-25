@@ -1,5 +1,7 @@
 'use client';
 
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
 import {
   useV1ApplyMatch,
   useV1ApproveMatchApplication,
@@ -7,26 +9,79 @@ import {
   useV1MatchApplicationEligibility,
   useV1MatchApplications,
   useV1Matches,
+  useV1MasterSports,
+  useV1RecentSearches,
+  useV1RecordSearch,
   useV1RejectMatchApplication,
   useV1WithdrawMatchApplication,
 } from '@/hooks/use-v1-api';
-import type { V1Match, V1MatchApiStatus, V1ViewerState } from '@/types/api';
+import type { V1Match, V1MatchApiStatus, V1Sport, V1ViewerState } from '@/types/api';
 import { MatchDetailPageView, MatchListPageView, MatchStatePageView } from './matches-page';
 import type { MatchCardModel, MatchDetailViewModel, MatchListViewModel } from './matches.types';
 import { getMatchDetailViewModel, getMatchListViewModel, getMatchStateViewModel } from './matches.view-model';
 
+const FIXED_MATCH_SPORT_NAMES = ['축구', '풋살', '러닝', '수영'] as const;
+
 export function MatchListPageClient() {
-  const query = useV1Matches();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const selectedSportId = searchParams.get('sportId') ?? undefined;
+  const selectedSort = toMatchSort(searchParams.get('sort'));
+  const selectedView = toMatchView(searchParams.get('view'));
+  const filterOpen = searchParams.get('filter') === '1';
+  const initialQuery = searchParams.get('q') ?? '';
+  const [searchValue, setSearchValue] = useState(initialQuery);
+  const [submittedQuery, setSubmittedQuery] = useState(initialQuery);
+  const [searchOpen, setSearchOpen] = useState(false);
+  useEffect(() => {
+    setSearchValue(initialQuery);
+    setSubmittedQuery(initialQuery);
+  }, [initialQuery]);
+  const allMatches = useV1Matches();
+  const matchFilters = useMemo(() => {
+    const filters: { sportId?: string; query?: string; sort?: 'recommended' | 'latest' | 'deadline'; view?: 'card' | 'compact' } = {};
+    if (selectedSportId) filters.sportId = selectedSportId;
+    if (submittedQuery.trim()) filters.query = submittedQuery.trim();
+    if (selectedSort !== 'recommended') filters.sort = selectedSort;
+    if (selectedView !== 'card') filters.view = selectedView;
+    return Object.keys(filters).length ? filters : undefined;
+  }, [selectedSportId, selectedSort, selectedView, submittedQuery]);
+  const filteredMatches = useV1Matches(matchFilters, { enabled: Boolean(matchFilters) });
+  const recentSearches = useV1RecentSearches();
+  const recordSearch = useV1RecordSearch();
+  const sports = useV1MasterSports();
+  const query = matchFilters ? filteredMatches : allMatches;
 
   if (query.isError) return <MatchStatePageView model={getMatchStateViewModel('error')} />;
 
   const base = getMatchListViewModel();
   const items = query.data?.items;
+  const countItems = allMatches.data?.items ?? items ?? [];
+  const searchModel: NonNullable<MatchListViewModel['search']> = {
+    value: searchValue,
+    placeholder: '지역, 시간, 매치명 검색',
+    recentItems: (recentSearches.data?.items ?? []).slice(0, 5).map((item) => ({ id: item.id, query: item.query })),
+    isOpen: searchOpen,
+    isLoading: recentSearches.isLoading,
+    onFocus: () => setSearchOpen(true),
+    onBlur: () => setSearchOpen(false),
+    onChange: setSearchValue,
+    onSubmit: () => submitSearch(searchValue),
+    onClear: clearSearch,
+    onSelectRecent: (value) => {
+      setSearchValue(value);
+      submitSearch(value, { source: 'recent' });
+    },
+  };
   const model: MatchListViewModel = items
     ? {
         ...base,
+        query: submittedQuery,
+        search: searchModel,
+        filterHref: buildMatchHref(searchParams, { filter: '1' }),
+        filterSheet: buildMatchFilterSheet(searchParams, selectedSort, selectedView, filterOpen),
         matches: items.map((item, index) => toMatchCard(item, base.matches[index] ?? base.matches[0])),
-        sports: buildSportSummary(items, base),
+        sports: buildSportSummary(countItems, base, selectedSportId, sports.data),
         summary: {
           ...base.summary,
           count: items.length,
@@ -34,11 +89,37 @@ export function MatchListPageClient() {
           urgent: items.filter((item) => statusToCardStatus(getStatus(item)) === 'open').length,
         },
       }
-    : base;
-
-  if (items && items.length === 0) return <MatchStatePageView model={getMatchStateViewModel('empty')} />;
+    : {
+        ...base,
+        query: submittedQuery,
+        search: searchModel,
+        filterHref: buildMatchHref(searchParams, { filter: '1' }),
+        filterSheet: buildMatchFilterSheet(searchParams, selectedSort, selectedView, filterOpen),
+      };
 
   return <MatchListPageView model={model} />;
+
+  function submitSearch(value: string, options?: { source?: string }) {
+    const nextQuery = value.trim();
+    setSearchValue(nextQuery);
+    setSubmittedQuery(nextQuery);
+    setSearchOpen(false);
+    updateMatchUrl(nextQuery);
+    if (nextQuery) {
+      recordSearch.mutate({ query: nextQuery, filters: { domain: 'matches', source: options?.source ?? 'matches' } });
+    }
+  }
+
+  function clearSearch() {
+    setSearchValue('');
+    setSubmittedQuery('');
+    setSearchOpen(false);
+    updateMatchUrl('');
+  }
+
+  function updateMatchUrl(nextQuery: string) {
+    router.replace(buildMatchHref(searchParams, { q: nextQuery || null, filter: null }), { scroll: false });
+  }
 }
 
 export function MatchDetailPageClient({ matchId }: { matchId: string }) {
@@ -137,17 +218,74 @@ function toParticipants(
   }));
 }
 
-function buildSportSummary(items: V1Match[], fallback: MatchListViewModel) {
+function buildSportSummary(items: V1Match[], fallback: MatchListViewModel, selectedSportId?: string, masterSports?: V1Sport[]) {
   const counts = new Map<string, number>();
   items.forEach((item) => {
     const name = item.sport?.name ?? item.sportName ?? '기타';
     counts.set(name, (counts.get(name) ?? 0) + 1);
   });
 
+  const fixedSports = FIXED_MATCH_SPORT_NAMES.map((name) => {
+    const sport = masterSports?.find((item) => item.name === name);
+    return {
+      label: name,
+      count: counts.get(name) ?? 0,
+      active: sport?.id === selectedSportId,
+      href: sport?.id ? `/matches?sportId=${sport.id}` : '/matches',
+    };
+  });
+
   return [
-    { label: '전체', count: items.length, active: true },
-    ...Array.from(counts.entries()).map(([label, count]) => ({ label, count })),
-  ].slice(0, Math.max(fallback.sports.length, 1));
+    { label: fallback.sports[0]?.label ?? '전체', count: items.length, active: !selectedSportId, href: '/matches' },
+    ...fixedSports,
+  ];
+}
+
+function buildMatchFilterSheet(
+  params: URLSearchParams,
+  sort: NonNullable<MatchListViewModel['filterSheet']>['sort'],
+  view: NonNullable<MatchListViewModel['filterSheet']>['view'],
+  open: boolean,
+): NonNullable<MatchListViewModel['filterSheet']> {
+  const sortOptions: NonNullable<MatchListViewModel['filterSheet']>['sortOptions'] = [
+    { label: '추천순', value: 'recommended', href: buildMatchHref(params, { sort: 'recommended', filter: '1' }), active: sort === 'recommended' },
+    { label: '마감임박', value: 'deadline', href: buildMatchHref(params, { sort: 'deadline', filter: '1' }), active: sort === 'deadline' },
+    { label: '최신순', value: 'latest', href: buildMatchHref(params, { sort: 'latest', filter: '1' }), active: sort === 'latest' },
+  ];
+  const viewOptions: NonNullable<MatchListViewModel['filterSheet']>['viewOptions'] = [
+    { label: '카드형', value: 'card', description: '이미지와 핵심 정보를 크게', href: buildMatchHref(params, { view: 'card', filter: '1' }), active: view === 'card' },
+    { label: '콤팩트형', value: 'compact', description: '더 많은 매치를 빠르게', href: buildMatchHref(params, { view: 'compact', filter: '1' }), active: view === 'compact' },
+  ];
+
+  return {
+    open,
+    closeHref: buildMatchHref(params, { filter: null }),
+    resetHref: buildMatchHref(params, { sort: null, view: null, filter: '1' }),
+    applyHref: buildMatchHref(params, { filter: null }),
+    sort,
+    view,
+    sortOptions,
+    viewOptions,
+  };
+}
+
+function buildMatchHref(params: URLSearchParams, overrides: Record<string, string | null>) {
+  const next = new URLSearchParams(params.toString());
+  Object.entries(overrides).forEach(([key, value]) => {
+    if (value === null || value === '') next.delete(key);
+    else next.set(key, value);
+  });
+  const queryString = next.toString();
+  return queryString ? `/matches?${queryString}` : '/matches';
+}
+
+function toMatchSort(value: string | null): 'recommended' | 'deadline' | 'latest' {
+  if (value === 'deadline' || value === 'latest') return value;
+  return 'recommended';
+}
+
+function toMatchView(value: string | null): 'card' | 'compact' {
+  return value === 'compact' ? 'compact' : 'card';
 }
 
 function countToday(items: V1Match[]) {

@@ -48,7 +48,7 @@ html, body { background: #f4f5f7; font-family: 'Pretendard', sans-serif; }
 <script type="text/babel" src="lib/screens-refresh3.jsx?v=20260425-fix32"></script>
 <script type="text/babel" src="lib/screens-v2main.jsx?v=20260425-fix32"></script>
 <script type="text/babel" src="lib/screens-v2main2.jsx?v=20260425-fix32"></script>
-<script type="text/babel" src="lib/screens-sm-revision.jsx?v=core00-final-restored-sm9-leave-2states-auth01-separated-team05-sm5-search-filter"></script>
+<script type="text/babel" src="lib/screens-sm-revision.jsx?v=core00-final-restored-sm9-leave-2states-auth01-separated-team05-sm5-search-filter-review14"></script>
 <script type="text/babel" src="lib/screens-parity.jsx?v=20260425-fix32"></script>
 <script type="text/babel" src="lib/screens-case-matrix.jsx?v=20260425-fix32"></script>
 <script type="text/babel" src="lib/screens-readiness.jsx?v=20260425-fix32"></script>
@@ -3086,6 +3086,21 @@ function App() {
           </DCArtboard>
         </DCSection>
 
+        <DCSection id="reviews-post-event-sm-final" title="14 · 리뷰 · 일정 종료 후 상호 평가 · SM 최종본" subtitle="개인매치와 팀매치 일정이 끝난 뒤 서로에게 남기는 리뷰 flow를 독립 섹션으로 추가한다. 자유 작성 대신 별점과 대표 선택 항목 하나만 사용한다.">
+          <DCArtboard id="reviews-post-event-inbox" label="14 · 리뷰 대기 목록" width={375} height={812}>
+            <SMRevisionPostEventReviewInboxMobile/>
+          </DCArtboard>
+          <DCArtboard id="reviews-post-event-select" label="14 · 대상 선택 · 별점 · 선택형 리뷰" width={375} height={812}>
+            <SMRevisionPostEventReviewSelectMobile/>
+          </DCArtboard>
+          <DCArtboard id="reviews-post-event-complete" label="14 · 리뷰 완료" width={375} height={812}>
+            <SMRevisionPostEventReviewCompleteMobile/>
+          </DCArtboard>
+          <DCArtboard id="reviews-post-event-rules" label="14 · 리뷰 동작/예외 규칙" width={840} height={812}>
+            <SMRevisionPostEventReviewRules/>
+          </DCArtboard>
+        </DCSection>
+
         <DCSection id="m19-grid" title="M19 · 공통 플로우 · 인터랙션 (viewport grid)" subtitle="fix29에서 추가. ID schema m19-{mb|tb|dt}-{main|flow|state|components|assets|motion}. FormStepShell · StickyCTA · BottomSheet · Toast · Skeleton · edit-flow parity · reduced-motion.">
           <DCArtboard id="m19-mb-main" label="m19-mb-main — 공통 플로우 atlas" width={375} height={812}>
             <M19MobileMain/>
@@ -3787,6 +3802,21 @@ function App() {
           </DCArtboard>
           <DCArtboard id="handoff-readiness-matrix-1-1" label="개발 핸드오프 준비도" width={1280} height={800} data-canonical-id="m19-dt-main-matrix-handoff-readiness-matrix-1-1">
             <HandoffReadinessMatrix/>
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="reviews-post-event-sm-final-1-1" data-first-design-copy="1-1" data-source-section="reviews-post-event-sm-final" title="1-1 · 14 · 리뷰 · 일정 종료 후 상호 평가 · SM 최종본" subtitle="14 리뷰 섹션을 1-1차 디자인 완료에도 동일하게 노출한다. 별점과 대표 선택 항목 하나만 저장하고 자유 본문 입력은 두지 않는다.">
+          <DCArtboard id="reviews-post-event-inbox-1-1" label="14 · 리뷰 대기 목록" width={375} height={812}>
+            <SMRevisionPostEventReviewInboxMobile/>
+          </DCArtboard>
+          <DCArtboard id="reviews-post-event-select-1-1" label="14 · 대상 선택 · 별점 · 선택형 리뷰" width={375} height={812}>
+            <SMRevisionPostEventReviewSelectMobile/>
+          </DCArtboard>
+          <DCArtboard id="reviews-post-event-complete-1-1" label="14 · 리뷰 완료" width={375} height={812}>
+            <SMRevisionPostEventReviewCompleteMobile/>
+          </DCArtboard>
+          <DCArtboard id="reviews-post-event-rules-1-1" label="14 · 리뷰 동작/예외 규칙" width={840} height={812}>
+            <SMRevisionPostEventReviewRules/>
           </DCArtboard>
         </DCSection>
 
@@ -4518,6 +4548,7 @@ const SM_FIRST_DESIGN_COMPLETE_SECTIONS = [
   'desktop-web',
   'admin-ops-sm-revision',
   'common-flows-motion',
+  'reviews-post-event-sm-final',
 ];
 
 const SM_FIRST_DESIGN_COMPLETE_1_1_SECTIONS = [
@@ -4538,6 +4569,7 @@ const SM_FIRST_DESIGN_COMPLETE_1_1_SECTIONS = [
   'desktop-web-1-1',
   'admin-ops-sm-revision-1-1',
   'common-flows-motion-1-1',
+  'reviews-post-event-sm-final-1-1',
 ];
 
 function SMNewVisibilityStyle({ mode }) {
@@ -4643,6 +4675,7 @@ function SMNewViewerGuide({ onJump, viewMode, setViewMode }) {
     ['admin-ops', '12 관리자'],
     ['admin-ops-sm-revision', '12 관리자 SM'],
     ['common-flows-motion', '13 공통 플로우'],
+    ['reviews-post-event-sm-final', '14 리뷰'],
   ];
   const candidate = [
     ['lessons', 'C01 레슨'],
@@ -4692,6 +4725,7 @@ function SMNewViewerGuide({ onJump, viewMode, setViewMode }) {
     ['desktop-web', '11 데스크톱'],
     ['admin-ops-sm-revision', '12 관리자 SM'],
     ['common-flows-motion', '13 공통 플로우'],
+    ['reviews-post-event-sm-final', '14 리뷰'],
   ];
   const complete11 = [
     ['core-shell-sm-final-1-1', '00 SM 최종'],
@@ -4711,6 +4745,7 @@ function SMNewViewerGuide({ onJump, viewMode, setViewMode }) {
     ['desktop-web-1-1', '11 데스크톱'],
     ['admin-ops-sm-revision-1-1', '12 관리자 SM'],
     ['common-flows-motion-1-1', '13 공통 플로우'],
+    ['reviews-post-event-sm-final-1-1', '14 리뷰'],
   ];
   const grids = [
     ['m01-grid', 'M01 인증'],

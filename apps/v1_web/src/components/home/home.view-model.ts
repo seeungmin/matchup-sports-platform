@@ -70,10 +70,10 @@ export function getHomeViewModel(): HomeViewModel {
     stats: {
       monthlyActivity: 12,
       monthlyActivitySub: '지난달보다 +3',
-      mannerScore: '4.9',
-      mannerScoreSub: '상위 8%',
+      mannerScore: '-',
+      mannerScoreSub: '-',
       joined: 8,
-      trustState: '샘플',
+      trustState: '-',
       pending: '대기 없음',
     },
     featuredMatch: sortedMatches[0],
@@ -82,7 +82,7 @@ export function getHomeViewModel(): HomeViewModel {
       { label: '매치', sub: '03', href: '/matches', color: 'var(--blue500)', background: 'var(--blue50)' },
       { label: '팀매치', sub: '04', href: '/team-matches', color: 'var(--orange500)', background: 'var(--orange50)' },
       { label: '팀', sub: '05', href: '/teams', color: 'var(--green500)', background: 'var(--green50)' },
-      { label: '나의 팀', sub: '미정', color: 'var(--grey500)', background: 'var(--grey100)', disabled: true },
+      { label: '나의 팀', sub: '07', href: '/my/teams', color: 'var(--grey500)', background: 'var(--grey100)' },
     ],
     weather: {
       city: '마포',

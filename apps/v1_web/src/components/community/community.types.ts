@@ -8,6 +8,7 @@ export type ChatRoomModel = {
   unread: number;
   pinned?: boolean;
   initials: string;
+  avatarUrl?: string;
   actionPending?: boolean;
   onTogglePin?: () => void;
   onRequestLeave?: () => void;
@@ -35,15 +36,19 @@ export type ChatRoomViewModel = {
   title: string;
   context: { title: string; sub: string; href: string };
   messages: Array<{ id: string; who: 'me' | 'other' | 'system'; label: string; body: string }>;
+  status?: 'loading' | 'error' | 'ready';
+  emptyTitle?: string;
+  emptyBody?: string;
   draft?: string;
   sending?: boolean;
   onDraftChange?: (value: string) => void;
   onSend?: () => void;
+  onRetry?: () => void;
 };
 
 export type NotificationModel = {
   id: string;
-  group: '오늘' | '어제';
+  group: string;
   title: string;
   body: string;
   time: string;
@@ -56,6 +61,7 @@ export type NotificationsViewModel = {
   unreadCount: number;
   notifications: NotificationModel[];
   readAllPending?: boolean;
+  readAllToastVisible?: boolean;
   onReadAll?: () => void;
   onOpen?: (notification: NotificationModel) => void;
 };

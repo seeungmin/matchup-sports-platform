@@ -34,8 +34,8 @@ function getApiNotice(isLoading: boolean, isError: boolean, hasData: boolean, ma
 
   if (isError) {
     return {
-      title: '내 매치 API 연결에 실패했습니다',
-      body: '현재 화면에는 샘플 항목이 표시됩니다. 새로고침 후에도 반복되면 다시 시도해 주세요.',
+      title: '내 매치를 불러오지 못했습니다',
+      body: '일시적으로 최신 내역을 확인하지 못했습니다. 새로고침 후에도 반복되면 잠시 뒤 다시 시도해 주세요.',
       tone: 'warning',
     };
   }

@@ -1,6 +1,6 @@
 # V1 SM New E2E Scenario Matrix
 
-이 문서는 `Team Design > 1차 디자인 완료`의 17개 섹션을 기준으로 v1 E2E 시나리오를 정의한다.
+이 문서는 `Team Design > 1차 디자인 완료`의 18개 섹션을 기준으로 v1 E2E 시나리오를 정의한다.
 각 시나리오는 화면 흐름, API 계약, DB 상태 전이를 함께 검증하는 단위다.
 
 Scenario heading numbers and IDs preserve the source design numbers from
@@ -62,6 +62,7 @@ work can be checked directly against the design inventory.
 | 11 | `desktop-web` | `V1-11-*` Desktop Web |
 | 12 | `admin-ops-sm-revision` | `V1-12-*` Admin Operations |
 | 13 | `common-flows-motion` | `V1-13-*` Common Flows And Motion |
+| 14 | `reviews-post-event-sm-final` | `V1-14-*` Post-event Reviews |
 
 ## 00. Core Shell
 
@@ -457,6 +458,25 @@ All mutable v1 tables plus audit/status logs where applicable.
 | V1-13-004 | Mutation idempotency | Required mutations handle repeated `Idempotency-Key` and conflicting payloads |
 | V1-13-005 | Stale state conflict | Two actors changing same target produce latest-state recovery, not fake success |
 | V1-13-006 | Navigation after optimistic mutation | Navigation is not lost when mutation invalidates/reorders/unmounts list rows |
+
+## 14. Post-event Reviews
+
+Source design no: `14`
+
+Design section: `reviews-post-event-sm-final`
+
+Primary contracts:
+Reviewable completed schedules, review target eligibility, star rating, one selectable review tag, review submit.
+
+DB evidence:
+Completed match/team-match participation, review records, selected review tag, reputation summary update.
+
+| ID | Scenario | Expected E2E assertion |
+|---|---|---|
+| V1-14-001 | Review unlocks after completed schedule | Only completed schedules where the user was an approved participant appear in the review inbox |
+| V1-14-002 | Select target and submit tag-only review | User selects a target, star rating, and exactly one predefined tag; no free-text body is required or shown |
+| V1-14-003 | Duplicate review lock | Submitting the same reviewer/target/schedule twice returns existing state or conflict without duplicate records |
+| V1-14-004 | Ineligible schedule lock | Cancelled, not-participated, disputed, or expired schedules show a locked CTA with a concrete reason |
 
 ## Suggested Automation Files
 

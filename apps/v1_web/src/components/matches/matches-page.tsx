@@ -18,7 +18,7 @@ export function MatchListPageView({ model }: { model: MatchListViewModel }) {
       topBar={false}
       floatingSlot={<MatchCreateFloatingButton />}
     >
-      <MatchSearchBar query={model.query} filterCount={model.filterCount} />
+      <MatchSearchBar query={model.query} filterCount={model.filterCount} search={model.search} filterHref={model.filterHref} />
       <div className="tm-match-list">
         <SportSelector sports={model.sports} />
         <div className="tm-match-summary-row">
@@ -33,9 +33,14 @@ export function MatchListPageView({ model }: { model: MatchListViewModel }) {
           <span className="tm-badge tm-badge-blue">필터 {model.filterCount}</span>
         </div>
         <div className="tm-match-card-stack">
-          {model.matches.map((match, index) => <MatchCardItem key={match.id} match={match} index={index} />)}
+          {model.matches.length ? (
+            model.matches.map((match, index) => <MatchCardItem key={match.id} match={match} index={index} />)
+          ) : (
+            <EmptyState title="조건에 맞는 매치가 없어요" sub="다른 종목을 선택하거나 전체 매치로 돌아가면 모집 중인 매치를 볼 수 있습니다." />
+          )}
         </div>
       </div>
+      {model.filterSheet?.open ? <MatchFilterSheet model={model} /> : null}
     </AppChrome>
   );
 }
@@ -50,9 +55,9 @@ export function MatchStatePageView({ model }: { model: MatchStateViewModel }) {
         <EmptyState title={model.title} sub={model.description} />
         {model.state === 'error' ? (
           <Card pad={16} style={{ marginTop: 18, background: 'var(--grey50)' }}>
-            <div className="tm-text-label">아직 재시도 API가 연결되지 않았어요</div>
+            <div className="tm-text-label">목록으로 돌아가 다시 확인해 주세요</div>
             <div className="tm-text-caption" style={{ marginTop: 6, lineHeight: 1.55 }}>
-              지금은 목록으로 돌아가 상태를 확인할 수 있고, 실제 재시도 mutation은 API 바인딩 후 연결합니다.
+              새로고침 후에도 같은 문제가 반복되면 잠시 뒤 다시 시도해 주세요.
             </div>
             <Link className="tm-btn tm-btn-md tm-btn-neutral tm-btn-block" href="/matches" style={{ marginTop: 14 }}>목록으로 돌아가기</Link>
           </Card>
@@ -119,7 +124,7 @@ function MatchParticipantsPageView() {
         </div>
         <Card pad={14} style={{ marginTop: 16, background: 'var(--grey50)' }}>
           <div className="tm-text-label">참가자 관리는 상세/수정 플로우에서 연결됩니다</div>
-          <div className="tm-text-caption" style={{ marginTop: 5 }}>이 route는 참가자 상태 표현을 확인하기 위한 읽기 전용 fixture입니다.</div>
+          <div className="tm-text-caption" style={{ marginTop: 5 }}>참가자 승인 상태와 모집 정원을 한곳에서 확인할 수 있습니다.</div>
         </Card>
       </div>
     </AppChrome>
@@ -250,14 +255,54 @@ export function MatchCreatePageView({ model }: { model: MatchCreateViewModel }) 
   );
 }
 
-function MatchSearchBar({ query, filterCount }: { query: string; filterCount: number }) {
+function MatchSearchBar({ query, filterCount, search, filterHref = '/matches?filter=1' }: { query: string; filterCount: number; search?: MatchListViewModel['search']; filterHref?: string }) {
   return (
     <div className="tm-list-searchbar">
-      <Link className="tm-list-search-input" href="/search" aria-label="매치 검색">
-        <span className="tm-list-search-text">{query || '지역, 시간, 매치명 검색'}</span>
-        <SearchIcon size={19} strokeWidth={2} />
-      </Link>
-      <Link className="tm-list-filter-button" href="/matches/filter" aria-label={`필터 ${filterCount}개 적용`}>
+      <form
+        className="tm-list-search-form"
+        onBlur={(event) => {
+          if (!(event.relatedTarget instanceof Node) || !event.currentTarget.contains(event.relatedTarget)) {
+            search?.onBlur();
+          }
+        }}
+        onSubmit={(event) => {
+          event.preventDefault();
+          search?.onSubmit();
+        }}
+      >
+        <div className={`tm-list-search-input tm-list-search-input-field ${search?.isOpen ? 'tm-list-search-input-active' : ''}`} aria-label="매치 검색">
+          <input
+            aria-label="매치 검색어"
+            className="tm-list-search-field"
+            onChange={(event) => search?.onChange(event.target.value)}
+            onFocus={search?.onFocus}
+            placeholder={search?.placeholder ?? '지역, 시간, 매치명 검색'}
+            value={search?.value ?? query}
+          />
+          {search?.value ? (
+            <button className="tm-list-search-clear" type="button" aria-label="검색어 지우기" onClick={search.onClear}>
+              ×
+            </button>
+          ) : null}
+          <button className="tm-list-search-submit" type="submit" aria-label="검색">
+            <SearchIcon size={19} strokeWidth={2} />
+          </button>
+        </div>
+        {search?.isOpen ? (
+          <div className="tm-list-search-dropdown">
+            <div className="tm-list-search-dropdown-title">최근 검색</div>
+            {search.isLoading ? <div className="tm-list-search-empty">불러오는 중</div> : null}
+            {!search.isLoading && search.recentItems.length === 0 ? <div className="tm-list-search-empty">최근 검색어가 없습니다</div> : null}
+            {search.recentItems.map((item) => (
+              <button key={item.id} className="tm-list-search-recent" type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => search.onSelectRecent(item.query)}>
+                <span>{item.query}</span>
+                <SearchIcon size={16} strokeWidth={2} />
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </form>
+      <Link className="tm-list-filter-button" href={filterHref} aria-label={`필터 ${filterCount}개 적용`}>
         <FilterIcon size={21} strokeWidth={2} />
         <span className="tm-list-filter-count tab-num">{filterCount}</span>
       </Link>
@@ -265,8 +310,69 @@ function MatchSearchBar({ query, filterCount }: { query: string; filterCount: nu
   );
 }
 
+function MatchFilterSheet({ model }: { model: MatchListViewModel }) {
+  const sheet = model.filterSheet;
+  if (!sheet) return null;
+
+  return (
+    <>
+      <Link className="tm-filter-scrim" href={sheet.closeHref} aria-label="필터 닫기" />
+      <section className="tm-filter-sheet" aria-label="매치 필터">
+        <div className="tm-filter-sheet-handle" />
+        <div className="tm-filter-sheet-head">
+          <div>
+            <div className="tm-text-subhead">필터</div>
+            <div className="tm-text-caption" style={{ marginTop: 2 }}>정렬과 보기 방식만 조정</div>
+          </div>
+          <Link className="tm-btn tm-btn-sm tm-btn-ghost" href={sheet.resetHref} style={{ color: 'var(--text-caption)' }}>초기화</Link>
+        </div>
+        <div className="tm-filter-section">
+          <div className="tm-text-label">정렬</div>
+          <div className="tm-filter-chip-wrap">
+            {sheet.sortOptions.map((option) => (
+              <Link key={option.value} className={`tm-chip ${option.active ? 'tm-chip-active' : ''}`} href={option.href}>{option.label}</Link>
+            ))}
+          </div>
+        </div>
+        <div className="tm-filter-section">
+          <div className="tm-text-label">보기 방식</div>
+          <div className="tm-filter-view-grid">
+            {sheet.viewOptions.map((option) => (
+              <Link key={option.value} className={`tm-filter-view-option ${option.active ? 'tm-filter-view-option-active' : ''}`} href={option.href}>
+                <span className="tm-text-label">{option.label}</span>
+                <span className="tm-text-micro">{option.description}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+        <div className="tm-filter-actions">
+          <Link className="tm-btn tm-btn-lg tm-btn-neutral" href={sheet.closeHref}>닫기</Link>
+          <Link className="tm-btn tm-btn-lg tm-btn-primary" href={sheet.applyHref}>적용하기</Link>
+        </div>
+      </section>
+    </>
+  );
+}
+
 function SportSelector({ sports }: { sports: MatchListViewModel['sports'] }) {
-  return <div className="tm-sport-chip-row">{sports.map((sport) => <button key={sport.label} className={`tm-chip ${sport.active ? 'tm-chip-active' : ''}`} type="button">{sport.label} <span className="tab-num">{sport.count}</span></button>)}</div>;
+  return (
+    <div className="tm-sport-chip-row">
+      {sports.map((sport) => {
+        const className = `tm-chip ${sport.active ? 'tm-chip-active' : ''}`;
+        const content = <>{sport.label} <span className="tab-num">{sport.count}</span></>;
+
+        return sport.href ? (
+          <Link key={sport.label} className={className} href={sport.href}>
+            {content}
+          </Link>
+        ) : (
+          <button key={sport.label} className={className} type="button">
+            {content}
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 function MatchCardItem({ match, index }: { match: MatchCardModel; index: number }) {
@@ -322,7 +428,7 @@ function CreateProgress({ step, edit }: { step: number; edit: boolean }) {
 }
 
 function SportStep({ model }: { model: MatchCreateViewModel }) {
-  return <div><h1 className="tm-text-heading">어떤 종목인가요?</h1><p className="tm-text-body" style={{ marginTop: 8 }}>매치 목록의 종목 chip과 같은 기준으로 생성 후 필터에 반영됩니다.</p><div className="tm-create-sport-grid">{model.sports.map((sport) => <button key={sport} className={`tm-card tm-pressable ${sport === model.selectedSport ? 'tm-create-selected' : ''}`} style={{ padding: 16, textAlign: 'left' }} type="button" onClick={() => model.form?.onSelectSport(sport)}><div className="tm-text-body-lg">{sport}</div><div className="tm-text-caption" style={{ marginTop: 5 }}>{sport === model.selectedSport ? '선택됨' : '선택 가능'}</div></button>)}</div></div>;
+  return <div><h1 className="tm-text-heading">어떤 종목인가요?</h1><p className="tm-text-body" style={{ marginTop: 8 }}>함께 할 종목을 선택해 주세요.</p><div className="tm-create-sport-grid">{model.sports.map((sport) => <button key={sport} className={`tm-card tm-pressable ${sport === model.selectedSport ? 'tm-create-selected' : ''}`} style={{ padding: 16, textAlign: 'left' }} type="button" onClick={() => model.form?.onSelectSport(sport)}><div className="tm-text-body-lg">{sport}</div><div className="tm-text-caption" style={{ marginTop: 5 }}>{sport === model.selectedSport ? '선택됨' : '선택 가능'}</div></button>)}</div></div>;
 }
 
 function InfoStep({ model, edit }: { model: MatchCreateViewModel; edit: boolean }) {
@@ -333,16 +439,16 @@ function InfoStep({ model, edit }: { model: MatchCreateViewModel; edit: boolean 
       <CreateField label="매치 제목" value={draft.title} onChange={(value) => model.form?.onFieldChange('title', value)} />
       <CreateField label="설명" value={draft.description} multiline onChange={(value) => model.form?.onFieldChange('description', value)} />
       <Card pad={0} style={{ marginTop: 14, overflow: 'hidden' }}>
-        <div className="tm-create-image-preview" style={{ backgroundImage: `url(${draft.image})` }}><span className="tm-badge tm-badge-grey">예시 이미지</span></div>
+        <div className="tm-create-image-preview" style={{ backgroundImage: `url(${draft.image})` }}><span className="tm-badge tm-badge-grey">대표 이미지</span></div>
         <div style={{ padding: 14 }}>
           <button className="tm-btn tm-btn-md tm-btn-neutral tm-btn-block" type="button">+ 이미지 업로드</button>
-          <div className="tm-text-caption" style={{ marginTop: 8 }}>선택된 파일 없음 · 예시 이미지는 제출 데이터에 포함되지 않아요.</div>
+          <div className="tm-text-caption" style={{ marginTop: 8 }}>대표 이미지를 추가하면 목록과 상세 화면에 함께 표시됩니다.</div>
         </div>
       </Card>
       <div className="tm-create-two-col"><CreateField label="최대 인원" value={`${draft.capacity}`} type="number" onChange={(value) => model.form?.onFieldChange('capacity', Number(value))} /><CreateField label="신청 방식" value={draft.actionLabel} /></div>
       <div className="tm-create-two-col"><CreateField label="최소 레벨" value={draft.minLevel} onChange={(value) => model.form?.onFieldChange('minLevel', value)} /><CreateField label="최대 레벨" value={draft.maxLevel} onChange={(value) => model.form?.onFieldChange('maxLevel', value)} /></div>
       <CreateField label="규칙" value={draft.rules} multiline onChange={(value) => model.form?.onFieldChange('rules', value)} />
-      {edit ? <StateCard tone="orange" title="수정 모드" body="기존 값은 prefill되고 변경사항만 저장합니다. 저장 실패 시 입력값을 유지합니다." /> : null}
+      {edit ? <StateCard tone="orange" title="변경사항 저장" body="저장에 실패하면 입력한 내용을 유지한 채 다시 시도할 수 있습니다." /> : null}
     </div>
   );
 }
@@ -354,7 +460,7 @@ function PlaceTimeStep({ model }: { model: MatchCreateViewModel }) {
 
 function ConfirmStep({ model }: { model: MatchCreateViewModel }) {
   const draft = model.draft;
-  return <div><h1 className="tm-text-heading">작성된 내용을 확인해주세요</h1><Card pad={0} style={{ marginTop: 16, overflow: 'hidden' }}><div className="tm-create-image-preview" style={{ backgroundImage: `url(${draft.image})` }} /><div style={{ padding: 16 }}><div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}><span className="tm-badge tm-badge-blue">{model.selectedSport}</span><span className="tm-badge tm-badge-grey">{draft.minLevel}-{draft.maxLevel}</span><span className="tm-badge tm-badge-grey">{draft.gender}</span></div><div className="tm-text-subhead" style={{ marginTop: 10 }}>{draft.title}</div><div className="tm-text-caption" style={{ marginTop: 6 }}>{draft.description}</div></div></Card><Card pad={16} style={{ marginTop: 12 }}><InfoRow label="일시" value={`${draft.date} ${draft.startTime}-${draft.endTime}`} /><InfoRow label="장소" value={draft.venue} sub={draft.address} /><InfoRow label="인원/신청 방식" value={`최대 ${draft.capacity}명 · ${draft.actionLabel}`} /><InfoRow label="이미지" value="선택된 파일 없음" sub="예시 이미지는 저장되지 않음" /></Card></div>;
+  return <div><h1 className="tm-text-heading">작성된 내용을 확인해주세요</h1><Card pad={0} style={{ marginTop: 16, overflow: 'hidden' }}><div className="tm-create-image-preview" style={{ backgroundImage: `url(${draft.image})` }} /><div style={{ padding: 16 }}><div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}><span className="tm-badge tm-badge-blue">{model.selectedSport}</span><span className="tm-badge tm-badge-grey">{draft.minLevel}-{draft.maxLevel}</span><span className="tm-badge tm-badge-grey">{draft.gender}</span></div><div className="tm-text-subhead" style={{ marginTop: 10 }}>{draft.title}</div><div className="tm-text-caption" style={{ marginTop: 6 }}>{draft.description}</div></div></Card><Card pad={16} style={{ marginTop: 12 }}><InfoRow label="일시" value={`${draft.date} ${draft.startTime}-${draft.endTime}`} /><InfoRow label="장소" value={draft.venue} sub={draft.address} /><InfoRow label="인원/신청 방식" value={`최대 ${draft.capacity}명 · ${draft.actionLabel}`} /><InfoRow label="이미지" value="대표 이미지" sub="목록과 상세 화면에 표시됩니다" /></Card></div>;
 }
 
 function MatchComplete({ model }: { model: MatchCreateViewModel }) {

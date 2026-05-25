@@ -20,13 +20,13 @@ const teams = [
     tags: ['초보-중수', '주 1회', '친선'],
     intro: '주 1회 정기적으로 풋살을 즐기는 동네 팀입니다. 초보-중수 멤버와 빠른 응답을 중요하게 봅니다.',
     fit: 94,
-    manner: 4.9,
+    manner: '4.9',
     trust: 'verified' as const,
     next: '오늘 21:00 정기전',
   },
   {
     id: 'team-2',
-    name: '강동 위클리 풋살',
+    name: '강동 애슬레틱 풋살',
     logo: '강',
     sport: '풋살',
     sports: ['풋살'],
@@ -35,15 +35,15 @@ const teams = [
     status: 'reviewing' as const,
     statusLabel: '검토중',
     tags: ['중수', '평일 저녁', '리그 준비'],
-    intro: '평일 저녁 풋살 위주로 운영하는 팀입니다. 가입 신청은 운영진 검토 후 확정됩니다.',
+    intro: '평일 저녁 풋살 위주로 운영하는 팀입니다. 가입 신청은 운영진 검토 후 확정합니다.',
     fit: 88,
-    manner: 4.7,
+    manner: '4.7',
     trust: 'estimated' as const,
-    next: '가입 신청 검토 중',
+    next: '가입 신청 검토중',
   },
   {
     id: 'team-3',
-    name: '마포 선데이 FC',
+    name: '마포 원데이 FC',
     logo: '마',
     sport: '축구',
     sports: ['축구', '풋살'],
@@ -54,11 +54,137 @@ const teams = [
     tags: ['11:11', '주말', 'A등급'],
     intro: '주말 11:11 경기를 꾸준히 하는 팀입니다. 현재 모집은 닫혀 있어 다음 모집 알림만 받을 수 있습니다.',
     fit: 76,
-    manner: 4.6,
-    trust: 'sample' as const,
+    manner: '-',
+    trust: 'none' as const,
     next: '다음 모집 알림 가능',
   },
+  {
+    id: 'team-4',
+    name: '내 팀 다이나믹 FS',
+    logo: '다',
+    sport: '풋살',
+    sports: ['풋살', '러닝'],
+    region: '서울 구로',
+    members: 14,
+    status: 'mine' as const,
+    statusLabel: '내 팀',
+    tags: ['팀장', '팀매치 운영', '친선'],
+    intro: '내가 관리하는 풋살 팀입니다. 팀 소개, 멤버 권한, 모집 상태와 팀매치 생성을 관리할 수 있습니다.',
+    fit: 100,
+    manner: '4.8',
+    trust: 'verified' as const,
+    next: '신청 3명 검토 필요',
+  },
 ];
+
+const teamByMode: Record<TeamDetailViewModel['mode'], (typeof teams)[number]> = {
+  default: teams[0],
+  pending: teams[1],
+  closed: teams[2],
+  mine: teams[3],
+};
+
+const detailByMode: Record<TeamDetailViewModel['mode'], Pick<TeamDetailViewModel['team'], 'description' | 'activity' | 'condition' | 'trustNote' | 'schedule' | 'city' | 'county' | 'level' | 'contact' | 'links' | 'images' | 'membersList'>> = {
+  default: {
+    description: '성수와 광진권에서 풋살 정기전을 운영하는 팀입니다. 신규 멤버는 2주 체험 후 정식 가입으로 전환합니다.',
+    activity: '주 1회 정기전 · 신규 멤버 3명 모집',
+    condition: '풋살 초보-중수 · 성동/광진권 활동 가능',
+    trustNote: '검증됨 · 최근 경기 12회 · 신고 0건',
+    schedule: '매주 목 21:00 · 성수 풋살파크',
+    city: '서울',
+    county: '성동구',
+    level: '초보-중수',
+    contact: '비공개',
+    links: [
+      { label: 'Instagram', value: 'https://instagram.com/seongsu-runners' },
+      { label: 'Kakao', value: 'https://open.kakao.com/seongsu-runners' },
+      { label: 'Website', value: '등록된 링크 없음' },
+    ],
+    images: [
+      { title: '로고 이미지', count: 1 },
+      { title: '커버 이미지', count: 1 },
+      { title: '추가 사진', count: 3, max: 10 },
+      { title: '활동 사진', count: 2, example: true },
+    ],
+    membersList: [
+      { name: '김도윤', role: '팀장', meta: 'FW · 매너 4.9', status: '관리자' },
+      { name: '박서준', role: '운영진', meta: 'GK · 매너 4.8', status: '관리자' },
+      { name: '이하나', role: '멤버', meta: 'MF · 최근 4경기', status: '활동중' },
+    ],
+  },
+  pending: {
+    description: '가입 신청이 접수된 팀입니다. 운영진이 프로필, 활동 지역, 최근 매치 이력을 검토하고 있습니다.',
+    activity: '평일 저녁 정기전 · 운영진 검토 후 가입',
+    condition: '풋살 중수 · 평일 저녁 참여 가능',
+    trustNote: '추정 · 최근 경기 8회',
+    schedule: '매주 화 20:00 · 강동 풋살파크',
+    city: '서울',
+    county: '강동구',
+    level: '중수',
+    contact: '승인 후 공개',
+    links: [
+      { label: 'Kakao', value: '승인 후 공개' },
+      { label: 'Website', value: '등록된 링크 없음' },
+    ],
+    images: [
+      { title: '로고 이미지', count: 1 },
+      { title: '커버 이미지', count: 1 },
+      { title: '활동 사진', count: 2, max: 10 },
+    ],
+    membersList: [
+      { name: '운영진', role: '관리자', meta: '가입 신청 검토중', status: '검토중' },
+      { name: '나', role: '신청자', meta: '가입 승인 대기', status: '검토중' },
+    ],
+  },
+  closed: {
+    description: '현재 모집이 마감된 축구 팀입니다. 다음 모집이 열리면 알림을 받을 수 있습니다.',
+    activity: '주말 11:11 정기전 · 현재 모집 마감',
+    condition: '축구 A등급 · 주말 고정 참여',
+    trustNote: '참고 · 공개된 신뢰 점수 없음',
+    schedule: '매주 일 09:00 · 상암 보조구장',
+    city: '서울',
+    county: '마포구',
+    level: '중수-고수',
+    contact: '비공개',
+    links: [
+      { label: 'Instagram', value: 'https://instagram.com/mapo-oneday' },
+      { label: 'Kakao', value: '모집 재개 후 공개' },
+    ],
+    images: [
+      { title: '로고 이미지', count: 1 },
+      { title: '커버 이미지', count: 1 },
+      { title: '활동 사진', count: 4, max: 10 },
+    ],
+    membersList: [
+      { name: '모집 상태', role: '마감', meta: '다음 모집 알림 가능', status: '마감' },
+    ],
+  },
+  mine: {
+    description: '내가 관리하는 팀입니다. 팀 정보, 멤버 권한, 가입 신청, 팀매치 생성과 수정 흐름으로 이동할 수 있습니다.',
+    activity: '팀매치 운영중 · 가입 신청 3명 검토 필요',
+    condition: '풋살 초보-중수 · 구로/영등포권',
+    trustNote: '검증됨 · 최근 경기 10회 · 신고 0건',
+    schedule: '매주 금 21:00 · 신도림 풋살파크',
+    city: '서울',
+    county: '구로구',
+    level: '초보-중수',
+    contact: '팀장에게만 공개',
+    links: [
+      { label: 'Kakao', value: 'https://open.kakao.com/dynamic-fs' },
+      { label: 'Website', value: '등록된 링크 없음' },
+    ],
+    images: [
+      { title: '로고 이미지', count: 1 },
+      { title: '커버 이미지', count: 1 },
+      { title: '추가 사진', count: 5, max: 10 },
+    ],
+    membersList: [
+      { name: '나', role: '팀장', meta: '모든 권한', status: '팀장' },
+      { name: '정하늘', role: '운영진', meta: '가입 승인 가능', status: '관리자' },
+      { name: '문태오', role: '멤버', meta: '최근 3경기', status: '활동중' },
+    ],
+  },
+};
 
 export function getTeamListViewModel(): TeamListViewModel {
   return {
@@ -76,7 +202,7 @@ export function getTeamStateViewModel(state: TeamStateViewModel['state']): TeamS
   const copy = {
     search: {
       title: '팀 검색',
-      description: '검색어가 입력된 팀 둘러보기 상태를 확인하는 QA용 fixture입니다.',
+      description: '팀명, 지역, 종목으로 가입 가능한 팀을 찾아보세요.',
       query: '풋살',
       teams,
     },
@@ -88,13 +214,13 @@ export function getTeamStateViewModel(state: TeamStateViewModel['state']): TeamS
     },
     error: {
       title: '팀 목록을 불러오지 못했어요',
-      description: '네트워크 또는 API 연결 상태를 확인한 뒤 목록으로 돌아가 다시 시도해주세요.',
+      description: '일시적으로 목록을 불러오지 못했습니다. 잠시 뒤 다시 시도해 주세요.',
       query: '풋살',
       teams: [],
     },
     filter: {
       title: '팀 필터',
-      description: '현재 선택된 팀 조건을 확인하는 QA용 fixture입니다. 실제 적용은 목록 API 바인딩 후 연결합니다.',
+      description: '지역, 종목, 모집 상태를 선택해 나에게 맞는 팀을 찾아보세요.',
       query: '',
       teams,
     },
@@ -117,35 +243,13 @@ export function getTeamStateViewModel(state: TeamStateViewModel['state']): TeamS
 }
 
 export function getTeamDetailViewModel(mode: TeamDetailViewModel['mode'] = 'default'): TeamDetailViewModel {
+  const team = teamByMode[mode];
   return {
     mode,
+    ctaLabel: mode === 'mine' ? '팀 관리' : mode === 'pending' ? '신청 상태 보기' : mode === 'closed' ? '모집 알림 받기' : '가입 신청',
     team: {
-      ...teams[0],
-      description: '성수와 광진권에서 풋살 정기전을 운영하는 팀입니다. 신규 멤버는 2주 체험 후 정식 가입으로 전환합니다.',
-      activity: '주 1회 정기전 · 신규 멤버 3명 모집',
-      condition: '풋살 초보-중수 · 성동/광진권 활동 가능',
-      trustNote: 'verified · 최근 경기 12회 · 신고 0건',
-      schedule: '매주 화 21:00 · 성수 풋살파크',
-      city: '서울',
-      county: '성동구',
-      level: '초보-중수',
-      contact: '비공개',
-      links: [
-        { label: 'Instagram', value: 'https://instagram.com/seongsu-runners' },
-        { label: 'Kakao', value: 'https://open.kakao.com/seongsu-runners' },
-        { label: 'Website', value: '등록된 링크 없음' },
-      ],
-      images: [
-        { title: '로고 이미지', count: 1 },
-        { title: '커버 이미지', count: 1 },
-        { title: '추가 사진', count: 3, max: 10 },
-        { title: '예시 이미지', count: 2, example: true },
-      ],
-      membersList: [
-        { name: '김도윤', role: '팀장', meta: 'FW · 매너 4.9', status: '관리자' },
-        { name: '박서준', role: '운영진', meta: 'GK · 매너 4.8', status: '관리자' },
-        { name: '이하늘', role: '멤버', meta: 'MF · 최근 4경기', status: '활동중' },
-      ],
+      ...team,
+      ...detailByMode[mode],
     },
   };
 }
@@ -180,10 +284,10 @@ export function getTeamMembersViewModel(): TeamMembersViewModel {
     members: [
       { name: '김도윤', role: '팀장', meta: 'FW · 가입 2024.03', status: '팀장', locked: true },
       { name: '박서준', role: '운영진', meta: 'GK · 가입 2024.05', status: '관리자' },
-      { name: '이하늘', role: '멤버', meta: 'MF · 최근 4경기', status: '활동중' },
+      { name: '이하나', role: '멤버', meta: 'MF · 최근 4경기', status: '활동중' },
     ],
     requests: [
-      { name: '정민호', meta: '초보-중수 · 성동 · 풋살 2년', status: '검토중' },
+      { name: '정하늘', meta: '초보-중수 · 성동 · 풋살 2년', status: '검토중' },
       { name: '최유진', meta: '초보 · 광진 · 평일 가능', status: '검토중' },
     ],
   };

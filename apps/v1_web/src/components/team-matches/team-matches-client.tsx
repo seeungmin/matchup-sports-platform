@@ -1,8 +1,13 @@
 'use client';
 
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
 import {
   useV1ApplyTeamMatch,
   useV1ApproveTeamMatchApplication,
+  useV1MasterSports,
+  useV1RecentSearches,
+  useV1RecordSearch,
   useV1RejectTeamMatchApplication,
   useV1TeamMatch,
   useV1TeamMatchApplications,
@@ -20,23 +25,112 @@ import {
 } from './team-matches.view-model';
 
 export function TeamMatchListPageClient() {
-  const query = useV1TeamMatches();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const selectedSportId = searchParams.get('sportId') ?? undefined;
+  const selectedSort = toTeamMatchSort(searchParams.get('sort'));
+  const selectedView = toTeamMatchView(searchParams.get('view'));
+  const filterOpen = searchParams.get('filter') === '1';
+  const initialQuery = searchParams.get('q') ?? '';
+  const [searchValue, setSearchValue] = useState(initialQuery);
+  const [submittedQuery, setSubmittedQuery] = useState(initialQuery);
+  const [searchOpen, setSearchOpen] = useState(false);
+  useEffect(() => {
+    setSearchValue(initialQuery);
+    setSubmittedQuery(initialQuery);
+  }, [initialQuery]);
+  const sportsQuery = useV1MasterSports();
+  const allQuery = useV1TeamMatches();
+  const teamMatchFilters = useMemo(() => {
+    const filters: { sportId?: string; query?: string; sort?: 'recommended' | 'deadline'; view?: 'card' | 'compact' } = {};
+    if (selectedSportId) filters.sportId = selectedSportId;
+    if (submittedQuery.trim()) filters.query = submittedQuery.trim();
+    if (selectedSort === 'deadline') filters.sort = 'deadline';
+    if (selectedView !== 'card') filters.view = selectedView;
+    return Object.keys(filters).length ? filters : undefined;
+  }, [selectedSportId, selectedSort, selectedView, submittedQuery]);
+  const filteredQuery = useV1TeamMatches(
+    teamMatchFilters,
+    { enabled: Boolean(teamMatchFilters) },
+  );
+  const recentSearches = useV1RecentSearches();
+  const recordSearch = useV1RecordSearch();
+  const query = teamMatchFilters ? filteredQuery : allQuery;
 
   if (query.isError) return <TeamMatchStatePageView model={getTeamMatchStateViewModel('error')} />;
 
   const base = getTeamMatchListViewModel();
   const items = query.data?.items;
+  const allItems = allQuery.data?.items ?? items ?? [];
+  const searchModel: NonNullable<TeamMatchListViewModel['search']> = {
+    value: searchValue,
+    placeholder: '지역, 팀 이름, 경기조건 검색',
+    recentItems: (recentSearches.data?.items ?? []).slice(0, 5).map((item) => ({ id: item.id, query: item.query })),
+    isOpen: searchOpen,
+    isLoading: recentSearches.isLoading,
+    onFocus: () => setSearchOpen(true),
+    onBlur: () => setSearchOpen(false),
+    onChange: setSearchValue,
+    onSubmit: () => submitSearch(searchValue),
+    onClear: clearSearch,
+    onSelectRecent: (value) => {
+      setSearchValue(value);
+      submitSearch(value, { source: 'recent' });
+    },
+  };
   const model: TeamMatchListViewModel = items
     ? {
         ...base,
+        query: submittedQuery,
+        search: searchModel,
+        filterHref: buildTeamMatchHref(searchParams, { filter: '1' }),
+        filterSheet: buildTeamMatchFilterSheet(searchParams, selectedSort, selectedView, filterOpen),
+        sports: buildSportChips({
+          base,
+          sports: sportsQuery.data,
+          matches: allItems,
+          selectedSportId,
+        }),
         matches: items.map((item, index) => toTeamMatch(item, base.matches[index] ?? base.matches[0])),
         summary: { ...base.summary, count: items.length, today: items.length },
       }
-    : base;
-
-  if (items && items.length === 0) return <TeamMatchStatePageView model={getTeamMatchStateViewModel('empty')} />;
+    : {
+        ...base,
+        query: submittedQuery,
+        search: searchModel,
+        filterHref: buildTeamMatchHref(searchParams, { filter: '1' }),
+        filterSheet: buildTeamMatchFilterSheet(searchParams, selectedSort, selectedView, filterOpen),
+        sports: buildSportChips({
+          base,
+          sports: sportsQuery.data,
+          matches: allItems,
+          selectedSportId,
+        }),
+      };
 
   return <TeamMatchListPageView model={model} />;
+
+  function submitSearch(value: string, options?: { source?: string }) {
+    const nextQuery = value.trim();
+    setSearchValue(nextQuery);
+    setSubmittedQuery(nextQuery);
+    setSearchOpen(false);
+    updateTeamMatchUrl(nextQuery);
+    if (nextQuery) {
+      recordSearch.mutate({ query: nextQuery, filters: { domain: 'team-matches', source: options?.source ?? 'team-matches' } });
+    }
+  }
+
+  function clearSearch() {
+    setSearchValue('');
+    setSubmittedQuery('');
+    setSearchOpen(false);
+    updateTeamMatchUrl('');
+  }
+
+  function updateTeamMatchUrl(nextQuery: string) {
+    router.replace(buildTeamMatchHref(searchParams, { q: nextQuery || null, filter: null }), { scroll: false });
+  }
 }
 
 export function TeamMatchDetailPageClient({ teamMatchId }: { teamMatchId: string }) {
@@ -104,6 +198,88 @@ function toTeamMatch(match: V1TeamMatch, fallback: TeamMatchModel): TeamMatchMod
   };
 }
 
+function buildSportChips({
+  base,
+  sports,
+  matches,
+  selectedSportId,
+}: {
+  base: TeamMatchListViewModel;
+  sports?: Array<{ id: string; name: string }>;
+  matches: V1TeamMatch[];
+  selectedSportId?: string;
+}): TeamMatchListViewModel['sports'] {
+  const fixedSports = sports?.length
+    ? sports.slice(0, 4)
+    : base.sports.slice(1, 5).map((sport) => ({ id: sport.label, name: sport.label }));
+
+  return [
+    {
+      label: base.sports[0]?.label ?? '전체',
+      count: matches.length,
+      active: !selectedSportId,
+      href: '/team-matches',
+    },
+    ...fixedSports.map((sport) => ({
+      label: sport.name,
+      count: matches.filter((match) => {
+        const matchSport = match.sport;
+        return matchSport?.sportId === sport.id || matchSport?.name === sport.name || match.sportName === sport.name;
+      }).length,
+      active: selectedSportId === sport.id,
+      href: `/team-matches?sportId=${encodeURIComponent(sport.id)}`,
+    })),
+  ];
+}
+
+function buildTeamMatchFilterSheet(
+  params: URLSearchParams,
+  sort: NonNullable<TeamMatchListViewModel['filterSheet']>['sort'],
+  view: NonNullable<TeamMatchListViewModel['filterSheet']>['view'],
+  open: boolean,
+): NonNullable<TeamMatchListViewModel['filterSheet']> {
+  const sortOptions: NonNullable<TeamMatchListViewModel['filterSheet']>['sortOptions'] = [
+    { label: '추천순', value: 'recommended', href: buildTeamMatchHref(params, { sort: 'recommended', filter: '1' }), active: sort === 'recommended' },
+    { label: '마감임박', value: 'deadline', href: buildTeamMatchHref(params, { sort: 'deadline', filter: '1' }), active: sort === 'deadline' },
+    { label: '등급높은순', value: 'grade', href: buildTeamMatchHref(params, { sort: 'grade', filter: '1' }), active: sort === 'grade' },
+    { label: '가격낮은순', value: 'price', href: buildTeamMatchHref(params, { sort: 'price', filter: '1' }), active: sort === 'price' },
+  ];
+  const viewOptions: NonNullable<TeamMatchListViewModel['filterSheet']>['viewOptions'] = [
+    { label: '카드형', value: 'card', description: 'VS 히어로와 팀 정보', href: buildTeamMatchHref(params, { view: 'card', filter: '1' }), active: view === 'card' },
+    { label: '콤팩트형', value: 'compact', description: '더 많은 팀매치 비교', href: buildTeamMatchHref(params, { view: 'compact', filter: '1' }), active: view === 'compact' },
+  ];
+
+  return {
+    open,
+    closeHref: buildTeamMatchHref(params, { filter: null }),
+    resetHref: buildTeamMatchHref(params, { sort: null, view: null, filter: '1' }),
+    applyHref: buildTeamMatchHref(params, { filter: null }),
+    sort,
+    view,
+    sortOptions,
+    viewOptions,
+  };
+}
+
+function buildTeamMatchHref(params: URLSearchParams, overrides: Record<string, string | null>) {
+  const next = new URLSearchParams(params.toString());
+  Object.entries(overrides).forEach(([key, value]) => {
+    if (value === null || value === '') next.delete(key);
+    else next.set(key, value);
+  });
+  const queryString = next.toString();
+  return queryString ? `/team-matches?${queryString}` : '/team-matches';
+}
+
+function toTeamMatchSort(value: string | null): NonNullable<TeamMatchListViewModel['filterSheet']>['sort'] {
+  if (value === 'deadline' || value === 'grade' || value === 'price') return value;
+  return 'recommended';
+}
+
+function toTeamMatchView(value: string | null): NonNullable<TeamMatchListViewModel['filterSheet']>['view'] {
+  return value === 'compact' ? 'compact' : 'card';
+}
+
 function toApplicantTeams(
   match: V1TeamMatch,
   fallback: TeamMatchDetailViewModel['match']['applicantTeams'],
@@ -118,7 +294,7 @@ function toApplicantTeams(
   if (applications?.length) {
     return applications.map((application) => ({
       name: application.applicantTeam.name,
-      meta: `${application.applicantTeam.score ?? '평가 전'} · ${application.applicantTeam.matchCount}경기${application.message ? ` · ${application.message}` : ''}`,
+      meta: `${application.applicantTeam.score ?? '-'} · ${application.applicantTeam.matchCount}경기${application.message ? ` · ${application.message}` : ''}`,
       status: application.status === 'requested' ? '신청대기' : application.status,
       actionPending: actions?.pending,
       onApprove: application.status === 'requested' && actions ? () => actions.approve(application.applicationId) : undefined,

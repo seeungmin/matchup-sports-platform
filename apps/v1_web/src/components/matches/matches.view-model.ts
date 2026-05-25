@@ -9,10 +9,10 @@ import type {
 const matches = [
   {
     id: 'match-1',
-    title: '주말 풋살 한판!',
+    title: '주말 풋살 초보 환영 매치',
     sport: '풋살',
     venue: '안양천 풋살장',
-    region: '양천',
+    region: '목동',
     date: '5월 16일 토',
     time: '18:00',
     current: 8,
@@ -26,10 +26,10 @@ const matches = [
   },
   {
     id: 'match-2',
-    title: '잠실 아침 러닝',
+    title: '아침 러닝 5km 함께 뛰어요',
     sport: '러닝',
     venue: '잠실한강공원',
-    region: '강남',
+    region: '송파',
     date: '5월 17일 일',
     time: '07:30',
     current: 5,
@@ -38,12 +38,12 @@ const matches = [
     level: '중수',
     host: '박서준',
     image: '/mock/generated/team-huddle.webp',
-    deadline: '마감 임박',
+    deadline: '호스트 검토중',
     status: 'pending' as const,
   },
   {
     id: 'match-3',
-    title: '마포 자유수영 레인',
+    title: '마포 자유수영 레인 공유',
     sport: '수영',
     venue: '마포 스포츠센터',
     region: '마포',
@@ -55,14 +55,14 @@ const matches = [
     level: '입문-초보',
     host: '이하나',
     image: '/mock/generated/team-huddle.webp',
-    deadline: '2일 남음',
+    deadline: '참가 확정',
     status: 'approved' as const,
   },
   {
     id: 'match-4',
-    title: '상암 축구 친선경기',
+    title: '영암 축구 친선경기',
     sport: '축구',
-    venue: '상암월드컵경기장 보조구장',
+    venue: '영암월드컵경기장 보조구장',
     region: '목동',
     date: '5월 20일 수',
     time: '21:00',
@@ -70,15 +70,80 @@ const matches = [
     capacity: 20,
     actionLabel: '모집 완료',
     level: '중수-고수',
-    host: '오현우',
+    host: '윤현우',
     image: '/mock/generated/team-huddle.webp',
     deadline: '모집 완료',
     status: 'full' as const,
   },
+  {
+    id: 'match-5',
+    title: '내가 만든 저녁 농구 픽업',
+    sport: '농구',
+    venue: '성수 실내체육관',
+    region: '성수',
+    date: '5월 21일 목',
+    time: '19:30',
+    current: 6,
+    capacity: 10,
+    actionLabel: '매치 관리',
+    level: '초보-중수',
+    host: '나',
+    image: '/mock/generated/team-huddle.webp',
+    deadline: '신청 3명 검토중',
+    status: 'mine' as const,
+  },
 ];
 
+const matchDetailByMode: Record<MatchDetailViewModel['mode'], (typeof matches)[number]> = {
+  default: matches[0],
+  pending: matches[1],
+  approved: matches[2],
+  mine: matches[4],
+};
+
+const detailCopy: Record<MatchDetailViewModel['mode'], Pick<MatchDetailViewModel['match'], 'description' | 'address' | 'rules' | 'participants'>> = {
+  default: {
+    description: '초보도 편하게 참여할 수 있는 주말 풋살 매치입니다. 경기 전 10분 일찍 모여 팀을 나누고 가볍게 몸을 풉니다.',
+    address: '서울 양천구 안양천로 939',
+    rules: ['풋살화 착용', '개인 물 지참', '지각 시 호스트에게 미리 연락'],
+    participants: [
+      { name: '김정민', meta: '호스트 · 매너 4.9', status: '승인완료' },
+      { name: '박서준', meta: '초보 · 최근 3경기', status: '승인완료' },
+      { name: '이하나', meta: '중수 · 빠른 응답', status: '승인중' },
+    ],
+  },
+  pending: {
+    description: '참가 신청이 접수된 러닝 매치입니다. 호스트가 프로필과 최근 참여 이력을 확인한 뒤 승인 여부를 결정합니다.',
+    address: '서울 송파구 올림픽로 25',
+    rules: ['러닝화 착용', '개인 물 지참', '승인 전까지 참가 확정 아님'],
+    participants: [
+      { name: '박서준', meta: '호스트 · 매너 4.8', status: '승인완료' },
+      { name: '나', meta: '신청자 · 승인 대기', status: '승인중' },
+    ],
+  },
+  approved: {
+    description: '승인이 완료된 수영 매치입니다. 참가가 확정되었으므로 경기 전 안내와 준비물을 계속 확인할 수 있습니다.',
+    address: '서울 마포구 월드컵로 25',
+    rules: ['수모 착용', '입장 15분 전 도착', '승인 완료자는 채팅 안내 확인'],
+    participants: [
+      { name: '이하나', meta: '호스트 · 매너 4.9', status: '승인완료' },
+      { name: '나', meta: '참가 확정', status: '승인완료' },
+    ],
+  },
+  mine: {
+    description: '내가 만든 농구 픽업 매치입니다. 신청자를 승인하거나 거절하고, 필요하면 매치 정보를 수정할 수 있습니다.',
+    address: '서울 성동구 아차산로 17',
+    rules: ['실내화 착용', '팀 조끼 제공', '신청자는 호스트 승인 후 확정'],
+    participants: [
+      { name: '정하늘', meta: '신청 메시지 · 2명 동반 가능', status: '승인 대기' },
+      { name: '문태오', meta: '최근 농구 5경기 · 매너 4.7', status: '승인 대기' },
+      { name: '최유진', meta: '참가 확정', status: '승인완료' },
+    ],
+  },
+};
+
 const draft = {
-  title: '주말 풋살 한판!',
+  title: '주말 풋살 초보 환영 매치',
   description: '초보도 편하게 참여할 수 있는 주말 풋살 매치입니다.',
   image: '/mock/generated/futsal-rooftop.webp',
   capacity: 10,
@@ -125,12 +190,12 @@ export function getMatchStateViewModel(state: MatchStateViewModel['state']): Mat
     },
     error: {
       title: '매치 목록을 불러오지 못했어요',
-      description: '네트워크 또는 API 연결 상태를 확인한 뒤 목록으로 돌아가 다시 시도해주세요.',
+      description: '일시적으로 목록을 불러오지 못했습니다. 잠시 뒤 다시 시도해 주세요.',
       matches: [],
     },
     filter: {
       title: '필터',
-      description: '현재 선택된 조건을 확인하는 QA용 fixture입니다. 실제 적용은 목록 API 바인딩 후 연결합니다.',
+      description: '원하는 종목, 지역, 모집 상태를 선택해 참여 가능한 매치를 찾아보세요.',
       matches: base.matches,
     },
     joined: {
@@ -140,7 +205,7 @@ export function getMatchStateViewModel(state: MatchStateViewModel['state']): Mat
     },
     participants: {
       title: '참가자',
-      description: '매치 상세의 참가자 목록을 독립 route에서 확인하는 QA용 fixture입니다.',
+      description: '참가 신청과 승인 상태를 확인할 수 있습니다.',
       matches: base.matches,
     },
   }[state];
@@ -160,19 +225,12 @@ export function getMatchStateViewModel(state: MatchStateViewModel['state']): Mat
 }
 
 export function getMatchDetailViewModel(mode: MatchDetailViewModel['mode'] = 'default'): MatchDetailViewModel {
-  const match = matches[0];
+  const match = matchDetailByMode[mode];
   return {
     mode,
     match: {
       ...match,
-      description: '초보도 편하게 참여할 수 있는 주말 풋살 매치입니다. 경기 전 10분 일찍 모여 팀을 나누고 가볍게 워밍업합니다.',
-      address: '서울 양천구 안양천로 939',
-      rules: ['풋살화 착용', '개인 물 지참', '지각 시 미리 연락'],
-      participants: [
-        { name: '김정민', meta: '호스트 · 매너 4.9', status: '승인완료' },
-        { name: '박서준', meta: '초보 · 최근 3경기', status: '승인완료' },
-        { name: '이하나', meta: '중수 · 빠른 응답', status: '승인중' },
-      ],
+      ...detailCopy[mode],
     },
   };
 }

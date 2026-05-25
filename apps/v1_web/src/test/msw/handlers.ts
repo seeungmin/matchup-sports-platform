@@ -2,6 +2,7 @@ import { http, HttpResponse } from 'msw';
 import {
   v1AdminLogsFixture,
   v1AdminOverviewFixture,
+  v1ChatMessagesByRoomFixture,
   v1ChatMessagesFixture,
   v1ChatRoomsFixture,
   v1HomeFixture,
@@ -57,15 +58,106 @@ export const v1MswHandlers = [
   http.get(`${api}/notices/:noticeId`, ({ params }) => ok({ notice: v1NoticesFixture.find((item) => item.id === params.noticeId) ?? v1NoticesFixture[0] })),
   http.get(`${api}/matches`, () => ok(page(v1MatchesFixture))),
   http.get(`${api}/matches/:matchId`, ({ params }) => ok(v1MatchesFixture.find((item) => item.id === params.matchId) ?? v1MatchesFixture[0])),
-  http.get(`${api}/teams`, () => ok(page(v1TeamsFixture))),
+  http.get(`${api}/teams`, ({ request }) => {
+    const sportId = new URL(request.url).searchParams.get('sportId');
+    const sport = v1SportsFixture.find((item) => item.id === sportId);
+    const teams = sport
+      ? v1TeamsFixture.filter((item) => item.sport?.sportId === sport.id || item.sportName === sport.name)
+      : v1TeamsFixture;
+    return ok(page(teams));
+  }),
   http.get(`${api}/teams/:teamId`, ({ params }) => ok(v1TeamsFixture.find((item) => item.id === params.teamId) ?? v1TeamsFixture[0])),
   http.get(`${api}/me/teams`, () => ok(v1TeamsFixture)),
-  http.get(`${api}/team-matches`, () => ok(page(v1TeamMatchesFixture))),
+  http.get(`${api}/team-matches`, ({ request }) => {
+    const sportId = new URL(request.url).searchParams.get('sportId');
+    const sport = v1SportsFixture.find((item) => item.id === sportId);
+    const teamMatches = sport
+      ? v1TeamMatchesFixture.filter((item) => item.sport?.sportId === sport.id || item.sportName === sport.name)
+      : v1TeamMatchesFixture;
+    return ok(page(teamMatches));
+  }),
   http.get(`${api}/team-matches/:teamMatchId`, ({ params }) => ok(v1TeamMatchesFixture.find((item) => item.id === params.teamMatchId) ?? v1TeamMatchesFixture[0])),
   http.get(`${api}/chat/rooms`, () => ok(v1ChatRoomsFixture)),
-  http.get(`${api}/chat/rooms/:roomId/messages`, () => ok(v1ChatMessagesFixture)),
+  http.get(`${api}/chat/rooms/:roomId`, ({ params }) => {
+    const room = v1ChatRoomsFixture.items.find((item) => item.roomId === params.roomId) ?? v1ChatRoomsFixture.items[0];
+    return ok({
+      roomId: room.roomId,
+      roomType: room.roomType,
+      status: room.status,
+      title: room.title,
+      linkedTarget: room.linkedTarget,
+      me: {
+        participantId: 'chat-participant-1',
+        status: 'active',
+        pinned: room.pinned,
+        mutedUntil: null,
+        lastReadMessageId: null,
+      },
+      participants: [
+        { userId: 'user-1', displayName: '나', role: 'member' },
+        { userId: 'user-2', displayName: '상대', role: 'member' },
+      ],
+    });
+  }),
+  http.get(`${api}/chat/rooms/:roomId/messages`, ({ params }) => ok(v1ChatMessagesByRoomFixture[String(params.roomId)] ?? v1ChatMessagesFixture)),
+  http.post(`${api}/chat/rooms/:roomId/messages`, async ({ params, request }) => {
+    const body = await request.json() as { content?: string };
+    const sentAt = new Date().toISOString();
+    const message = {
+      messageId: `message-${Date.now()}`,
+      sender: { userId: 'user-1', displayName: '나', profileImageUrl: null },
+      content: body.content ?? '',
+      status: 'sent',
+      sentAt,
+      mine: true,
+    };
+    const roomMessages = v1ChatMessagesByRoomFixture[String(params.roomId)] ?? v1ChatMessagesFixture;
+    roomMessages.items.unshift(message);
+    const room = v1ChatRoomsFixture.items.find((item) => item.roomId === params.roomId);
+    if (room) {
+      room.lastMessage = { messageId: message.messageId, contentPreview: `나: ${message.content}`, sentAt };
+      room.unreadCount = 0;
+    }
+    return ok({ messageId: message.messageId, roomId: params.roomId, content: message.content, status: 'sent', sentAt });
+  }),
+  http.patch(`${api}/chat/rooms/:roomId/me`, async ({ params, request }) => {
+    const body = await request.json() as { pinned?: boolean; lastReadMessageId?: string | null; mutedUntil?: string | null };
+    const room = v1ChatRoomsFixture.items.find((item) => item.roomId === params.roomId);
+    if (room && typeof body.pinned === 'boolean') room.pinned = body.pinned;
+    if (room && body.lastReadMessageId !== undefined) room.unreadCount = 0;
+    return ok({
+      roomId: params.roomId,
+      pinned: room?.pinned ?? Boolean(body.pinned),
+      mutedUntil: body.mutedUntil ?? null,
+      lastReadMessageId: body.lastReadMessageId ?? null,
+      status: 'active',
+    });
+  }),
+  http.post(`${api}/chat/rooms/:roomId/leave`, ({ params }) => {
+    v1ChatRoomsFixture.items = v1ChatRoomsFixture.items.filter((item) => item.roomId !== params.roomId);
+    return ok({ roomId: params.roomId, status: 'left' });
+  }),
   http.get(`${api}/notifications`, () => ok(v1NotificationsFixture)),
-  http.patch(`${api}/notifications/:notificationId/read`, ({ params }) => ok({ id: params.notificationId, read: true })),
+  http.patch(`${api}/notifications/:notificationId/read`, ({ params }) => {
+    const readAt = new Date().toISOString();
+    const notification = v1NotificationsFixture.items.find((item) => item.notificationId === params.notificationId);
+    if (notification) {
+      notification.status = 'read';
+      notification.readAt = readAt;
+      v1NotificationsFixture.unreadCount = v1NotificationsFixture.items.filter((item) => item.status !== 'read').length;
+    }
+    return ok({ notificationId: params.notificationId, status: 'read', readAt });
+  }),
+  http.post(`${api}/notifications/read-all`, () => {
+    const readAt = new Date().toISOString();
+    const updatedCount = v1NotificationsFixture.items.filter((item) => item.status !== 'read').length;
+    v1NotificationsFixture.items.forEach((item) => {
+      item.status = 'read';
+      item.readAt = item.readAt ?? readAt;
+    });
+    v1NotificationsFixture.unreadCount = 0;
+    return ok({ updatedCount, readAt, unreadCount: 0 });
+  }),
   http.get(`${api}/notification-preferences`, () => ok(v1SettingsFixture.notifications)),
   http.get(`${api}/me/profile`, () => ok(v1ProfileFixture)),
   http.get(`${api}/me/settings`, () => ok(v1SettingsFixture)),

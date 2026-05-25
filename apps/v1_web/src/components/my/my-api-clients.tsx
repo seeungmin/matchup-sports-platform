@@ -173,7 +173,7 @@ export function ProfileEditPageClient() {
           </select>
         </label>
         <Card pad={14} style={{ marginTop: 14, background: message?.includes('실패') ? 'var(--red50)' : 'var(--blue50)' }}>
-          <div className="tm-text-label">{message ?? '저장 준비 완료'}</div>
+          <div className="tm-text-label">{message ?? '저장할 수 있습니다'}</div>
           <div className="tm-text-caption" style={{ marginTop: 5 }}>저장하면 /me/profile API에 반영됩니다.</div>
         </Card>
       </form>
@@ -256,7 +256,7 @@ export function WithdrawalPageClient() {
           <p className="tm-text-body" style={{ margin: '10px 0 0', lineHeight: 1.6 }}>진행 중인 매치, 팀 운영 권한, 정산 내역이 남아 있으면 탈퇴가 제한될 수 있습니다.</p>
         </section>
         <Card pad={16}>
-          <ListItem title="요청 상태" sub="탈퇴 요청은 계정 상태를 withdrawal_pending으로 변경합니다" trailing="API 연결" />
+          <ListItem title="요청 상태" sub="탈퇴 요청 후에는 계정 검토가 진행됩니다" trailing="검토" />
           <ListItem title="보관 데이터" sub="법적 보관 기간 이후 삭제됩니다" trailing="필수" />
         </Card>
         <label className="tm-create-field">
@@ -326,7 +326,7 @@ function toTeamDetailModel(team: V1TeamDetail): MyTeam {
     role: team.viewer.role as MyTeam['role'],
     roleLabel: roleLabel(team.viewer.role),
     members: team.memberCount,
-    manner: team.trust.score ? String(team.trust.score) : trustLabel(team.trust.trustState),
+    manner: team.trust.score && hasTrustValue(team.trust.trustState) ? String(team.trust.score) : '-',
     next: team.profile.activityAreaText ?? '예정된 팀 일정은 팀매치에서 확인하세요',
     description: team.profile.introduction ?? '팀 소개가 아직 없습니다.',
   };
@@ -423,8 +423,11 @@ function visibilityLabel(value: string) {
 function trustLabel(value: string) {
   if (value === 'verified') return '검증';
   if (value === 'estimated') return '추정';
-  if (value === 'sample') return '샘플';
-  return '미집계';
+  return '-';
+}
+
+function hasTrustValue(value: string) {
+  return value === 'verified' || value === 'estimated';
 }
 
 function initials(value: string) {

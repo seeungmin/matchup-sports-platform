@@ -68,14 +68,26 @@ export type V1AuthSessionResponse = V1DevLoginResponse;
 
 export type V1Sport = {
   id: string;
+  code?: string;
   name: string;
-  levels: { id: string; name: string }[];
+  levels: { id: string; code?: string; name: string; description?: string | null }[];
 };
 
 export type V1Region = {
   id: string;
+  code?: string;
   name: string;
   parentId: string | null;
+  level?: string;
+  children?: V1Region[];
+};
+
+export type V1MasterSportsResponse = {
+  sports: V1Sport[];
+};
+
+export type V1MasterRegionsResponse = {
+  regions: Array<Omit<V1Region, 'parentId'> & { parentId?: string | null; children?: Array<Omit<V1Region, 'parentId' | 'children'> & { parentId?: string | null }> }>;
 };
 
 export type V1OnboardingStep = 'terms' | 'signup' | 'sport' | 'level' | 'region' | 'confirm' | 'done';
@@ -653,11 +665,11 @@ export type V1MyTeamMatch = {
 
 export type V1ChatRoom = {
   roomId: string;
-  roomType: 'match' | 'team_match';
+  roomType: 'match' | 'team' | 'team_match';
   title: string;
   status: string;
   linkedTarget: {
-    type: 'match' | 'team_match' | null;
+    type: 'match' | 'team' | 'team_match' | null;
     id: string | null;
     title: string;
     route: string | null;
@@ -687,7 +699,7 @@ export type V1ChatMessage = {
 
 export type V1ChatRoomDetail = {
   roomId: string;
-  roomType: 'match' | 'team_match';
+  roomType: 'match' | 'team' | 'team_match';
   status: string;
   title: string;
   linkedTarget: V1ChatRoom['linkedTarget'];
