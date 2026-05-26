@@ -25,6 +25,7 @@ Query:
 | Field | Type | Required | Notes |
 |---|---|---|---|
 | `sportType` | enum | No | 종목 필터 |
+| `gender` | MatchGender (`any`, `male`, `female`) | No | recruitment gender condition |
 | `city` | string | No | `hostTeam.city` 기준 |
 | `status` | string | No | 단일 status 또는 comma-separated status list |
 | `teamId` | uuid | No | host 또는 applicant team 기준 |
@@ -75,7 +76,7 @@ Supported behaviors:
 - `matchDate`, `startTime`, `endTime`, `quarterCount`
 - `venueName`, `venueAddress`, `venueInfo`
 - `totalFee`, `opponentFee`
-- `requiredLevel`, `matchStyle`, `allowMercenary`, `hasReferee`
+- `gender`, `requiredLevel`, `matchStyle`, `allowMercenary`, `hasReferee`
 - `skillGrade`, `gameFormat`, `matchType`, `proPlayerCount`, `uniformColor`, `notes`
 
 ### 2. 모집글 취소

@@ -38,6 +38,7 @@ type AppChromeProps = {
   bottomNav?: boolean;
   topBar?: boolean;
   backHref?: string;
+  centerTitle?: boolean;
 };
 
 export function AppChrome({
@@ -52,6 +53,7 @@ export function AppChrome({
   bottomNav = true,
   topBar = true,
   backHref,
+  centerTitle = false,
 }: AppChromeProps) {
   const frameClassName = [
     'tm-app-frame',
@@ -62,14 +64,14 @@ export function AppChrome({
   return (
     <div className={frameClassName}>
       {topBar ? (
-        <header className="tm-topbar">
+        <header className={centerTitle ? 'tm-topbar tm-topbar-centered' : 'tm-topbar'}>
           <div className="tm-topbar-title">
             {backHref ? (
               <Link className="tm-btn tm-btn-icon tm-btn-ghost" href={backHref} aria-label="뒤로가기">
                 <ChevronLeftIcon size={22} strokeWidth={2.2} />
               </Link>
             ) : null}
-            <div className="tm-text-body-lg" style={{ color: 'var(--text-strong)' }}>{title}</div>
+            <div className="tm-text-body-lg tm-topbar-heading" style={{ color: 'var(--text-strong)' }}>{title}</div>
           </div>
           <div className="tm-topbar-actions">
             {topbarActions ?? (

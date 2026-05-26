@@ -35,6 +35,12 @@ const matchStyleLabel: Record<string, string> = {
   friendly: '친선', competitive: '경쟁', manner_focused: '매너 중시',
 };
 
+const genderLabel = {
+  any: '성별 무관',
+  male: '남성',
+  female: '여성',
+} as const;
+
 export default function TeamMatchDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -258,6 +264,12 @@ export default function TeamMatchDetailPage() {
                 <div className="rounded-xl bg-gray-50 dark:bg-gray-700 px-3.5 py-3">
                   <p className="text-xs text-gray-500 mb-0.5">경기방식</p>
                   <p className="text-base font-semibold text-gray-900 dark:text-white">{match.gameFormat || '-'}</p>
+                </div>
+                <div className="rounded-xl bg-gray-50 dark:bg-gray-700 px-3.5 py-3">
+                  <p className="text-xs text-gray-500 mb-0.5">성별 조건</p>
+                  <p className="text-base font-semibold text-gray-900 dark:text-white">
+                    {genderLabel[match.gender] ?? match.gender}
+                  </p>
                 </div>
                 <div className="rounded-xl bg-gray-50 dark:bg-gray-700 px-3.5 py-3">
                   <p className="text-xs text-gray-500 mb-0.5">매치 유형</p>

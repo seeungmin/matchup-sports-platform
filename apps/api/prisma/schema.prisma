@@ -91,7 +91,12 @@ enum AdminUserAuditAction {
 enum Gender {
   male
   female
-  other
+}
+
+enum MatchGender {
+  any
+  male
+  female
 }
 
 enum NotificationType {
@@ -417,7 +422,7 @@ model Match {
   fee            Int         @default(0)
   levelMin       Int         @default(1) @map("level_min")
   levelMax       Int         @default(5) @map("level_max")
-  gender         String      @default("any") // any, male, female
+  gender         MatchGender @default(any)
   status         MatchStatus @default(recruiting)
   teamConfig     Json?       @map("team_config")
   createdAt      DateTime    @default(now()) @map("created_at")
@@ -1006,7 +1011,8 @@ model TeamMatch {
   cancellationPolicy String? @map("cancellation_policy")
 
   // 매칭 조건
-  requiredLevel  Int?       @map("required_level")
+  gender         MatchGender @default(any)
+  requiredLevel  Int?        @map("required_level")
   hasProPlayers  Boolean    @default(false) @map("has_pro_players")
   allowMercenary Boolean    @default(true) @map("allow_mercenary")
   matchStyle     MatchStyle @default(friendly) @map("match_style")

@@ -28,6 +28,8 @@
 - [x] Replace frontend hardcoded centroid matching with the resolver endpoint.
 - [x] Update match/team/team-match forms so district selection is explicit and grouped.
 - [x] Validate that region references used by match/team/team-match are active level-2 regions.
+- [x] Add my-page location settings so users can refresh current location into their primary activity region after onboarding.
+- [x] Add a home weather refresh control that re-reads current browser location on demand.
 
 ## UI / UX Changes To Report
 
@@ -35,6 +37,8 @@
 - Match create/edit place step: new explicit region dropdown before venue/address.
 - Team match create/edit place step: new explicit region dropdown before venue/address.
 - Team create/edit form: free-text city/county is replaced by DB-backed region selection.
+- My location settings: current primary activity region, current-location refresh, and manual district fallback.
+- Home weather card: explicit refresh action that updates weather from the user's current browser location.
 
 ## Acceptance Criteria
 
@@ -42,10 +46,15 @@
 - Given the user denies browser location, when they choose a region manually, then onboarding can continue.
 - Given a match/team/team-match is created, when region is submitted, then the backend rejects inactive parent regions and accepts active level-2 regions.
 - Given the master region API returns parents and children, when forms render, then only children are selectable and parent names are used for context.
+- Given the user opens `/v1/my/settings/location`, when they allow current location, then the matched district can be saved as the primary activity region.
+- Given browser location fails or is denied on my location settings, when the user manually selects a district, then it can be saved as the primary activity region.
+- Given the user taps the weather refresh action on `/v1/home`, when browser location succeeds, then weather is fetched for the current coordinates without persisting raw coordinates.
 
 ## Progress Snapshot
 
 - 2026-05-26: Implemented v1 region master expansion for Seoul/Gyeonggi, DB center coordinates, server-side location resolver, onboarding resolver integration, and district-only form selection for match/team/team-match. Local v1 DB was synced with `db push`, seeded, and v1 API/Web were restarted.
+- 2026-05-26: Follow-up requested for my-page location management and home weather refresh. Current implementation only resolves location during onboarding and weather auto-load; my profile/settings cannot refresh activity region yet.
+- 2026-05-26: Added `PATCH /api/v1/me/regions`, `/v1/my/settings/location`, manual/current-location primary region update, and home weather refresh. Fixed existing v1 seed `index` build error encountered during validation.
 
 ## Validation
 

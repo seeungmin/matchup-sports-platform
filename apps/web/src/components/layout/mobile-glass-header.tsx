@@ -15,6 +15,7 @@ interface MobileGlassHeaderProps {
   actions?: ReactNode;
   sticky?: boolean;
   compact?: boolean;
+  centerTitle?: boolean;
   testId?: string;
 }
 
@@ -28,6 +29,7 @@ export function MobileGlassHeader({
   actions,
   sticky = true,
   compact = false,
+  centerTitle = false,
   testId = 'mobile-glass-header',
 }: MobileGlassHeaderProps) {
   const router = useRouter();
@@ -42,7 +44,7 @@ export function MobileGlassHeader({
           className,
         )}
       >
-        <div className={cn('flex items-center gap-3 px-5', compact ? 'py-3' : 'py-3.5')}>
+        <div className={cn('relative flex items-center gap-3 px-5', compact ? 'py-3' : 'py-3.5')}>
           {showBack && (
             <button
               type="button"
@@ -53,7 +55,12 @@ export function MobileGlassHeader({
               <ArrowLeft size={19} />
             </button>
           )}
-          <div className="min-w-0 flex-1">
+          <div
+            className={cn(
+              'min-w-0 flex-1',
+              centerTitle && 'pointer-events-none absolute left-1/2 max-w-[calc(100%-128px)] -translate-x-1/2 text-center',
+            )}
+          >
             <div className="truncate text-[17px] font-semibold tracking-[-0.02em] text-gray-900 dark:text-white">
               {title}
             </div>
@@ -63,7 +70,11 @@ export function MobileGlassHeader({
               </p>
             )}
           </div>
-          {actions && <div className="flex items-center gap-2">{actions}</div>}
+          {actions && (
+            <div className={cn('flex items-center gap-2', centerTitle && 'ml-auto')}>
+              {actions}
+            </div>
+          )}
         </div>
       </header>
     );

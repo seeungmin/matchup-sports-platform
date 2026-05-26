@@ -20,14 +20,20 @@ import type {
 
 export function MyHomePageView({ model }: { model: MyHomeViewModel }) {
   return (
-    <AppChrome title="마이" activeTab="my" hasNewNotification={model.hasNewNotification}>
+    <AppChrome title="마이페이지" activeTab="my" hasNewNotification={model.hasNewNotification} centerTitle>
       <div className="tm-my-shell">
         <section className="tm-my-profile-head">
           <div className="tm-my-avatar">{model.user.initials}</div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="tm-text-heading">{model.user.name}</div>
             <div className="tm-text-caption" style={{ marginTop: 4 }}>{model.user.handle} · {model.user.region}</div>
-            <div className="tm-my-chip-row">{model.user.sports.map((sport) => <span key={sport} className="tm-badge tm-badge-grey">{sport}</span>)}</div>
+            {model.user.sports.length > 0 ? (
+              <div className="tm-my-chip-row">{model.user.sports.map((sport) => <span key={sport} className="tm-badge tm-badge-grey">{sport}</span>)}</div>
+            ) : (
+              <Link className="tm-btn tm-btn-sm tm-btn-ghost" href="/onboarding/sport" style={{ marginTop: 8 }}>
+                운동정보 설정
+              </Link>
+            )}
           </div>
           <Link className="tm-btn tm-btn-sm tm-btn-neutral" href="/my/profile/edit">수정</Link>
         </section>

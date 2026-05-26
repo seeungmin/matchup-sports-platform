@@ -1,7 +1,13 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { V1AuthUser } from '../auth/v1-auth-user';
 import { PrismaService } from '../prisma/prisma.service';
-import { UpdateProfileDto, UpdateSettingsDto, WithdrawalRequestDto } from './dto/profile.dto';
+import {
+  UpdateMyPreferencesDto,
+  UpdateMyRegionsDto,
+  UpdateProfileDto,
+  UpdateSettingsDto,
+  WithdrawalRequestDto,
+} from './dto/profile.dto';
 
 @Injectable()
 export class ProfileService {
@@ -198,9 +204,19 @@ export class ProfileService {
         notificationInput.teamMatchEnabled ??
         notificationInput.chatEnabled ??
         notificationInput.noticeEnabled;
+      const individualNotifications = {
+        ...(notificationInput.matchEnabled === undefined ? {} : { matchEnabled: notificationInput.matchEnabled }),
+        ...(notificationInput.teamEnabled === undefined ? {} : { teamEnabled: notificationInput.teamEnabled }),
+        ...(notificationInput.teamMatchEnabled === undefined
+          ? {}
+          : { teamMatchEnabled: notificationInput.teamMatchEnabled }),
+        ...(notificationInput.chatEnabled === undefined ? {} : { chatEnabled: notificationInput.chatEnabled }),
+        ...(notificationInput.noticeEnabled === undefined ? {} : { noticeEnabled: notificationInput.noticeEnabled }),
+      };
       const nextPreferences = await tx.v1NotificationPreference.upsert({
         where: { userId: user.id },
         update: {
+          ...individualNotifications,
           ...(activityEnabled === undefined ? {} : { activityEnabled }),
           ...(notificationInput.marketingEnabled === undefined
             ? {}
@@ -209,6 +225,11 @@ export class ProfileService {
         create: {
           userId: user.id,
           activityEnabled: activityEnabled ?? true,
+          matchEnabled: notificationInput.matchEnabled ?? activityEnabled ?? true,
+          teamEnabled: notificationInput.teamEnabled ?? activityEnabled ?? true,
+          teamMatchEnabled: notificationInput.teamMatchEnabled ?? activityEnabled ?? true,
+          chatEnabled: notificationInput.chatEnabled ?? activityEnabled ?? true,
+          noticeEnabled: notificationInput.noticeEnabled ?? activityEnabled ?? true,
           marketingEnabled: notificationInput.marketingEnabled ?? false,
         },
       });
@@ -220,6 +241,95 @@ export class ProfileService {
       profile: { visibilityStatus: normalizeVisibility(profile?.visibility) },
       notifications: toSettingsNotifications(preferences),
       updatedAt: preferences.updatedAt,
+    };
+  }
+
+  async updateMyRegions(user: V1AuthUser, dto: UpdateMyRegionsDto) {
+    this.assertMutableAccount(user);
+    const region = await this.prisma.v1Region.findFirst({
+      where: { id: dto.regionId, isActive: true, level: 2 },
+      include: { parent: true },
+    });
+
+    if (!region) {
+      throw validationError('regionId must be an active district region', 'regionId');
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.v1UserRegion.updateMany({
+        where: { userId: user.id },
+        data: { isPrimary: false },
+      });
+      await tx.v1UserRegion.upsert({
+        where: { userId_regionId: { userId: user.id, regionId: region.id } },
+        update: { isPrimary: true },
+        create: { userId: user.id, regionId: region.id, isPrimary: true },
+      });
+    });
+
+    return {
+      region: {
+        regionId: region.id,
+        name: formatRegionName(region),
+      },
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
+  async updateMyPreferences(user: V1AuthUser, dto: UpdateMyPreferencesDto) {
+    this.assertMutableAccount(user);
+    validateNoDuplicates(dto.sports.map((sport) => sport.sportId), 'sports');
+    validateNoDuplicates(dto.regions.map((region) => region.regionId), 'regions');
+
+    if (dto.regions.filter((region) => region.primary).length > 1) {
+      throw validationError('Only one primary region is allowed', 'regions.primary');
+    }
+
+    await this.validateSports(dto.sports);
+    await this.validateRegions(dto.regions.map((region) => region.regionId));
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.v1UserSportPreference.deleteMany({ where: { userId: user.id } });
+      if (dto.sports.length > 0) {
+        await tx.v1UserSportPreference.createMany({
+          data: dto.sports.map((sport, index) => ({
+            userId: user.id,
+            sportId: sport.sportId,
+            sportLevelId: sport.levelId ?? null,
+            isPrimary: index === 0,
+          })),
+        });
+      }
+
+      await tx.v1UserRegion.deleteMany({ where: { userId: user.id } });
+      if (dto.regions.length > 0) {
+        const primaryRegionId = dto.regions.find((region) => region.primary)?.regionId ?? dto.regions[0]?.regionId;
+        await tx.v1UserRegion.createMany({
+          data: dto.regions.map((region) => ({
+            userId: user.id,
+            regionId: region.regionId,
+            isPrimary: region.regionId === primaryRegionId,
+          })),
+        });
+      }
+    });
+
+    const snapshot = await this.getUserSnapshot(user.id);
+
+    return {
+      sports: snapshot.sportPreferences.map((preference) => ({
+        sportId: preference.sport.id,
+        sportName: preference.sport.name,
+        levelId: preference.sportLevel?.id ?? null,
+        levelName: preference.sportLevel?.name ?? null,
+        primary: preference.isPrimary,
+      })),
+      regions: snapshot.regions.map((userRegion) => ({
+        regionId: userRegion.region.id,
+        name: formatRegionName(userRegion.region),
+        primary: userRegion.isPrimary,
+      })),
+      updatedAt: new Date().toISOString(),
     };
   }
 
@@ -264,6 +374,13 @@ export class ProfileService {
           },
           orderBy: [{ isPrimary: 'desc' }, { createdAt: 'asc' }],
         },
+        sportPreferences: {
+          include: {
+            sport: { select: { id: true, name: true } },
+            sportLevel: { select: { id: true, name: true } },
+          },
+          orderBy: [{ isPrimary: 'desc' }, { createdAt: 'asc' }],
+        },
         authIdentities: { where: { status: 'active' }, select: { provider: true } },
       },
     });
@@ -287,6 +404,68 @@ export class ProfileService {
       throw new ForbiddenException({ code: 'PERMISSION_DENIED', message: 'Account cannot be modified' });
     }
   }
+
+  private async validateSports(sports: Array<{ sportId: string; levelId?: string | null }>) {
+    for (const sport of sports) {
+      const activeSport = await this.prisma.v1Sport.findFirst({
+        where: { id: sport.sportId, isActive: true },
+        select: { id: true },
+      });
+
+      if (!activeSport) {
+        throw validationError('Sport is not active or does not exist', 'sports');
+      }
+
+      if (sport.levelId) {
+        const level = await this.prisma.v1SportLevel.findFirst({
+          where: {
+            id: sport.levelId,
+            sportId: sport.sportId,
+            isActive: true,
+          },
+          select: { id: true },
+        });
+
+        if (!level) {
+          throw validationError('Level does not belong to the selected active sport', 'sports.levelId');
+        }
+      }
+    }
+  }
+
+  private async validateRegions(regionIds: string[]) {
+    if (regionIds.length === 0) return;
+
+    const count = await this.prisma.v1Region.count({
+      where: {
+        id: { in: regionIds },
+        isActive: true,
+        level: 2,
+      },
+    });
+
+    if (count !== regionIds.length) {
+      throw validationError('Region is not an active district region', 'regions');
+    }
+  }
+}
+
+function validateNoDuplicates(values: string[], field: string) {
+  if (new Set(values).size !== values.length) {
+    throw validationError(`Duplicate ${field} are not allowed`, field);
+  }
+}
+
+function validationError(message: string, field: string) {
+  return new BadRequestException({
+    code: 'VALIDATION_FAILED',
+    message,
+    details: { field },
+  });
+}
+
+function formatRegionName(region: { name: string; parent: { name: string } | null }) {
+  return region.parent?.name ? `${region.parent.name} ${region.name}` : region.name;
 }
 
 function toProfileResponse(user: Awaited<ReturnType<ProfileService['getUserSnapshot']>>) {
@@ -295,7 +474,15 @@ function toProfileResponse(user: Awaited<ReturnType<ProfileService['getUserSnaps
     accountStatus: user.accountStatus,
     email: user.email,
     authProvider: user.authIdentities[0]?.provider ?? null,
+    onboardingStatus: user.onboardingStatus,
     regionName: formatPrimaryRegion(user.regions),
+    sports: user.sportPreferences.map((preference) => ({
+      sportId: preference.sport.id,
+      sportName: preference.sport.name,
+      levelId: preference.sportLevel?.id ?? null,
+      levelName: preference.sportLevel?.name ?? null,
+      primary: preference.isPrimary,
+    })),
     profile: toProfilePayload(user.profile),
     reputation: toReputationPayload(user.reputationSummary),
   };
@@ -311,9 +498,7 @@ function formatPrimaryRegion(
 ) {
   const primary = regions[0];
   if (!primary) return null;
-  return primary.region.parent?.name
-    ? `${primary.region.parent.name} ${primary.region.name}`
-    : primary.region.name;
+  return formatRegionName(primary.region);
 }
 
 function toProfilePayload(profile: {
@@ -355,14 +540,19 @@ function normalizeVisibility(value?: string | null) {
 
 function toSettingsNotifications(preferences: {
   activityEnabled: boolean;
+  matchEnabled?: boolean;
+  teamEnabled?: boolean;
+  teamMatchEnabled?: boolean;
+  chatEnabled?: boolean;
+  noticeEnabled?: boolean;
   marketingEnabled: boolean;
 }) {
   return {
-    matchEnabled: preferences.activityEnabled,
-    teamEnabled: preferences.activityEnabled,
-    teamMatchEnabled: preferences.activityEnabled,
-    chatEnabled: preferences.activityEnabled,
-    noticeEnabled: preferences.activityEnabled,
+    matchEnabled: preferences.matchEnabled ?? preferences.activityEnabled,
+    teamEnabled: preferences.teamEnabled ?? preferences.activityEnabled,
+    teamMatchEnabled: preferences.teamMatchEnabled ?? preferences.activityEnabled,
+    chatEnabled: preferences.chatEnabled ?? preferences.activityEnabled,
+    noticeEnabled: preferences.noticeEnabled ?? preferences.activityEnabled,
     marketingEnabled: preferences.marketingEnabled,
   };
 }

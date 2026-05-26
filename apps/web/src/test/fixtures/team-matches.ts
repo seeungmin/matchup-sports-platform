@@ -16,6 +16,7 @@ export const mockTeamMatch: TeamMatch = {
   venueAddress: '서울시 송파구 올림픽로 25',
   totalFee: 200000,
   opponentFee: 100000,
+  gender: 'any',
   requiredLevel: 3,
   hasProPlayers: false,
   allowMercenary: true,

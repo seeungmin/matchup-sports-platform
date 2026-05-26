@@ -28,6 +28,7 @@
 | `city`, `district` | string | No | venue relation 필터 |
 | `date` | YYYY-MM-DD | No | matchDate |
 | `levelMin`, `levelMax` | int | No | transform(parseInt) |
+| `gender` | MatchGender (`any`, `male`, `female`) | No | recruitment gender condition |
 | `maxFee` | int | No | `fee <= maxFee` |
 | `freeOnly` | boolean | No | `fee = 0` |
 | `availableOnly` | boolean | No | recruiting만 |
@@ -55,7 +56,7 @@
 | `fee` | int >= 0 | No | 0 |
 | `levelMin` | int(1~5) | No | 1 |
 | `levelMax` | int(1~5) | No | 5 |
-| `gender` | any/male/female | No | any |
+| `gender` | MatchGender (`any`, `male`, `female`) | No | any |
 | `teamConfig` | object | No | - |
 
 - 부가 동작

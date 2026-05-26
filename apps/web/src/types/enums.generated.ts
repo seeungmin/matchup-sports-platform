@@ -31,11 +31,14 @@ export const ADMINUSERSTATUS_VALUES = ['active', 'suspended'] as const;
 export type AdminUserAuditAction = 'warn' | 'suspend' | 'reactivate';
 export const ADMINUSERAUDITACTION_VALUES = ['warn', 'suspend', 'reactivate'] as const;
 
-export type Gender = 'male' | 'female' | 'other';
-export const GENDER_VALUES = ['male', 'female', 'other'] as const;
+export type Gender = 'male' | 'female';
+export const GENDER_VALUES = ['male', 'female'] as const;
 
-export type NotificationType = 'match_created' | 'player_joined' | 'player_left' | 'team_announced' | 'match_updated' | 'match_confirmed' | 'match_reminder' | 'match_cancelled' | 'match_completed' | 'review_pending' | 'level_changed' | 'payment_confirmed' | 'payment_refunded' | 'marketplace_order' | 'marketplace_message' | 'team_invitation' | 'elo_changed' | 'badge_earned' | 'no_show_penalty' | 'team_application_received' | 'team_application_accepted' | 'team_application_rejected' | 'team_match_applied' | 'team_match_approved' | 'team_match_rejected' | 'mercenary_applied' | 'mercenary_accepted' | 'mercenary_rejected' | 'mercenary_closed' | 'mercenary_cancelled' | 'review_received' | 'lesson_ticket_purchased' | 'chat_message';
-export const NOTIFICATIONTYPE_VALUES = ['match_created', 'player_joined', 'player_left', 'team_announced', 'match_updated', 'match_confirmed', 'match_reminder', 'match_cancelled', 'match_completed', 'review_pending', 'level_changed', 'payment_confirmed', 'payment_refunded', 'marketplace_order', 'marketplace_message', 'team_invitation', 'elo_changed', 'badge_earned', 'no_show_penalty', 'team_application_received', 'team_application_accepted', 'team_application_rejected', 'team_match_applied', 'team_match_approved', 'team_match_rejected', 'mercenary_applied', 'mercenary_accepted', 'mercenary_rejected', 'mercenary_closed', 'mercenary_cancelled', 'review_received', 'lesson_ticket_purchased', 'chat_message'] as const;
+export type MatchGender = 'any' | 'male' | 'female';
+export const MATCHGENDER_VALUES = ['any', 'male', 'female'] as const;
+
+export type NotificationType = 'match_created' | 'player_joined' | 'player_left' | 'team_announced' | 'match_updated' | 'match_confirmed' | 'match_reminder' | 'match_cancelled' | 'match_completed' | 'review_pending' | 'level_changed' | 'payment_confirmed' | 'payment_refunded' | 'marketplace_order' | 'marketplace_message' | 'team_invitation' | 'elo_changed' | 'badge_earned' | 'no_show_penalty' | 'team_application_received' | 'team_application_accepted' | 'team_application_rejected' | 'team_match_applied' | 'team_match_approved' | 'team_match_rejected' | 'mercenary_applied' | 'mercenary_accepted' | 'mercenary_rejected' | 'mercenary_closed' | 'mercenary_cancelled' | 'review_received' | 'lesson_ticket_purchased' | 'chat_message' | 'marketplace_order_shipped' | 'marketplace_order_delivered' | 'marketplace_order_completed' | 'marketplace_order_disputed' | 'marketplace_order_refunded' | 'marketplace_dispute_message' | 'marketplace_dispute_resolved' | 'marketplace_payout_paid';
+export const NOTIFICATIONTYPE_VALUES = ['match_created', 'player_joined', 'player_left', 'team_announced', 'match_updated', 'match_confirmed', 'match_reminder', 'match_cancelled', 'match_completed', 'review_pending', 'level_changed', 'payment_confirmed', 'payment_refunded', 'marketplace_order', 'marketplace_message', 'team_invitation', 'elo_changed', 'badge_earned', 'no_show_penalty', 'team_application_received', 'team_application_accepted', 'team_application_rejected', 'team_match_applied', 'team_match_approved', 'team_match_rejected', 'mercenary_applied', 'mercenary_accepted', 'mercenary_rejected', 'mercenary_closed', 'mercenary_cancelled', 'review_received', 'lesson_ticket_purchased', 'chat_message', 'marketplace_order_shipped', 'marketplace_order_delivered', 'marketplace_order_completed', 'marketplace_order_disputed', 'marketplace_order_refunded', 'marketplace_dispute_message', 'marketplace_dispute_resolved', 'marketplace_payout_paid'] as const;
 
 export type ChatRoomType = 'team_match' | 'direct' | 'team';
 export const CHATROOMTYPE_VALUES = ['team_match', 'direct', 'team'] as const;
@@ -64,8 +67,8 @@ export const LISTINGTYPE_VALUES = ['sell', 'rent', 'group_buy'] as const;
 export type ItemCondition = 'new' | 'like_new' | 'good' | 'fair' | 'poor';
 export const ITEMCONDITION_VALUES = ['new', 'like_new', 'good', 'fair', 'poor'] as const;
 
-export type OrderStatus = 'pending' | 'paid' | 'escrow_held' | 'shipped' | 'delivered' | 'completed' | 'disputed' | 'refunded' | 'cancelled';
-export const ORDERSTATUS_VALUES = ['pending', 'paid', 'escrow_held', 'shipped', 'delivered', 'completed', 'disputed', 'refunded', 'cancelled'] as const;
+export type OrderStatus = 'pending' | 'paid' | 'escrow_held' | 'shipped' | 'delivered' | 'completed' | 'disputed' | 'refunded' | 'cancelled' | 'auto_released';
+export const ORDERSTATUS_VALUES = ['pending', 'paid', 'escrow_held', 'shipped', 'delivered', 'completed', 'disputed', 'refunded', 'cancelled', 'auto_released'] as const;
 
 export type TournamentStatus = 'draft' | 'recruiting' | 'full' | 'ongoing' | 'completed' | 'cancelled';
 export const TOURNAMENTSTATUS_VALUES = ['draft', 'recruiting', 'full', 'ongoing', 'completed', 'cancelled'] as const;
@@ -103,8 +106,20 @@ export const INVITATIONSTATUS_VALUES = ['pending', 'accepted', 'declined', 'expi
 export type SettlementType = 'match' | 'marketplace' | 'lesson';
 export const SETTLEMENTTYPE_VALUES = ['match', 'marketplace', 'lesson'] as const;
 
-export type SettlementStatus = 'pending' | 'processing' | 'completed' | 'failed';
-export const SETTLEMENTSTATUS_VALUES = ['pending', 'processing', 'completed', 'failed'] as const;
+export type SettlementStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'refunded' | 'held';
+export const SETTLEMENTSTATUS_VALUES = ['pending', 'processing', 'completed', 'failed', 'refunded', 'held'] as const;
+
+export type DisputeStatus = 'filed' | 'seller_responded' | 'admin_reviewing' | 'resolved_refund' | 'resolved_release' | 'withdrawn' | 'dismissed';
+export const DISPUTESTATUS_VALUES = ['filed', 'seller_responded', 'admin_reviewing', 'resolved_refund', 'resolved_release', 'withdrawn', 'dismissed'] as const;
+
+export type DisputeActorRole = 'buyer' | 'seller' | 'admin';
+export const DISPUTEACTORROLE_VALUES = ['buyer', 'seller', 'admin'] as const;
+
+export type DisputeTargetType = 'marketplace_order' | 'team_match';
+export const DISPUTETARGETTYPE_VALUES = ['marketplace_order', 'team_match'] as const;
+
+export type PayoutStatus = 'pending' | 'processing' | 'paid' | 'failed' | 'cancelled';
+export const PAYOUTSTATUS_VALUES = ['pending', 'processing', 'paid', 'failed', 'cancelled'] as const;
 
 export type ReportTargetType = 'user' | 'message' | 'listing' | 'review';
 export const REPORTTARGETTYPE_VALUES = ['user', 'message', 'listing', 'review'] as const;

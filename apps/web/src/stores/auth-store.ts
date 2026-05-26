@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { disconnectSocket } from '@/lib/realtime-client';
-import type { SportType } from '@/types/enums.generated';
+import type { Gender, SportType } from '@/types/enums.generated';
 
 interface SportProfile {
   id: string;
@@ -21,7 +21,7 @@ interface User {
   mannerScore: number;
   totalMatches: number;
   bio?: string | null;
-  gender?: string | null;
+  gender?: Gender | null;
   locationCity?: string | null;
   locationDistrict?: string | null;
   sportProfiles?: SportProfile[];

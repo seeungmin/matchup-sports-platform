@@ -23,6 +23,7 @@ import {
   getTodayFilterDate,
   parseMatchDiscoveryFilters,
   type MatchDiscoveryFilters,
+  type MatchDiscoveryGender,
   type MatchDiscoveryLevel,
   type MatchDiscoverySort,
 } from '@/lib/match-discovery';
@@ -58,6 +59,13 @@ const LEVEL_FILTERS: Array<{ key: MatchDiscoveryLevel; translationKey: string }>
   { key: 'beginner', translationKey: 'beginner' },
   { key: 'intermediate', translationKey: 'intermediate' },
   { key: 'advanced', translationKey: 'advanced' },
+];
+
+const GENDER_FILTERS: Array<{ key: MatchDiscoveryGender; label: string }> = [
+  { key: 'all', label: '전체' },
+  { key: 'any', label: '성별 무관' },
+  { key: 'male', label: '남성' },
+  { key: 'female', label: '여성' },
 ];
 
 const SORT_FILTERS: Array<{ key: MatchDiscoverySort; translationKey: string }> = [
@@ -104,6 +112,7 @@ export function MatchesPage() {
         prev.date === urlFilters.date &&
         prev.city === urlFilters.city &&
         prev.level === urlFilters.level &&
+        prev.gender === urlFilters.gender &&
         prev.fee === urlFilters.fee &&
         prev.available === urlFilters.available &&
         prev.sort === urlFilters.sort;
@@ -126,11 +135,12 @@ export function MatchesPage() {
       draftFilters.date ||
       draftFilters.city ||
       draftFilters.level !== 'all' ||
+      draftFilters.gender !== 'all' ||
       draftFilters.sort !== 'upcoming'
     ) {
       setShowFilters(true);
     }
-  }, [draftFilters.city, draftFilters.date, draftFilters.level, draftFilters.sort]);
+  }, [draftFilters.city, draftFilters.date, draftFilters.gender, draftFilters.level, draftFilters.sort]);
 
   const activeFilterCount = useMemo(
     () => countActiveMatchDiscoveryFilters(draftFilters),
@@ -151,6 +161,9 @@ export function MatchesPage() {
       const levelKey = LEVEL_FILTERS.find((item) => item.key === draftFilters.level)?.translationKey;
       if (levelKey) summary.push(t(levelKey));
     }
+    if (draftFilters.gender !== 'all') {
+      summary.push(GENDER_FILTERS.find((item) => item.key === draftFilters.gender)?.label ?? draftFilters.gender);
+    }
     if (draftFilters.fee === 'free') summary.push(t('free'));
     if (draftFilters.available) summary.push(t('availableOnly'));
     if (draftFilters.sort !== 'upcoming') {
@@ -168,6 +181,7 @@ export function MatchesPage() {
       date: '',
       city: '',
       level: 'all',
+      gender: 'all',
       fee: 'all',
       available: false,
       sort: 'upcoming',
@@ -428,6 +442,33 @@ export function MatchesPage() {
                       }`}
                     >
                       {t(filter.translationKey)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-gray-500 dark:text-gray-400">
+                성별
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {GENDER_FILTERS.map((filter) => {
+                  const isActive = draftFilters.gender === filter.key;
+                  return (
+                    <button
+                      key={filter.key}
+                      type="button"
+                      aria-pressed={isActive}
+                      data-testid={`match-gender-${filter.key}`}
+                      onClick={() => updateFilters({ gender: filter.key })}
+                      className={`min-h-[44px] rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                        isActive
+                          ? 'bg-blue-500 text-white'
+                          : 'border border-gray-200 bg-white text-gray-600 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300'
+                      }`}
+                    >
+                      {filter.label}
                     </button>
                   );
                 })}

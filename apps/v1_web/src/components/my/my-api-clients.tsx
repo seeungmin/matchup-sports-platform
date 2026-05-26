@@ -10,19 +10,26 @@ import {
   useV1MyActivitySummary,
   useV1MyTeams,
   useV1MyTeamMatches,
+  useV1MasterRegions,
+  useV1MasterSports,
   useV1Notifications,
+  useV1Onboarding,
   useV1Profile,
   useV1RejectTeamJoinApplication,
   useV1RemoveTeamMembership,
+  useV1ResolveLocation,
   useV1Settings,
   useV1TeamDetail,
   useV1TeamJoinApplications,
   useV1TeamMembers,
+  useV1UpdateMyPreferences,
+  useV1UpdateMyRegion,
   useV1UpdateProfile,
   useV1UpdateSettings,
   useV1WithdrawalRequest,
 } from '@/hooks/use-v1-api';
-import type { V1MyActivitySummary, V1MyTeam, V1MyTeamMatch, V1Profile, V1Settings, V1TeamDetail, V1TeamJoinApplication, V1TeamMember } from '@/types/api';
+import { toDistrictRegionOptions } from '@/lib/v1-regions';
+import type { V1MyActivitySummary, V1MyTeam, V1MyTeamMatch, V1Profile, V1Settings, V1Sport, V1TeamDetail, V1TeamJoinApplication, V1TeamMember } from '@/types/api';
 import {
   MyHomePageView,
   SettingsPageView,
@@ -128,6 +135,190 @@ export function MyTeamMembersPageClient({ teamId }: { teamId: string }) {
 
 export function ProfileEditPageClient() {
   const profile = useV1Profile();
+  const onboarding = useV1Onboarding();
+  const sportsQuery = useV1MasterSports();
+  const regionsQuery = useV1MasterRegions();
+  const update = useV1UpdateProfile();
+  const updatePreferences = useV1UpdateMyPreferences();
+  const sports = sportsQuery.data ?? [];
+  const regions = toDistrictRegionOptions(regionsQuery.data ?? []);
+  const [displayName, setDisplayName] = useState(profileEditModel.user.name);
+  const [bio, setBio] = useState(profileEditModel.user.intro);
+  const [visibilityStatus, setVisibilityStatus] = useState<'public' | 'members_only' | 'private'>('public');
+  const [selectedSports, setSelectedSports] = useState<Array<{ sportId: string; levelId: string | null }>>([]);
+  const [selectedRegionId, setSelectedRegionId] = useState('');
+  const [preferencesHydrated, setPreferencesHydrated] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!profile.data) return;
+    setDisplayName(profile.data.profile.displayName);
+    setBio(profile.data.profile.bio ?? '');
+    setVisibilityStatus(profile.data.profile.visibilityStatus);
+  }, [profile.data]);
+
+  useEffect(() => {
+    if (preferencesHydrated || !onboarding.data) return;
+    setSelectedSports(onboarding.data.sports.map((sport) => ({ sportId: sport.sportId, levelId: sport.levelId })));
+    setSelectedRegionId(onboarding.data.regions.find((region) => region.primary)?.regionId ?? onboarding.data.regions[0]?.regionId ?? '');
+    setPreferencesHydrated(true);
+  }, [onboarding.data, preferencesHydrated]);
+
+  const toggleSport = (sportId: string) => {
+    setSelectedSports((current) => {
+      const exists = current.some((sport) => sport.sportId === sportId);
+      return exists ? current.filter((sport) => sport.sportId !== sportId) : [...current, { sportId, levelId: null }];
+    });
+  };
+
+  const setSportLevel = (sportId: string, levelId: string) => {
+    setSelectedSports((current) => current.map((sport) => (sport.sportId === sportId ? { ...sport, levelId } : sport)));
+  };
+
+  const missingLevels = selectedSports.some((sport) => !sport.levelId);
+  const pending = update.isPending || updatePreferences.isPending;
+
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setMessage(null);
+    if (!displayName.trim()) {
+      setMessage('닉네임을 입력해 주세요.');
+      return;
+    }
+    if (missingLevels) {
+      setMessage('선택한 종목의 난이도를 모두 선택해 주세요.');
+      return;
+    }
+
+    try {
+      await update.mutateAsync({
+        displayName: displayName.trim(),
+        bio,
+        profileImageUrl: profile.data?.profile.profileImageUrl ?? null,
+        visibilityStatus,
+      });
+      await updatePreferences.mutateAsync({
+        sports: selectedSports,
+        regions: selectedRegionId ? [{ regionId: selectedRegionId, primary: true }] : [],
+      });
+      setMessage('프로필과 운동 정보가 저장되었습니다.');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : '프로필 저장에 실패했습니다.');
+    }
+  };
+
+  return (
+    <AppChrome title="프로필 수정" activeTab="my" bottomNav={false} backHref="/my">
+      <form className="tm-create-shell tm-profile-edit-shell" id="v1-profile-edit-form" onSubmit={submit}>
+        <section className="tm-my-profile-head">
+          <div className="tm-my-avatar">{initials(displayName)}</div>
+          <div>
+            <div className="tm-text-body-lg">프로필 사진</div>
+            <div className="tm-text-caption" style={{ marginTop: 4 }}>목록과 신청 화면에 함께 표시됩니다.</div>
+          </div>
+        </section>
+        <label className="tm-create-field">
+          <span className="tm-text-label">닉네임</span>
+          <input className="tm-input" value={displayName} onChange={(event) => setDisplayName(event.target.value)} maxLength={40} required />
+        </label>
+        <label className="tm-create-field">
+          <span className="tm-text-label">소개</span>
+          <textarea className="tm-input tm-create-input-multiline" value={bio} onChange={(event) => setBio(event.target.value)} maxLength={500} />
+        </label>
+        <label className="tm-create-field">
+          <span className="tm-text-label">공개 범위</span>
+          <select className="tm-input" value={visibilityStatus} onChange={(event) => setVisibilityStatus(event.target.value as typeof visibilityStatus)}>
+            <option value="public">전체 공개</option>
+            <option value="members_only">멤버 공개</option>
+            <option value="private">비공개</option>
+          </select>
+        </label>
+
+        <Card pad={16}>
+          <div className="tm-text-body-lg">운동 종목</div>
+          <div className="tm-text-caption" style={{ marginTop: 4 }}>회원가입 때 선택한 종목을 여기서 다시 바꿀 수 있습니다.</div>
+          <div className="tm-auth-sport-grid" style={{ marginTop: 14 }}>
+            {sports.map((sport) => (
+              <button
+                className={`tm-card tm-auth-option-card ${selectedSports.some((item) => item.sportId === sport.id) ? 'tm-auth-option-selected' : ''}`}
+                key={sport.id}
+                onClick={() => toggleSport(sport.id)}
+                type="button"
+              >
+                <div className="tm-text-body-lg">{sport.name}</div>
+                <div className="tm-text-caption">{selectedSports.some((item) => item.sportId === sport.id) ? '선택됨' : '선택 가능'}</div>
+              </button>
+            ))}
+          </div>
+        </Card>
+
+        {selectedSports.length > 0 ? (
+          <Card pad={16}>
+            <div className="tm-text-body-lg">난이도</div>
+            <div className="tm-text-caption" style={{ marginTop: 4 }}>선택한 종목마다 현재 실력에 가까운 난이도를 선택해 주세요.</div>
+            <div className="tm-auth-stack" style={{ marginTop: 14 }}>
+              {selectedSports.map(({ sportId, levelId }) => {
+                const sport = sports.find((candidate) => candidate.id === sportId);
+                if (!sport) return null;
+                return <SportLevelPicker key={sportId} levelId={levelId} onSelect={(nextLevelId) => setSportLevel(sportId, nextLevelId)} sport={sport} />;
+              })}
+            </div>
+          </Card>
+        ) : null}
+
+        <Card pad={16}>
+          <div className="tm-text-body-lg">활동 위치</div>
+          <div className="tm-text-caption" style={{ marginTop: 4 }}>매치와 팀 추천에 사용할 기본 지역입니다.</div>
+          <label className="tm-create-field" style={{ marginTop: 14 }}>
+            <span className="tm-text-label">지역</span>
+            <select className="tm-input" value={selectedRegionId} onChange={(event) => setSelectedRegionId(event.target.value)}>
+              <option value="">지역 선택 안 함</option>
+              {regions.map((region) => (
+                <option key={region.id} value={region.id}>{region.name}</option>
+              ))}
+            </select>
+          </label>
+        </Card>
+
+        <Card pad={14} style={{ marginTop: 14, background: message?.includes('실패') || message?.includes('선택해') || message?.includes('입력해') ? 'var(--red50)' : 'var(--blue50)' }}>
+          <div className="tm-text-label">{message ?? '저장할 수 있습니다.'}</div>
+          <div className="tm-text-caption" style={{ marginTop: 5 }}>저장하면 프로필, 종목, 난이도, 활동 위치가 함께 반영됩니다.</div>
+        </Card>
+      </form>
+      <div className="tm-fixed-cta">
+        <button className="tm-btn tm-btn-lg tm-btn-primary tm-btn-block" type="submit" form="v1-profile-edit-form" disabled={pending || missingLevels}>
+          {pending ? '저장 중' : '프로필 저장'}
+        </button>
+      </div>
+    </AppChrome>
+  );
+}
+
+function SportLevelPicker({
+  levelId,
+  onSelect,
+  sport,
+}: {
+  levelId: string | null;
+  onSelect: (levelId: string) => void;
+  sport: V1Sport;
+}) {
+  return (
+    <div className="tm-profile-level-panel">
+      <div className="tm-text-label">{sport.name}</div>
+      <div className="tm-auth-chip-wrap" style={{ marginTop: 10 }}>
+        {sport.levels.map((level) => (
+          <button className={`tm-chip ${levelId === level.id ? 'tm-chip-active' : ''}`} key={level.id} onClick={() => onSelect(level.id)} type="button">
+            {level.name}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ProfileEditPageClientLegacy() {
+  const profile = useV1Profile();
   const update = useV1UpdateProfile();
   const [displayName, setDisplayName] = useState(profileEditModel.user.name);
   const [bio, setBio] = useState(profileEditModel.user.intro);
@@ -208,6 +399,132 @@ export function SettingsPageClient() {
   };
 
   return <SettingsPageView model={model} />;
+}
+
+type LocationStatus = 'idle' | 'requesting' | 'matched' | 'denied' | 'unsupported' | 'unmatched' | 'saved';
+
+export function LocationSettingsPageClient() {
+  const profile = useV1Profile();
+  const regionsQuery = useV1MasterRegions();
+  const resolveLocation = useV1ResolveLocation();
+  const updateRegion = useV1UpdateMyRegion();
+  const regions = toDistrictRegionOptions(regionsQuery.data ?? []);
+  const [selectedRegionId, setSelectedRegionId] = useState('');
+  const [matchedLabel, setMatchedLabel] = useState<string | null>(null);
+  const [status, setStatus] = useState<LocationStatus>('idle');
+  const [message, setMessage] = useState('현재 위치를 한 번만 확인해 활동 지역으로 변환합니다.');
+
+  const requestCurrentLocation = () => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      setStatus('unsupported');
+      setMessage('이 브라우저에서는 현재 위치를 확인할 수 없습니다. 지역을 직접 선택해 주세요.');
+      return;
+    }
+
+    setStatus('requesting');
+    setMessage('현재 위치를 확인하고 있습니다.');
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolveLocation.mutate(
+          {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          },
+          {
+            onSuccess: (result) => {
+              if (!result.region?.id) {
+                setStatus('unmatched');
+                setMessage('현재 위치와 일치하는 지원 지역을 찾지 못했습니다. 지역을 직접 선택해 주세요.');
+                return;
+              }
+
+              const label = result.region.parent?.name ? `${result.region.parent.name} ${result.region.name}` : result.region.name;
+              setSelectedRegionId(result.region.id);
+              setMatchedLabel(label);
+              setStatus('matched');
+              setMessage(`${label} 지역으로 확인됐습니다. 저장하면 추천 기준 지역으로 사용됩니다.`);
+            },
+            onError: () => {
+              setStatus('unmatched');
+              setMessage('현재 위치를 지역으로 변환하지 못했습니다. 지역을 직접 선택해 주세요.');
+            },
+          },
+        );
+      },
+      () => {
+        setStatus('denied');
+        setMessage('위치 권한이 거부됐습니다. 지역을 직접 선택해 주세요.');
+      },
+      { enableHighAccuracy: false, maximumAge: 300000, timeout: 8000 },
+    );
+  };
+
+  const save = () => {
+    if (!selectedRegionId) return;
+    updateRegion.mutate(
+      { regionId: selectedRegionId },
+      {
+        onSuccess: (result) => {
+          setStatus('saved');
+          setMatchedLabel(result.region.name);
+          setMessage(`${result.region.name} 지역이 추천 기준으로 저장됐습니다.`);
+        },
+        onError: (error) => {
+          setStatus('unmatched');
+          setMessage(error instanceof Error ? error.message : '활동 지역 저장에 실패했습니다.');
+        },
+      },
+    );
+  };
+
+  return (
+    <AppChrome title="위치 및 활동 지역" activeTab="my" bottomNav={false} backHref="/my/settings">
+      <div className="tm-my-shell">
+        <Card pad={16}>
+          <div className="tm-text-label">현재 활동 지역</div>
+          <div className="tm-text-heading" style={{ marginTop: 6 }}>{profile.data?.regionName ?? '지역 미설정'}</div>
+          <div className="tm-text-caption" style={{ marginTop: 6 }}>
+            매치, 팀매치, 팀 추천의 기본 지역 기준으로 사용됩니다.
+          </div>
+        </Card>
+
+        <Card pad={16}>
+          <div className="tm-text-body-lg">현재 위치로 찾기</div>
+          <div className="tm-text-caption" style={{ marginTop: 5 }}>
+            좌표는 저장하지 않고 지원 지역으로 변환할 때만 사용합니다.
+          </div>
+          <button className="tm-btn tm-btn-md tm-btn-neutral tm-btn-block" style={{ marginTop: 12 }} type="button" onClick={requestCurrentLocation} disabled={status === 'requesting' || resolveLocation.isPending}>
+            {status === 'requesting' || resolveLocation.isPending ? '현재 위치 확인 중' : '현재 위치로 지역 찾기'}
+          </button>
+        </Card>
+
+        <label className="tm-create-field">
+          <span className="tm-text-label">활동 지역 직접 선택</span>
+          <select className="tm-input" value={selectedRegionId} onChange={(event) => {
+            setSelectedRegionId(event.target.value);
+            setMatchedLabel(regions.find((region) => region.id === event.target.value)?.name ?? null);
+            setStatus('idle');
+            setMessage('선택한 지역을 저장하면 추천 기준 지역으로 사용됩니다.');
+          }}>
+            <option value="">시/군/구 선택</option>
+            {regions.map((region) => (
+              <option key={region.id} value={region.id}>{region.name}</option>
+            ))}
+          </select>
+        </label>
+
+        <Card pad={14} style={{ background: status === 'denied' || status === 'unsupported' || status === 'unmatched' ? 'var(--red50)' : 'var(--blue50)' }}>
+          <div className="tm-text-label">{matchedLabel ?? '지역 확인 필요'}</div>
+          <div className="tm-text-caption" style={{ marginTop: 5 }}>{message}</div>
+        </Card>
+      </div>
+      <div className="tm-fixed-cta">
+        <button className="tm-btn tm-btn-lg tm-btn-primary tm-btn-block" type="button" disabled={!selectedRegionId || updateRegion.isPending} onClick={save}>
+          {updateRegion.isPending ? '저장 중' : '활동 지역 저장'}
+        </button>
+      </div>
+    </AppChrome>
+  );
 }
 
 export function NotificationSettingsPageClient() {
@@ -305,6 +622,9 @@ function toMyHomeModel(
       region: profile.regionName ?? myHomeModel.user.region,
       initials: initials(displayName),
       intro: profile.profile.bio ?? myHomeModel.user.intro,
+      sports: (profile.sports ?? []).map((sport) =>
+        sport.levelName ? `${sport.sportName} ${sport.levelName}` : sport.sportName,
+      ),
       stats: [
         { label: '활동', value: activitySummary?.totals.activityCount ?? profile.reputation.activityCount, unit: '회' },
         { label: '소속 팀', value: activitySummary?.totals.teamCount ?? teams.length, unit: '팀' },

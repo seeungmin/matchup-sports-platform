@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsUUID, IsInt, Min, Max, IsOptional, IsEnum, IsBoolean, Matches, IsIn, MaxLength, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-import { SportType, MatchStyle } from '@prisma/client';
+import { SportType, MatchStyle, MatchGender } from '@prisma/client';
 import { VenueInfoDto } from './venue-info.dto';
 
 export class CreateTeamMatchDto {
@@ -27,6 +27,9 @@ export class CreateTeamMatchDto {
   @ApiProperty({ required: false, default: 0 }) @IsOptional() @IsInt() @Min(0) opponentFee?: number;
   @ApiProperty({ required: false }) @IsOptional() @IsString() paymentDeadline?: string;
   @ApiProperty({ required: false }) @IsOptional() @IsString() cancellationPolicy?: string;
+  @ApiProperty({ required: false, enum: MatchGender, enumName: 'MatchGender', default: MatchGender.any })
+  @IsOptional() @IsEnum(MatchGender)
+  gender?: MatchGender;
   @ApiProperty({ required: false }) @IsOptional() @IsInt() @Min(1) @Max(5) requiredLevel?: number;
   @ApiProperty({ required: false, default: false }) @IsOptional() @IsBoolean() hasProPlayers?: boolean;
   @ApiProperty({ required: false, default: true }) @IsOptional() @IsBoolean() allowMercenary?: boolean;

@@ -157,6 +157,21 @@ describe('NotificationsPage', () => {
     );
   });
 
+  it('keeps server-synced toggles individually interactive while another save is pending', () => {
+    mockUseUpdateNotificationPreferences.mockReturnValue({
+      isPending: true,
+      mutate: mockMutate,
+    });
+
+    render(<NotificationsPage />);
+
+    expect(screen.getByRole('switch', { name: '매치 알림 켜짐' })).not.toBeDisabled();
+    expect(screen.getByRole('switch', { name: '팀 알림 켜짐' })).not.toBeDisabled();
+    expect(screen.getByRole('switch', { name: '채팅 알림 켜짐' })).not.toBeDisabled();
+    expect(screen.getByRole('switch', { name: '결제 알림 켜짐' })).not.toBeDisabled();
+    expect(screen.getByRole('switch', { name: '팀 가입 신청 켜짐' })).not.toBeDisabled();
+  });
+
   it('persists device-local dnd preference to localStorage', async () => {
     const user = userEvent.setup();
 

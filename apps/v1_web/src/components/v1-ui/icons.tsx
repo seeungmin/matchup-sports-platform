@@ -100,6 +100,17 @@ export function FilterIcon(props: IconProps) {
   );
 }
 
+export function RefreshIcon(props: IconProps) {
+  return (
+    <SvgIcon {...props}>
+      <path d="M20 11 A8 8 0 0 0 6.5 5.2" />
+      <path d="M6 3 V6 H9" />
+      <path d="M4 13 A8 8 0 0 0 17.5 18.8" />
+      <path d="M18 21 V18 H15" />
+    </SvgIcon>
+  );
+}
+
 export function BellIcon(props: IconProps) {
   return (
     <SvgIcon {...props}>

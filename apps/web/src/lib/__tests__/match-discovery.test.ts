@@ -18,7 +18,7 @@ describe('match discovery helpers', () => {
   it('parses search params with supported values', () => {
     const filters = parseMatchDiscoveryFilters(
       new URLSearchParams(
-        'sport=futsal&q=%ED%92%8B%EC%82%B4&date=2026-04-12&city=%EC%84%9C%EC%9A%B8&level=beginner&fee=free&available=1&sort=deadline',
+        'sport=futsal&q=%ED%92%8B%EC%82%B4&date=2026-04-12&city=%EC%84%9C%EC%9A%B8&level=beginner&gender=male&fee=free&available=1&sort=deadline',
       ),
     );
 
@@ -28,6 +28,7 @@ describe('match discovery helpers', () => {
       date: '2026-04-12',
       city: '서울',
       level: 'beginner',
+      gender: 'male',
       fee: 'free',
       available: true,
       sort: 'deadline',
@@ -41,13 +42,14 @@ describe('match discovery helpers', () => {
       date: '',
       city: '서울',
       level: 'all',
+      gender: 'female',
       fee: 'free',
       available: true,
       sort: 'latest',
     });
 
     expect(params.toString()).toBe(
-      'sport=futsal&q=%EC%95%BC%EA%B0%84&city=%EC%84%9C%EC%9A%B8&fee=free&available=1&sort=latest',
+      'sport=futsal&q=%EC%95%BC%EA%B0%84&city=%EC%84%9C%EC%9A%B8&gender=female&fee=free&available=1&sort=latest',
     );
   });
 
@@ -58,6 +60,7 @@ describe('match discovery helpers', () => {
       date: '2026-04-12',
       city: '서울',
       level: 'advanced',
+      gender: 'any',
       fee: 'free',
       available: true,
       sort: 'deadline',
@@ -68,6 +71,7 @@ describe('match discovery helpers', () => {
       q: '강남',
       date: '2026-04-12',
       city: '서울',
+      gender: 'any',
       levelMin: '4',
       levelMax: '5',
       freeOnly: 'true',
@@ -83,6 +87,7 @@ describe('match discovery helpers', () => {
       date: '',
       city: '서울',
       level: 'all',
+      gender: 'all',
       fee: 'free',
       available: true,
       sort: 'upcoming',

@@ -762,6 +762,10 @@ function getAuthNextRoute(onboarding: { status: string; missing: string[]; curre
     return '/terms?mode=social';
   }
 
+  if (onboarding.status === 'deferred') {
+    return null;
+  }
+
   if (options?.social && onboarding.missing.includes('terms')) {
     return '/terms?mode=social';
   }

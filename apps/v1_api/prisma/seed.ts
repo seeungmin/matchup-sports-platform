@@ -402,7 +402,7 @@ async function seedTeams(userIds: Record<string, string>, sportIds: Record<strin
       profile: {
         create: {
           description: '주말 풋살 상대를 찾는 v1 seed 팀입니다.',
-          genderRule: '성별 무관',
+          genderRule: '남',
         },
       },
     },
@@ -447,7 +447,7 @@ async function seedMatches(userIds: Record<string, string>, sportIds: Record<str
       endAt: new Date('2026-05-20T11:00:00.000Z'),
       maxParticipants: 6,
       levelNote: '초보 환영',
-      genderRule: '무관',
+      genderRule: '성별 무관',
       costNote: '무료',
       status: 'recruiting',
       participants: {
@@ -482,6 +482,7 @@ async function seedTeamMatches(
     update: {
       title: '토요일 풋살 상대팀 모집',
       status: 'recruiting',
+      genderRule: '남',
     },
     create: {
       id: '00000000-0000-4000-8000-000000000301',
@@ -496,7 +497,7 @@ async function seedTeamMatches(
       startAt: new Date('2026-05-23T05:00:00.000Z'),
       endAt: new Date('2026-05-23T07:00:00.000Z'),
       formatNote: '6:6',
-      genderRule: '무관',
+      genderRule: '남',
       costNote: '구장비 N분의 1',
       status: 'recruiting',
     },
@@ -876,7 +877,7 @@ async function seedCoverageTeams(
     ['00000000-0000-4000-8000-000000001204', '커버 보관 팀', 'archived', 'approval_required', 'none'],
   ] as const;
 
-  for (const [id, name, status, joinPolicy, trustState] of specs) {
+  for (const [index, [id, name, status, joinPolicy, trustState]] of specs.entries()) {
     await prisma.v1Team.upsert({
       where: { id },
       update: {
@@ -902,10 +903,12 @@ async function seedCoverageTeams(
       },
     });
 
+    const genderRule = index % 3 === 0 ? '여' : index % 3 === 1 ? '남' : '성별 무관';
+
     await prisma.v1TeamProfile.upsert({
       where: { teamId: id },
-      update: { description: `${name} seed coverage`, activityNote: '상태 커버리지', skillNote: '전체 레벨', genderRule: '성별 무관' },
-      create: { teamId: id, description: `${name} seed coverage`, activityNote: '상태 커버리지', skillNote: '전체 레벨', genderRule: '성별 무관' },
+      update: { description: `${name} seed coverage`, activityNote: '상태 커버리지', skillNote: '전체 레벨', genderRule },
+      create: { teamId: id, description: `${name} seed coverage`, activityNote: '상태 커버리지', skillNote: '전체 레벨', genderRule },
     });
 
     await prisma.v1TeamTrustScore.upsert({
@@ -996,6 +999,7 @@ async function seedCoverageMatches(
   const statuses = ['recruiting', 'closed', 'cancelled', 'completed', 'archived'] as const;
   for (const [index, status] of statuses.entries()) {
     const id = `00000000-0000-4000-8000-00000000130${index + 1}`;
+    const genderRule = index % 3 === 0 ? '성별 무관' : index % 3 === 1 ? '남' : '여';
     await prisma.v1Match.upsert({
       where: { id },
       update: {
@@ -1006,6 +1010,7 @@ async function seedCoverageMatches(
         status,
         startAt: futureStart,
         endAt: futureEnd,
+        genderRule,
         cancelledAt: status === 'cancelled' ? seedNow : null,
         completedAt: status === 'completed' ? seedNow : null,
       },
@@ -1022,7 +1027,7 @@ async function seedCoverageMatches(
         endAt: futureEnd,
         maxParticipants: 6,
         levelNote: '상태 커버리지',
-        genderRule: '무관',
+        genderRule,
         costNote: '무료',
         status,
         cancelledAt: status === 'cancelled' ? seedNow : null,
@@ -1041,6 +1046,7 @@ async function seedCoverageMatches(
       status: 'recruiting',
       startAt: pastStart,
       endAt: pastEnd,
+      genderRule: '성별 무관',
     },
     create: {
       id: '00000000-0000-4000-8000-000000001306',
@@ -1054,6 +1060,7 @@ async function seedCoverageMatches(
       startAt: pastStart,
       endAt: pastEnd,
       maxParticipants: 6,
+      genderRule: '성별 무관',
       status: 'recruiting',
     },
   });
@@ -1124,6 +1131,7 @@ async function seedCoverageTeamMatches(
   const statuses = ['recruiting', 'matched', 'cancelled', 'completed', 'archived'] as const;
   for (const [index, status] of statuses.entries()) {
     const id = `00000000-0000-4000-8000-00000000140${index + 1}`;
+    const genderRule = index % 3 === 0 ? '여' : index % 3 === 1 ? '남' : '성별 무관';
     await prisma.v1TeamMatch.upsert({
       where: { id },
       update: {
@@ -1136,6 +1144,7 @@ async function seedCoverageTeamMatches(
         approvedApplicantTeamId: status === 'matched' ? '00000000-0000-4000-8000-000000001202' : null,
         startAt: futureStart,
         endAt: futureEnd,
+        genderRule,
         cancelledAt: status === 'cancelled' ? seedNow : null,
         completedAt: status === 'completed' ? seedNow : null,
       },
@@ -1152,7 +1161,7 @@ async function seedCoverageTeamMatches(
         startAt: futureStart,
         endAt: futureEnd,
         formatNote: '6:6',
-        genderRule: '무관',
+        genderRule,
         costNote: '구장비 N분의 1',
         status,
         approvedApplicantTeamId: status === 'matched' ? '00000000-0000-4000-8000-000000001202' : null,
@@ -1173,6 +1182,7 @@ async function seedCoverageTeamMatches(
       status: 'recruiting',
       startAt: pastStart,
       endAt: pastEnd,
+      genderRule: '성별 무관',
     },
     create: {
       id: '00000000-0000-4000-8000-000000001406',
@@ -1186,6 +1196,7 @@ async function seedCoverageTeamMatches(
       placeAddress: '서울 송파구',
       startAt: pastStart,
       endAt: pastEnd,
+      genderRule: '성별 무관',
       status: 'recruiting',
     },
   });
@@ -1298,7 +1309,7 @@ async function seedHostChatDemoData(
       endAt: new Date('2026-05-24T11:00:00.000Z'),
       maxParticipants: 8,
       levelNote: '입문-초보',
-      genderRule: '무관',
+      genderRule: '여',
       costNote: '무료',
       status: 'recruiting',
       participants: {
@@ -1351,7 +1362,7 @@ async function seedHostChatDemoData(
       startAt: new Date('2026-05-25T10:00:00.000Z'),
       endAt: new Date('2026-05-25T12:00:00.000Z'),
       formatNote: '6:6',
-      genderRule: '무관',
+      genderRule: '여',
       costNote: '구장비 N분의 1',
       status: 'recruiting',
     },

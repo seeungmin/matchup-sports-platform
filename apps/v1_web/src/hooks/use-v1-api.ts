@@ -28,6 +28,7 @@ import type {
   V1MatchMutationResult,
   V1MatchUpdatePayload,
   V1MyActivitySummary,
+  V1MyRegionUpdateResult,
   V1MyTeamsResponse,
   V1MyTeamMatch,
   V1Notification,
@@ -149,7 +150,11 @@ export function useV1SaveOnboardingPreferences() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (body: V1OnboardingPreferencePayload) => v1Patch<V1OnboardingMutationResult>('/onboarding/preferences', body),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: v1Keys.onboarding() }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: v1Keys.onboarding() });
+      queryClient.invalidateQueries({ queryKey: v1Keys.profile() });
+      queryClient.invalidateQueries({ queryKey: v1Keys.home() });
+    },
   });
 }
 
@@ -200,6 +205,39 @@ export function useV1ResolveLocation() {
   return useMutation({
     mutationFn: (body: { latitude: number; longitude: number }) =>
       v1Post<V1ResolveLocationResponse>('/master/regions/resolve-location', body),
+  });
+}
+
+export function useV1UpdateMyRegion() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { regionId: string }) => v1Patch<V1MyRegionUpdateResult>('/me/regions', body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: v1Keys.profile() });
+      queryClient.invalidateQueries({ queryKey: v1Keys.settings() });
+      queryClient.invalidateQueries({ queryKey: v1Keys.home() });
+    },
+  });
+}
+
+export function useV1UpdateMyPreferences() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: {
+      sports: Array<{ sportId: string; levelId?: string | null }>;
+      regions: Array<{ regionId: string; primary: boolean }>;
+    }) =>
+      v1Patch<{
+        sports: NonNullable<V1Profile['sports']>;
+        regions: Array<{ regionId: string; name: string; primary: boolean }>;
+        updatedAt: string;
+      }>('/me/preferences', body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: v1Keys.profile() });
+      queryClient.invalidateQueries({ queryKey: v1Keys.onboarding() });
+      queryClient.invalidateQueries({ queryKey: v1Keys.settings() });
+      queryClient.invalidateQueries({ queryKey: v1Keys.home() });
+    },
   });
 }
 

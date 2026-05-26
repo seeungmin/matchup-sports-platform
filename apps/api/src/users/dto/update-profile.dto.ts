@@ -1,5 +1,6 @@
 import { IsString, IsOptional, IsEnum, IsInt, Min, Max } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Gender } from '@prisma/client';
 
 export class UpdateProfileDto {
   @ApiPropertyOptional()
@@ -17,10 +18,10 @@ export class UpdateProfileDto {
   @IsOptional()
   phone?: string;
 
-  @ApiPropertyOptional({ enum: ['male', 'female', 'other'] })
-  @IsEnum(['male', 'female', 'other'])
+  @ApiPropertyOptional({ enum: Gender, enumName: 'Gender' })
+  @IsEnum(Gender)
   @IsOptional()
-  gender?: 'male' | 'female' | 'other';
+  gender?: Gender;
 
   @ApiPropertyOptional()
   @IsInt()

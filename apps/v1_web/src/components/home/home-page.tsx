@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { AppChrome } from '@/components/v1-ui/shell';
-import { ChatIcon } from '@/components/v1-ui/icons';
+import { ChatIcon, RefreshIcon } from '@/components/v1-ui/icons';
 import { Card, EmptyState, KPIStat, ListItem, NumberDisplay, SectionTitle, WeatherStrip } from '@/components/v1-ui/primitives';
 import { cssUrl } from '@/lib/assets';
 import type { HomeMatchCard, HomeQuickAction, HomeViewModel } from './home.types';
@@ -56,6 +56,19 @@ export function HomePageView({ model }: { model: HomeViewModel }) {
       </div>
 
       <div style={{ padding: '0 20px 24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, gap: 10 }}>
+          <div className="tm-text-label">현재 위치 날씨</div>
+          <button
+            className="tm-btn tm-btn-icon tm-btn-neutral"
+            type="button"
+            onClick={model.refreshWeather}
+            disabled={!model.refreshWeather || model.weatherRefreshing}
+            aria-label={model.weatherRefreshing ? '날씨 확인 중' : '현재 위치 날씨 새로고침'}
+            title={model.weatherRefreshing ? '확인 중' : '새로고침'}
+          >
+            <RefreshIcon size={18} strokeWidth={2.1} />
+          </button>
+        </div>
         <WeatherStrip {...model.weather} />
       </div>
 

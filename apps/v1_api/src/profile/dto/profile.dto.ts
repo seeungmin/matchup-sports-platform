@@ -1,4 +1,4 @@
-import { IsBoolean, IsIn, IsOptional, IsString, MaxLength, ValidateNested } from 'class-validator';
+import { IsArray, IsBoolean, IsIn, IsOptional, IsString, IsUUID, MaxLength, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class UpdateProfileDto {
@@ -54,6 +54,40 @@ export class UpdateSettingsDto {
   @ValidateNested()
   @Type(() => SettingsNotificationsDto)
   notifications?: SettingsNotificationsDto;
+}
+
+export class UpdateMyRegionsDto {
+  @IsUUID()
+  regionId!: string;
+}
+
+class MySportPreferenceDto {
+  @IsUUID()
+  sportId!: string;
+
+  @IsOptional()
+  @IsUUID()
+  levelId?: string | null;
+}
+
+class MyRegionPreferenceDto {
+  @IsUUID()
+  regionId!: string;
+
+  @IsBoolean()
+  primary!: boolean;
+}
+
+export class UpdateMyPreferencesDto {
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => MySportPreferenceDto)
+  sports!: MySportPreferenceDto[];
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => MyRegionPreferenceDto)
+  regions!: MyRegionPreferenceDto[];
 }
 
 export class WithdrawalRequestDto {

@@ -58,7 +58,7 @@
 | `nickname` | string | No | No |
 | `profileImageUrl` | string | No | No |
 | `phone` | string | No | No |
-| `gender` | `male \| female \| other` | No | No |
+| `gender` | Gender (`male`, `female`) | No | No |
 | `birthYear` | int(1950~2015) | No | No |
 | `bio` | string | No | No |
 | `locationCity` | string | No | No |

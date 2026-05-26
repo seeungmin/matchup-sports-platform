@@ -19,13 +19,24 @@ const sportFilters = [
 ];
 
 
+const genderFilters = [
+  { key: '', label: '성별 전체' },
+  { key: 'any', label: '성별 무관' },
+  { key: 'male', label: '남성' },
+  { key: 'female', label: '여성' },
+] as const;
+
 export default function TeamMatchesPage() {
   const [activeSport, setActiveSport] = useState('');
+  const [activeGender, setActiveGender] = useState('');
   const [dateFilter, setDateFilter] = useState('');
   const [levelFilter, setLevelFilter] = useState('');
   const { isAuthenticated } = useAuthStore();
   const { data: myTeams } = useMyTeams();
-  const params = activeSport ? { sportType: activeSport } : undefined;
+  const params = {
+    ...(activeSport ? { sportType: activeSport } : {}),
+    ...(activeGender ? { gender: activeGender } : {}),
+  };
   const { data, isLoading, error, refetch } = useTeamMatches(params);
   const allMatches = data?.items ?? [];
   let matches = dateFilter
@@ -86,6 +97,23 @@ export default function TeamMatchesPage() {
 
       {/* 필터 행 */}
       <div className="px-5 @3xl:px-0 mb-4 flex flex-wrap items-center gap-2">
+        <div className="flex w-full gap-2 overflow-x-auto scrollbar-hide pb-1">
+          {genderFilters.map((f) => (
+            <button
+              key={f.key || 'all'}
+              type="button"
+              aria-pressed={activeGender === f.key}
+              onClick={() => setActiveGender(f.key)}
+              className={`shrink-0 rounded-lg px-3.5 py-2 text-sm font-medium transition-colors ${
+                activeGender === f.key
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-50 text-gray-600 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
         <label htmlFor="team-match-date-filter" className="sr-only">경기 날짜 필터</label>
         <input
           id="team-match-date-filter"
@@ -187,4 +215,3 @@ export default function TeamMatchesPage() {
     </div>
   );
 }
-

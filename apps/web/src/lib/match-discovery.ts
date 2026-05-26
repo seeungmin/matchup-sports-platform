@@ -1,6 +1,9 @@
+import type { MatchGender } from '@/types/api';
+
 export type MatchDiscoveryLevel = 'all' | 'beginner' | 'intermediate' | 'advanced';
 export type MatchDiscoveryFee = 'all' | 'free';
 export type MatchDiscoverySort = 'upcoming' | 'latest' | 'deadline';
+export type MatchDiscoveryGender = 'all' | MatchGender;
 
 export interface MatchDiscoveryFilters {
   sport: string;
@@ -8,6 +11,7 @@ export interface MatchDiscoveryFilters {
   date: string;
   city: string;
   level: MatchDiscoveryLevel;
+  gender: MatchDiscoveryGender;
   fee: MatchDiscoveryFee;
   available: boolean;
   sort: MatchDiscoverySort;
@@ -19,12 +23,14 @@ export const DEFAULT_MATCH_DISCOVERY_FILTERS: MatchDiscoveryFilters = {
   date: '',
   city: '',
   level: 'all',
+  gender: 'all',
   fee: 'all',
   available: false,
   sort: 'upcoming',
 };
 
 const LEVEL_OPTIONS = new Set<MatchDiscoveryLevel>(['all', 'beginner', 'intermediate', 'advanced']);
+const GENDER_OPTIONS = new Set<MatchDiscoveryGender>(['all', 'any', 'male', 'female']);
 const FEE_OPTIONS = new Set<MatchDiscoveryFee>(['all', 'free']);
 const SORT_OPTIONS = new Set<MatchDiscoverySort>(['upcoming', 'latest', 'deadline']);
 
@@ -44,6 +50,7 @@ export function parseMatchDiscoveryFilters(
   const date = normalizeString(searchParams.get('date'));
   const city = normalizeString(searchParams.get('city'));
   const rawLevel = normalizeString(searchParams.get('level')) as MatchDiscoveryLevel;
+  const rawGender = normalizeString(searchParams.get('gender')) as MatchDiscoveryGender;
   const rawFee = normalizeString(searchParams.get('fee')) as MatchDiscoveryFee;
   const rawSort = normalizeString(searchParams.get('sort')) as MatchDiscoverySort;
 
@@ -53,6 +60,7 @@ export function parseMatchDiscoveryFilters(
     date,
     city,
     level: LEVEL_OPTIONS.has(rawLevel) ? rawLevel : 'all',
+    gender: GENDER_OPTIONS.has(rawGender) ? rawGender : 'all',
     fee: FEE_OPTIONS.has(rawFee) ? rawFee : 'all',
     available: normalizeBoolean(searchParams.get('available')),
     sort: SORT_OPTIONS.has(rawSort) ? rawSort : 'upcoming',
@@ -67,6 +75,7 @@ export function buildMatchDiscoverySearchParams(filters: MatchDiscoveryFilters):
   if (filters.date) params.set('date', filters.date);
   if (filters.city) params.set('city', filters.city);
   if (filters.level !== 'all') params.set('level', filters.level);
+  if (filters.gender !== 'all') params.set('gender', filters.gender);
   if (filters.fee !== 'all') params.set('fee', filters.fee);
   if (filters.available) params.set('available', '1');
   if (filters.sort !== 'upcoming') params.set('sort', filters.sort);
@@ -83,6 +92,7 @@ export function buildMatchApiParams(
   if (filters.q) params.q = filters.q;
   if (filters.date) params.date = filters.date;
   if (filters.city) params.city = filters.city;
+  if (filters.gender !== 'all') params.gender = filters.gender;
 
   if (filters.level === 'beginner') {
     params.levelMin = '1';
@@ -118,6 +128,7 @@ export function countActiveMatchDiscoveryFilters(filters: MatchDiscoveryFilters)
   if (filters.date) count += 1;
   if (filters.city) count += 1;
   if (filters.level !== 'all') count += 1;
+  if (filters.gender !== 'all') count += 1;
   if (filters.fee !== 'all') count += 1;
   if (filters.available) count += 1;
   if (filters.sort !== 'upcoming') count += 1;

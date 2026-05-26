@@ -16,7 +16,7 @@ export const mockMatch: Match = {
   fee: 10000,
   levelMin: 1,
   levelMax: 5,
-  gender: 'all',
+  gender: 'any',
   teamConfig: null,
   createdAt: '2024-01-01T00:00:00.000Z',
 };

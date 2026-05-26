@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useV1ChatRooms, useV1Home } from '@/hooks/use-v1-api';
 import type { V1Home, V1HomeRecommendation, V1HomeShortcut, V1Match, V1Notice } from '@/types/api';
 import { HomePageView } from './home-page';
@@ -10,7 +10,7 @@ import { getHomeViewModel } from './home.view-model';
 export function HomePageClient() {
   const query = useV1Home();
   const chatRooms = useV1ChatRooms();
-  const weather = useCurrentLocationWeather();
+  const { weather, refreshing: weatherRefreshing, refresh: refreshWeather } = useCurrentLocationWeather();
   const fallback = getHomeViewModel();
   const chatUnreadCount = chatRooms.data?.items.reduce((sum, room) => sum + room.unreadCount, 0) ?? 0;
 
@@ -23,6 +23,8 @@ export function HomePageClient() {
           hasNewNotification: false,
           chatUnreadCount,
           weather: weather ?? fallback.weather,
+          weatherRefreshing,
+          refreshWeather,
           retry: () => void query.refetch(),
         }}
       />
@@ -33,8 +35,12 @@ export function HomePageClient() {
     <HomePageView
       model={
         query.data
-          ? toHomeModel(query.data, fallback, () => void query.refetch(), chatUnreadCount, weather)
-          : { ...fallback, chatUnreadCount, weather: weather ?? fallback.weather }
+          ? {
+              ...toHomeModel(query.data, fallback, () => void query.refetch(), chatUnreadCount, weather),
+              weatherRefreshing,
+              refreshWeather,
+            }
+          : { ...fallback, chatUnreadCount, weather: weather ?? fallback.weather, weatherRefreshing, refreshWeather }
       }
     />
   );
@@ -155,15 +161,17 @@ function normalizeShortcuts(shortcuts: V1HomeShortcut[] | undefined, fallback: H
 
 function useCurrentLocationWeather() {
   const [weather, setWeather] = useState<HomeViewModel['weather'] | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
+  const refresh = useCallback(() => {
     if (!('geolocation' in navigator)) {
       setWeather((current) => current ?? { city: '현재 위치', temp: '-', cond: '위치 권한 필요', wind: '-' });
-      return;
+      return () => undefined;
     }
 
     let cancelled = false;
 
+    setRefreshing(true);
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         try {
@@ -195,11 +203,14 @@ function useCurrentLocationWeather() {
           if (!cancelled) {
             setWeather((current) => current ?? { city: '현재 위치', temp: '-', cond: '날씨 불러오기 실패', wind: '-' });
           }
+        } finally {
+          if (!cancelled) setRefreshing(false);
         }
       },
       () => {
         if (!cancelled) {
           setWeather((current) => current ?? { city: '현재 위치', temp: '-', cond: '위치 권한 필요', wind: '-' });
+          setRefreshing(false);
         }
       },
       { enableHighAccuracy: false, maximumAge: 10 * 60 * 1000, timeout: 8000 },
@@ -210,7 +221,9 @@ function useCurrentLocationWeather() {
     };
   }, []);
 
-  return weather;
+  useEffect(() => refresh(), [refresh]);
+
+  return { weather, refreshing, refresh: () => void refresh() };
 }
 
 type OpenMeteoCurrentWeatherResponse = {

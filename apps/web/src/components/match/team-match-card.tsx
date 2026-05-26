@@ -24,6 +24,12 @@ const levelLabel: Record<string, string> = {
   pro: '프로',
 };
 
+const genderLabel = {
+  any: '성별 무관',
+  male: '남성',
+  female: '여성',
+} as const;
+
 export interface TeamMatchCardProps {
   match: TeamMatch;
   className?: string;
@@ -93,6 +99,8 @@ export function TeamMatchCard({ match, className }: TeamMatchCardProps) {
               {match.gameFormat}
             </>
           )}
+          <span className="mx-1 text-gray-300 dark:text-gray-600" aria-hidden="true">·</span>
+          {genderLabel[match.gender] ?? match.gender}
           <span className="mx-1 text-gray-300 dark:text-gray-600" aria-hidden="true">·</span>
           <span className="font-semibold text-gray-800 dark:text-gray-200">
             {formatCurrency(match.opponentFee ?? match.totalFee)}

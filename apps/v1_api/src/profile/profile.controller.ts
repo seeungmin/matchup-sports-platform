@@ -3,7 +3,13 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import { OptionalV1AuthGuard } from '../auth/optional-v1-auth.guard';
 import { V1AuthGuard } from '../auth/v1-auth.guard';
 import { V1AuthUser } from '../auth/v1-auth-user';
-import { UpdateProfileDto, UpdateSettingsDto, WithdrawalRequestDto } from './dto/profile.dto';
+import {
+  UpdateMyPreferencesDto,
+  UpdateMyRegionsDto,
+  UpdateProfileDto,
+  UpdateSettingsDto,
+  WithdrawalRequestDto,
+} from './dto/profile.dto';
 import { ProfileService } from './profile.service';
 
 @Controller()
@@ -44,6 +50,18 @@ export class ProfileController {
   @UseGuards(V1AuthGuard)
   updateSettings(@CurrentUser() user: V1AuthUser, @Body() dto: UpdateSettingsDto) {
     return this.profileService.updateSettings(user, dto);
+  }
+
+  @Patch('me/regions')
+  @UseGuards(V1AuthGuard)
+  updateMyRegions(@CurrentUser() user: V1AuthUser, @Body() dto: UpdateMyRegionsDto) {
+    return this.profileService.updateMyRegions(user, dto);
+  }
+
+  @Patch('me/preferences')
+  @UseGuards(V1AuthGuard)
+  updateMyPreferences(@CurrentUser() user: V1AuthUser, @Body() dto: UpdateMyPreferencesDto) {
+    return this.profileService.updateMyPreferences(user, dto);
   }
 
   @Post('auth/logout')

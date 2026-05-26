@@ -102,6 +102,14 @@ export type V1ResolveLocationResponse = {
   distanceMeters?: number | null;
 };
 
+export type V1MyRegionUpdateResult = {
+  region: {
+    regionId: string;
+    name: string;
+  };
+  updatedAt: string;
+};
+
 export type V1OnboardingStep = 'terms' | 'signup' | 'sport' | 'level' | 'region' | 'confirm' | 'done';
 
 export type V1OnboardingDetail = {
@@ -797,7 +805,15 @@ export type V1Profile = {
   accountStatus: string;
   email: string | null;
   authProvider: 'email' | 'kakao' | 'naver' | null;
+  onboardingStatus?: 'not_started' | 'terms_done' | 'social_terms_required' | 'social_profile_required' | 'signup_done' | 'sport_done' | 'level_done' | 'region_done' | 'completed' | 'deferred';
   regionName: string | null;
+  sports?: Array<{
+    sportId: string;
+    sportName: string;
+    levelId: string | null;
+    levelName: string | null;
+    primary: boolean;
+  }>;
   profile: {
     displayName: string;
     profileImageUrl: string | null;

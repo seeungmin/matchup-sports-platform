@@ -7,17 +7,20 @@ export const teamMatchesHandlers = [
     const url = new URL(request.url);
     const teamId = url.searchParams.get('teamId');
     const status = url.searchParams.get('status');
+    const gender = url.searchParams.get('gender');
 
     const baseMatches = [
       mockTeamMatch,
-      { ...mockTeamMatch, id: 'tm-2', status: 'scheduled', title: '수요일 팀 매치', hostTeamId: teamId ?? mockTeamMatch.hostTeamId },
-      { ...mockTeamMatch, id: 'tm-3', status: 'completed', title: '지난 경기 기록', hostTeamId: teamId ?? mockTeamMatch.hostTeamId },
-      { ...mockTeamMatch, id: 'tm-4', status: 'cancelled', title: '취소된 매치', hostTeamId: teamId ?? mockTeamMatch.hostTeamId },
+      { ...mockTeamMatch, id: 'tm-2', gender: 'male' as const, status: 'scheduled' as const, title: '수요일 남성 팀 매치', hostTeamId: teamId ?? mockTeamMatch.hostTeamId },
+      { ...mockTeamMatch, id: 'tm-3', gender: 'female' as const, status: 'completed' as const, title: '여성 팀 경기 기록', hostTeamId: teamId ?? mockTeamMatch.hostTeamId },
+      { ...mockTeamMatch, id: 'tm-4', gender: 'female' as const, status: 'recruiting' as const, title: '여성 팀 매치 모집', hostTeamId: teamId ?? mockTeamMatch.hostTeamId },
     ];
 
-    const filtered = status
-      ? baseMatches.filter((match) => status.split(',').includes(match.status))
-      : [mockTeamMatch];
+    const filtered = baseMatches.filter((match) => {
+      if (status && !status.split(',').includes(match.status)) return false;
+      if (gender && match.gender !== gender) return false;
+      return true;
+    });
 
     return paged(filtered.map((match) => (teamId ? { ...match, hostTeamId: teamId } : match)));
   }),

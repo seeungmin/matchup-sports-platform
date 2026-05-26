@@ -11,6 +11,7 @@ export type {
   AdminUserStatus,
   AdminUserAuditAction,
   Gender,
+  MatchGender,
   NotificationType,
   ChatRoomType,
   ChatMessageType,
@@ -42,6 +43,8 @@ export { SPORT_TYPES, SPORTTYPE_VALUES } from './enums.generated';
 
 import type {
   SportType,
+  Gender,
+  MatchGender,
   MatchStatus,
   PaymentStatus,
   PaymentMethod,
@@ -136,7 +139,7 @@ export interface Match {
   fee: number;
   levelMin: number;
   levelMax: number;
-  gender: string;
+  gender: MatchGender;
   status: MatchStatus;
   imageUrl?: string;
   teamConfig: TeamConfig | null;
@@ -365,7 +368,7 @@ export interface UserProfile {
   nickname: string;
   email: string | null;
   profileImageUrl: string | null;
-  gender: string | null;
+  gender: Gender | null;
   bio: string | null;
   mannerScore: number;
   totalMatches: number;
@@ -535,6 +538,7 @@ export interface TeamMatch {
   venueInfo?: VenueInfo | null;
   totalFee: number;
   opponentFee: number;
+  gender: MatchGender;
   requiredLevel?: number;
   hasProPlayers?: boolean;
   proPlayerCount?: number;
@@ -949,7 +953,7 @@ export interface CreateMatchInput {
   fee?: number;
   levelMin?: number;
   levelMax?: number;
-  gender?: string;
+  gender?: MatchGender;
   teamConfig?: TeamConfig;
 }
 
@@ -986,7 +990,7 @@ export interface UpdateMatchInput {
   fee?: number;
   levelMin?: number;
   levelMax?: number;
-  gender?: string;
+  gender?: MatchGender;
   teamConfig?: TeamConfig;
   status?: MatchStatus;
 }
@@ -1151,6 +1155,7 @@ export interface CreateTeamMatchInput {
   venueAddress: string;
   totalFee: number;
   opponentFee?: number;
+  gender?: MatchGender;
   totalMinutes?: number;
   requiredLevel?: number;
   hasProPlayers?: boolean;

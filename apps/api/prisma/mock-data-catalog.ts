@@ -8,6 +8,7 @@ import type {
   LessonType,
   ListingType,
   MatchStatus,
+  MatchGender,
   MatchStyle,
   MercenaryApplicationStatus,
   MercenaryPostStatus,
@@ -192,7 +193,7 @@ interface MockUserRecord {
   email: string;
   nickname: string;
   profileImageUrl: string;
-  gender: 'male' | 'female' | 'other';
+  gender: 'male' | 'female';
   birthYear: number;
   bio: string;
   sportTypes: SportType[];
@@ -272,7 +273,7 @@ interface MockMatchRecord {
   fee: number;
   levelMin: number;
   levelMax: number;
-  gender: string;
+  gender: MatchGender;
   participantKeys: MockUserKey[];
   status?: MatchStatus;
 }
@@ -370,6 +371,7 @@ interface MockTeamMatchRecord {
   venueAddress: string;
   totalFee: number;
   opponentFee: number;
+  gender: MatchGender;
   requiredLevel: number;
   allowMercenary: boolean;
   matchStyle: MatchStyle;
@@ -654,7 +656,7 @@ export function buildDevMockCatalog(seedDateKey = getKstDateKey()) {
       email: `mock-tennis-leader@${MOCK_EMAIL_DOMAIN}`,
       nickname: '지우서브에이스',
       profileImageUrl: MOCK_PROFILE_IMAGE_PATHS[4],
-      gender: 'other',
+      gender: 'female',
       birthYear: 1996,
       bio: 'serve 루틴과 footwork drill을 좋아하는 테니스 동호인입니다. 복식·단식 모두 OK.',
       sportTypes: ['tennis', 'swimming'],
@@ -2555,6 +2557,7 @@ export function buildDevMockCatalog(seedDateKey = getKstDateKey()) {
       venueAddress: '서울 마포구 성산로 48',
       totalFee: 240000,
       opponentFee: 120000,
+      gender: 'any',
       requiredLevel: 3,
       allowMercenary: true,
       matchStyle: 'friendly',
@@ -2590,6 +2593,7 @@ export function buildDevMockCatalog(seedDateKey = getKstDateKey()) {
       venueAddress: '서울 용산구 이촌로 302',
       totalFee: 180000,
       opponentFee: 90000,
+      gender: 'male',
       requiredLevel: 4,
       allowMercenary: false,
       matchStyle: 'competitive',
@@ -2616,6 +2620,7 @@ export function buildDevMockCatalog(seedDateKey = getKstDateKey()) {
       venueAddress: '서울 서초구 반포대로 112',
       totalFee: 90000,
       opponentFee: 45000,
+      gender: 'female',
       requiredLevel: 2,
       allowMercenary: true,
       matchStyle: 'manner_focused',
@@ -2642,6 +2647,7 @@ export function buildDevMockCatalog(seedDateKey = getKstDateKey()) {
       venueAddress: '서울 양천구 안양천로 939',
       totalFee: 300000,
       opponentFee: 150000,
+      gender: 'any',
       requiredLevel: 3,
       allowMercenary: true,
       matchStyle: 'friendly',
@@ -2668,6 +2674,7 @@ export function buildDevMockCatalog(seedDateKey = getKstDateKey()) {
       venueAddress: '서울 구로구 경인로 430',
       totalFee: 360000,
       opponentFee: 180000,
+      gender: 'any',
       requiredLevel: 3,
       allowMercenary: false,
       matchStyle: 'competitive',
@@ -2694,6 +2701,7 @@ export function buildDevMockCatalog(seedDateKey = getKstDateKey()) {
       venueAddress: '서울 광진구 뚝섬로34길 67',
       totalFee: 160000,
       opponentFee: 80000,
+      gender: 'female',
       requiredLevel: 2,
       allowMercenary: true,
       matchStyle: 'manner_focused',
@@ -2720,6 +2728,7 @@ export function buildDevMockCatalog(seedDateKey = getKstDateKey()) {
       venueAddress: '서울 송파구 올림픽로 240',
       totalFee: 420000,
       opponentFee: 210000,
+      gender: 'male',
       requiredLevel: 4,
       allowMercenary: true,
       matchStyle: 'competitive',
@@ -2756,6 +2765,7 @@ export function buildDevMockCatalog(seedDateKey = getKstDateKey()) {
       venueAddress: '서울 노원구 화랑로 727',
       totalFee: 350000,
       opponentFee: 175000,
+      gender: 'any',
       requiredLevel: 3,
       allowMercenary: false,
       matchStyle: 'competitive',
@@ -2783,6 +2793,7 @@ export function buildDevMockCatalog(seedDateKey = getKstDateKey()) {
       venueAddress: '서울 마포구 성산로 48',
       totalFee: 240000,
       opponentFee: 120000,
+      gender: 'any',
       requiredLevel: 3,
       allowMercenary: false,
       matchStyle: 'friendly',
@@ -2819,6 +2830,7 @@ export function buildDevMockCatalog(seedDateKey = getKstDateKey()) {
       venueAddress: '서울 양천구 안양천로 939',
       totalFee: 300000,
       opponentFee: 150000,
+      gender: 'any',
       requiredLevel: 3,
       allowMercenary: false,
       matchStyle: 'friendly',

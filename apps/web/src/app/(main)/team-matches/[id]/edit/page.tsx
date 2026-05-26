@@ -10,6 +10,7 @@ import { useToast } from '@/components/ui/toast';
 import { useTeamMatch } from '@/hooks/use-api';
 import { SKILL_GRADES, MATCH_TYPES } from '@/lib/skill-grades';
 import type { SkillGrade, MatchType } from '@/lib/skill-grades';
+import type { MatchGender } from '@/types/api';
 import { api } from '@/lib/api';
 import { Toggle } from '@/components/ui/toggle';
 
@@ -27,6 +28,11 @@ const matchStyleOptions = [
 ];
 
 const gameFormatOptions = ['11:11', '8:8', '6:6', '5:5'] as const;
+const genderOptions = [
+  { value: 'any', label: '성별 무관' },
+  { value: 'male', label: '남성' },
+  { value: 'female', label: '여성' },
+] as const;
 
 interface FormData {
   title: string;
@@ -39,6 +45,7 @@ interface FormData {
   venueAddress: string;
   totalFee: string;
   opponentFee: string;
+  gender: MatchGender;
   requiredLevel: string;
   skillGrade: SkillGrade;
   proPlayerCount: number;
@@ -71,6 +78,7 @@ export default function EditTeamMatchPage() {
     venueAddress: '',
     totalFee: '',
     opponentFee: '',
+    gender: 'any',
     requiredLevel: 'middle',
     skillGrade: 'B',
     proPlayerCount: 0,
@@ -100,6 +108,7 @@ export default function EditTeamMatchPage() {
         venueAddress: match.venueAddress || '',
         totalFee: match.totalFee != null ? String(match.totalFee) : '',
         opponentFee: match.opponentFee != null ? String(match.opponentFee) : '',
+        gender: match.gender || 'any',
         requiredLevel: (match.requiredLevel != null ? String(match.requiredLevel) : 'middle'),
         skillGrade: (match.skillGrade as SkillGrade) || 'B',
         proPlayerCount: match.proPlayerCount ?? 0,
@@ -353,6 +362,26 @@ export default function EditTeamMatchPage() {
                   {g.label}
                 </p>
                 <p className="text-xs text-gray-500 mt-0.5 whitespace-nowrap">{g.desc}</p>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="mb-5">
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-2 block">성별 조건</label>
+          <div className="grid grid-cols-3 gap-2">
+            {genderOptions.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => update('gender', option.value)}
+                className={`rounded-xl py-3 text-base font-semibold transition-colors ${
+                  form.gender === option.value
+                    ? 'ring-2 ring-blue-500 border border-blue-500 bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-300'
+                    : 'border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
+                }`}
+              >
+                {option.label}
               </button>
             ))}
           </div>

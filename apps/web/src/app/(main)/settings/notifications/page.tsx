@@ -108,7 +108,9 @@ export default function NotificationsPage() {
   const [dndEnabled, setDndEnabled] = useState(false);
   const [browserPermission, setBrowserPermission] =
     useState<BrowserPermissionState>('unsupported');
-  const [savingKey, setSavingKey] = useState<ServerPreferenceKey | null>(null);
+  const [savingKeys, setSavingKeys] = useState<Set<ServerPreferenceKey>>(
+    () => new Set(),
+  );
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -134,7 +136,7 @@ export default function NotificationsPage() {
   }
 
   const handleServerToggle = (key: ServerPreferenceKey, nextValue: boolean) => {
-    setSavingKey(key);
+    setSavingKeys((current) => new Set(current).add(key));
     updatePreferences.mutate(
       { [key]: nextValue },
       {
@@ -145,7 +147,11 @@ export default function NotificationsPage() {
           toast('error', '알림 설정을 저장하지 못했어요. 잠시 후 다시 시도해주세요');
         },
         onSettled: () => {
-          setSavingKey((current) => (current === key ? null : current));
+          setSavingKeys((current) => {
+            const next = new Set(current);
+            next.delete(key);
+            return next;
+          });
         },
       },
     );
@@ -249,8 +255,8 @@ export default function NotificationsPage() {
                         !preferencesQuery.data![category.key],
                       )
                     }
-                    disabled={updatePreferences.isPending}
-                    saving={savingKey === category.key}
+                    disabled={savingKeys.has(category.key)}
+                    saving={savingKeys.has(category.key)}
                   />
                 ))}
               </div>
@@ -274,8 +280,8 @@ export default function NotificationsPage() {
                         !preferencesQuery.data![category.key],
                       )
                     }
-                    disabled={updatePreferences.isPending}
-                    saving={savingKey === category.key}
+                    disabled={savingKeys.has(category.key)}
+                    saving={savingKeys.has(category.key)}
                   />
                 ))}
               </div>

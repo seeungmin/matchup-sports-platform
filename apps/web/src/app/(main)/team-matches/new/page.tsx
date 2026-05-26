@@ -10,7 +10,7 @@ import { ErrorState } from '@/components/ui/error-state';
 import { useRequireAuth } from '@/hooks/use-require-auth';
 import { SKILL_GRADES, MATCH_TYPES, getGradeInfo } from '@/lib/skill-grades';
 import type { SkillGrade, MatchType } from '@/lib/skill-grades';
-import type { CreateTeamMatchInput } from '@/types/api';
+import type { CreateTeamMatchInput, MatchGender } from '@/types/api';
 import { formatCurrency } from '@/lib/utils';
 import { sportLabel } from '@/lib/constants';
 import { Toggle } from '@/components/ui/toggle';
@@ -28,6 +28,11 @@ const matchStyleOptions = [
 ];
 
 const gameFormatOptions = ['11:11', '8:8', '6:6', '5:5'] as const;
+const genderOptions = [
+  { value: 'any', label: '성별 무관' },
+  { value: 'male', label: '남성' },
+  { value: 'female', label: '여성' },
+] as const;
 
 interface FormData {
   title: string;
@@ -41,6 +46,7 @@ interface FormData {
   venueAddress: string;
   totalFee: string;
   opponentFee: string;
+  gender: MatchGender;
   requiredLevel: string;
   hasProPlayers: boolean;
   allowMercenary: boolean;
@@ -67,6 +73,7 @@ const initialForm: FormData = {
   venueAddress: '',
   totalFee: '',
   opponentFee: '',
+  gender: 'any',
   requiredLevel: 'middle',
   hasProPlayers: false,
   allowMercenary: false,
@@ -135,6 +142,7 @@ export default function NewTeamMatchPage() {
       venueAddress: form.venueAddress,
       totalFee: Number(form.totalFee),
       opponentFee: form.isFreeInvitation ? 0 : (form.opponentFee ? Number(form.opponentFee) : 0),
+      gender: form.gender,
       totalMinutes: form.totalMinutes ? Number(form.totalMinutes) : 120,
       allowMercenary: form.allowMercenary,
       matchStyle: form.matchStyle,
@@ -404,6 +412,26 @@ export default function NewTeamMatchPage() {
                       {g.label}
                     </p>
                     <p className="text-xs text-gray-500 mt-0.5 whitespace-nowrap">{g.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">성별 조건</label>
+              <div className="grid grid-cols-3 gap-2">
+                {genderOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => update('gender', option.value)}
+                    className={`rounded-xl py-3 text-base font-semibold transition-colors ${
+                      form.gender === option.value
+                        ? 'ring-2 ring-blue-500 border border-blue-500 bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-300'
+                        : 'border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
+                    }`}
+                  >
+                    {option.label}
                   </button>
                 ))}
               </div>

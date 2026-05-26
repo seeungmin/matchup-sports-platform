@@ -14,7 +14,7 @@ import {
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { SportType } from '@prisma/client';
+import { MatchGender, SportType } from '@prisma/client';
 
 export class TeamConfigDto {
   @ApiPropertyOptional({ description: 'Number of teams', minimum: 2, maximum: 4 })
@@ -97,10 +97,10 @@ export class CreateMatchDto {
   @IsOptional()
   levelMax?: number;
 
-  @ApiPropertyOptional({ enum: ['any', 'male', 'female'] })
-  @IsEnum(['any', 'male', 'female'])
+  @ApiPropertyOptional({ enum: MatchGender, enumName: 'MatchGender' })
+  @IsEnum(MatchGender)
   @IsOptional()
-  gender?: string;
+  gender?: MatchGender;
 
   @ValidateNested()
   @Type(() => TeamConfigDto)
@@ -175,6 +175,11 @@ export class MatchFilterDto {
   @IsOptional()
   @Transform(({ value }) => value === true || value === 'true' || value === '1')
   beginnerFriendly?: boolean;
+
+  @ApiPropertyOptional({ enum: MatchGender, enumName: 'MatchGender' })
+  @IsEnum(MatchGender)
+  @IsOptional()
+  gender?: MatchGender;
 
   @ApiPropertyOptional({ enum: ['upcoming', 'latest', 'deadline'] })
   @IsIn(['upcoming', 'latest', 'deadline'])
@@ -262,10 +267,10 @@ export class UpdateMatchDto {
   @IsOptional()
   levelMax?: number;
 
-  @ApiPropertyOptional({ enum: ['any', 'male', 'female'] })
-  @IsEnum(['any', 'male', 'female'])
+  @ApiPropertyOptional({ enum: MatchGender, enumName: 'MatchGender' })
+  @IsEnum(MatchGender)
   @IsOptional()
-  gender?: string;
+  gender?: MatchGender;
 
   @ValidateNested()
   @Type(() => TeamConfigDto)

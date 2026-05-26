@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Check, Plus, ChevronRight } from 'lucide-react';
 import { useVenues } from '@/hooks/use-api';
-import type { Venue } from '@/types/api';
+import type { MatchGender, Venue } from '@/types/api';
 import { useToast } from '@/components/ui/toast';
 import { useRequireAuth } from '@/hooks/use-require-auth';
 import { sportLabel, levelLabel, sportCardAccent, SportType } from '@/lib/constants';
@@ -24,6 +24,23 @@ import { extractErrorMessage } from '@/lib/utils';
 
 const sportTypes = ['soccer', 'futsal', 'basketball', 'badminton', 'ice_hockey', 'swimming', 'tennis', 'baseball', 'volleyball', 'figure_skating', 'short_track'];
 
+interface MatchFormState {
+  sportType: string;
+  title: string;
+  description: string;
+  venueId: string;
+  customVenue: string;
+  matchDate: string;
+  startTime: string;
+  endTime: string;
+  maxPlayers: number;
+  fee: number;
+  levelMin: number;
+  levelMax: number;
+  gender: MatchGender;
+  rules: string;
+}
+
 export default function CreateMatchPage() {
   useRequireAuth();
   const router = useRouter();
@@ -37,7 +54,7 @@ export default function CreateMatchPage() {
     pendingCount: 0,
   });
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<MatchFormState>({
     sportType: '',
     title: '',
     description: '',
@@ -288,7 +305,7 @@ export default function CreateMatchPage() {
             {/* Gender */}
             <FormField label="성별 제한">
               <div className="flex gap-2">
-                {[{ value: 'any', label: '무관' }, { value: 'male', label: '남성' }, { value: 'female', label: '여성' }].map((g) => (
+                {([{ value: 'any', label: '무관' }, { value: 'male', label: '남성' }, { value: 'female', label: '여성' }] as const).map((g) => (
                   <button key={g.value} onClick={() => setForm({ ...form, gender: g.value })}
                     className={`min-h-[44px] rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                       form.gender === g.value ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900' : 'bg-gray-50 text-gray-600 dark:bg-gray-800 dark:text-gray-500'

@@ -60,5 +60,7 @@ export type HomeViewModel = {
     feelsLike?: number | string;
     status?: string;
   };
+  weatherRefreshing?: boolean;
+  refreshWeather?: () => void;
   notices: HomeNotice[];
 };

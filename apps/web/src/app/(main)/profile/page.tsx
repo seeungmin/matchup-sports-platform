@@ -91,8 +91,8 @@ export default function ProfilePage() {
   return (
     <div className="pt-[var(--safe-area-top)] @3xl:pt-0">
       <MobileGlassHeader
-        title={t('title')}
-        subtitle="기록, 일정, 알림을 한 곳에서 정리하세요."
+        title="마이페이지"
+        centerTitle
         actions={(
           <Link
             href="/settings"

@@ -192,6 +192,7 @@ export class MatchesService {
     };
 
     if (filter.sportType) where.sportType = filter.sportType as SportType;
+    if (filter.gender) where.gender = filter.gender;
     if (filter.q) {
       where.OR = [
         { title: { contains: filter.q, mode: 'insensitive' } },

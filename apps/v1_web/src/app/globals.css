@@ -163,6 +163,29 @@ button:disabled {
   min-width: 0;
 }
 
+.tm-topbar-heading {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tm-topbar-centered .tm-topbar-title {
+  flex: 1;
+}
+
+.tm-topbar-centered .tm-topbar-heading {
+  position: absolute;
+  left: 50%;
+  max-width: calc(100% - 128px);
+  text-align: center;
+  transform: translateX(-50%);
+}
+
+.tm-topbar-centered .tm-topbar-actions {
+  margin-left: auto;
+}
+
 .tm-topbar-title .tm-btn-icon {
   margin-left: -10px;
   margin-right: 2px;
@@ -3143,6 +3166,25 @@ select.tm-create-input {
   flex-wrap: wrap;
   gap: 4px;
   margin-top: 8px;
+}
+
+.tm-profile-level-panel {
+  border: 1px solid var(--grey100);
+  border-radius: 12px;
+  background: var(--grey50);
+  padding: 14px;
+}
+
+.tm-profile-edit-shell {
+  display: grid;
+  gap: 14px;
+  padding-top: 18px;
+}
+
+.tm-profile-edit-shell .tm-my-profile-head {
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: 16px;
 }
 
 .tm-my-profile-stats {

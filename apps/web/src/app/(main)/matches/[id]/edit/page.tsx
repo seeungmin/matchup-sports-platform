@@ -11,7 +11,7 @@ import { useMatch, useUpdateMatch, useVenues } from '@/hooks/use-api';
 import { useRequireAuth } from '@/hooks/use-require-auth';
 import { sportLabel, levelLabel } from '@/lib/constants';
 import { getSportDetailImageSet } from '@/lib/sport-image';
-import type { UpdateMatchInput, Venue } from '@/types/api';
+import type { MatchGender, UpdateMatchInput, Venue } from '@/types/api';
 import {
   firstUploadUrl,
   toExistingUploadAsset,
@@ -36,7 +36,7 @@ function buildUpdatePayload(form: {
   fee: number;
   levelMin: number;
   levelMax: number;
-  gender: string;
+  gender: MatchGender;
   imageUrl?: string | null;
 }): UpdateMatchInput {
   return {
@@ -66,7 +66,20 @@ export default function EditMatchPage() {
   const updateMatchMutation = useUpdateMatch();
   const hydratedMatchIdRef = useRef<string | null>(null);
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<{
+    sportType: string;
+    title: string;
+    description: string;
+    venueId: string;
+    matchDate: string;
+    startTime: string;
+    endTime: string;
+    maxPlayers: number;
+    fee: number;
+    levelMin: number;
+    levelMax: number;
+    gender: MatchGender;
+  }>({
     sportType: '',
     title: '',
     description: '',
@@ -348,7 +361,7 @@ export default function EditMatchPage() {
         {/* Gender */}
         <FormSection label="성별 제한">
           <div className="flex gap-2">
-            {[{ value: 'any', label: '무관' }, { value: 'male', label: '남성' }, { value: 'female', label: '여성' }].map((g) => (
+            {([{ value: 'any', label: '무관' }, { value: 'male', label: '남성' }, { value: 'female', label: '여성' }] as const).map((g) => (
               <button key={g.value} onClick={() => setForm({ ...form, gender: g.value })}
                 className={`min-h-[44px] rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors ${
                   form.gender === g.value ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900' : 'bg-gray-50 text-gray-600 dark:bg-gray-800 dark:text-gray-500'

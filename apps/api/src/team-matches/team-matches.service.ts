@@ -46,6 +46,7 @@ export class TeamMatchesService {
     const where: Prisma.TeamMatchWhereInput = {
       status: statuses.length === 1 ? statuses[0] : { in: statuses },
       ...(filter.sportType && { sportType: filter.sportType as Prisma.EnumSportTypeFilter }),
+      ...(filter.gender && { gender: filter.gender }),
       ...(andConditions.length > 0 && { AND: andConditions }),
     };
 
@@ -151,6 +152,7 @@ export class TeamMatchesService {
         opponentFee: data.opponentFee ?? 0,
         paymentDeadline: data.paymentDeadline,
         cancellationPolicy: data.cancellationPolicy,
+        gender: data.gender ?? 'any',
         requiredLevel: data.requiredLevel,
         hasProPlayers: data.hasProPlayers ?? false,
         allowMercenary: data.allowMercenary !== false,
@@ -226,6 +228,7 @@ export class TeamMatchesService {
       ...(data.opponentFee !== undefined && { opponentFee: data.opponentFee }),
       ...(data.paymentDeadline !== undefined && { paymentDeadline: data.paymentDeadline }),
       ...(data.cancellationPolicy !== undefined && { cancellationPolicy: data.cancellationPolicy }),
+      ...(data.gender !== undefined && { gender: data.gender }),
       ...(data.requiredLevel !== undefined && { requiredLevel: data.requiredLevel }),
       ...(data.hasProPlayers !== undefined && { hasProPlayers: data.hasProPlayers }),
       ...(data.allowMercenary !== undefined && { allowMercenary: data.allowMercenary }),

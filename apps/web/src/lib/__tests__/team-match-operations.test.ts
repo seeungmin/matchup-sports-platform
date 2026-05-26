@@ -45,6 +45,7 @@ function createMatch(): TeamMatch {
     venueAddress: '서울시',
     totalFee: 0,
     opponentFee: 0,
+    gender: 'any',
     status: 'scheduled',
     hostTeam,
     guestTeam,
