@@ -815,6 +815,8 @@ export function useV1UpdateProfile() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: v1Keys.profile() });
       queryClient.invalidateQueries({ queryKey: v1Keys.authMe() });
+      queryClient.invalidateQueries({ queryKey: v1Keys.settings() });
+      queryClient.invalidateQueries({ queryKey: v1Keys.home() });
     },
   });
 }

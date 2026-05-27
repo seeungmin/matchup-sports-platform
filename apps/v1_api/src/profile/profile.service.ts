@@ -483,6 +483,11 @@ function toProfileResponse(user: Awaited<ReturnType<ProfileService['getUserSnaps
       levelName: preference.sportLevel?.name ?? null,
       primary: preference.isPrimary,
     })),
+    regions: user.regions.map((userRegion) => ({
+      regionId: userRegion.region.id,
+      regionName: formatRegionName(userRegion.region),
+      primary: userRegion.isPrimary,
+    })),
     profile: toProfilePayload(user.profile),
     reputation: toReputationPayload(user.reputationSummary),
   };

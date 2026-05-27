@@ -397,6 +397,12 @@ export interface SportProfile {
   position?: string;
 }
 
+export interface UpdateSportProfileInput {
+  sportType: SportType;
+  level: number;
+  preferredPositions?: string[];
+}
+
 // ── MyTeam — flattened shape returned by useMyTeams() ──
 // Backend returns TeamMembership & { team: SportTeam }; the hook normalizes to this.
 export interface MyTeam {

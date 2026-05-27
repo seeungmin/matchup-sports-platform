@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth-store';
-import type { UserProfile, UserPublicProfile } from '@/types/api';
+import type { UpdateSportProfileInput, UserProfile, UserPublicProfile } from '@/types/api';
 import { extractData } from './shared';
 import { queryKeys } from './query-keys';
 
@@ -69,6 +69,22 @@ export function useMe() {
     },
     enabled: isAuthenticated,
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useUpdateMySportProfiles() {
+  const { setUser } = useAuthStore();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (profiles: UpdateSportProfileInput[]) => {
+      const res = await api.patch('/users/me/sport-profiles', { profiles });
+      return extractData<UserProfile>(res);
+    },
+    onSuccess: (user) => {
+      setUser(user as never);
+      queryClient.invalidateQueries({ queryKey: queryKeys.me });
+    },
   });
 }
 

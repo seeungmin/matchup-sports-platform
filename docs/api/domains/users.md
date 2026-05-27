@@ -14,6 +14,7 @@
 |---|---|---|---|
 | GET | `/users/me` | Yes | 내 프로필 |
 | PATCH | `/users/me` | Yes | 내 프로필 수정 |
+| PATCH | `/users/me/sport-profiles` | Yes | 내 운동정보 수정 |
 | GET | `/users/me/matches` | Yes | 내 매치 히스토리 |
 | GET | `/users/me/invitations` | Yes | 내 팀 초대 목록 |
 | GET | `/users/search?q=` | Yes | 닉네임 검색 |
@@ -69,6 +70,36 @@ CAUTION:
 - DTO에 없는 필드 전송 시 `400`
 - `birthYear`를 문자열로 보내면 transform 후 숫자 검증 실패 가능
 - `null`로 값을 지우는 계약이 DTO에서 보장되지 않는 필드는 빈 문자열/`null` clearing을 추측하지 말고 현재 service 동작을 확인해야 한다.
+
+## PATCH /users/me/sport-profiles
+
+- Body (`UpdateSportProfilesDto`)
+
+```json
+{
+  "profiles": [
+    {
+      "sportType": "futsal",
+      "level": 3,
+      "preferredPositions": ["FW", "MF"]
+    }
+  ]
+}
+```
+
+동작:
+
+- 현재 사용자의 `sportTypes`를 요청의 `profiles[].sportType` 목록으로 동기화한다.
+- 요청에 없는 기존 `UserSportProfile`은 삭제한다.
+- 기존 종목은 `level`, `preferredPositions`만 갱신하고, `eloRating`, `matchCount`, `winCount`, `mvpCount`는 경기 결과 기반 값으로 보존한다.
+- 새 종목은 기본 ELO/전적 값으로 생성한다.
+- 성공 응답은 `GET /users/me`와 동일한 full profile shape다.
+
+CAUTION:
+
+- `profiles` 안의 `sportType`은 중복될 수 없다.
+- `level`은 1~5 정수다.
+- 프론트는 운동정보가 없으면 `운동정보 설정`, 하나 이상 있으면 `운동정보 수정/관리`로 표시해야 한다. 설정 완료 상태에서 계속 `설정` CTA를 보여주면 안 된다.
 
 ## GET /users/me/matches
 
@@ -151,6 +182,7 @@ CAUTION:
 ## Frontend Mapping Notes
 
 - `useMyMatches`는 `/users/me/matches`를 `PaginatedResponse<Match>`로 사용
+- `useUpdateMySportProfiles`는 `/users/me/sport-profiles` 성공 응답으로 auth store와 `queryKeys.me`를 갱신
 - `useUserSearch`는 `/users/search` 결과를 사용자 선택 UI에 바로 사용
 - `useUserProfile(id)`는 `/users/:id`를 public profile로 소비
 - `useMe`와 `useUserProfile`의 응답 shape를 하나의 완전 동일 타입으로 가정하면 private/public 필드 드리프트가 생길 수 있다.

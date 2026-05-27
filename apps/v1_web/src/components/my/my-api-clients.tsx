@@ -13,7 +13,6 @@ import {
   useV1MasterRegions,
   useV1MasterSports,
   useV1Notifications,
-  useV1Onboarding,
   useV1Profile,
   useV1RejectTeamJoinApplication,
   useV1RemoveTeamMembership,
@@ -134,20 +133,12 @@ export function MyTeamMembersPageClient({ teamId }: { teamId: string }) {
 }
 
 export function ProfileEditPageClient() {
+  const router = useRouter();
   const profile = useV1Profile();
-  const onboarding = useV1Onboarding();
-  const sportsQuery = useV1MasterSports();
-  const regionsQuery = useV1MasterRegions();
   const update = useV1UpdateProfile();
-  const updatePreferences = useV1UpdateMyPreferences();
-  const sports = sportsQuery.data ?? [];
-  const regions = toDistrictRegionOptions(regionsQuery.data ?? []);
   const [displayName, setDisplayName] = useState(profileEditModel.user.name);
   const [bio, setBio] = useState(profileEditModel.user.intro);
   const [visibilityStatus, setVisibilityStatus] = useState<'public' | 'members_only' | 'private'>('public');
-  const [selectedSports, setSelectedSports] = useState<Array<{ sportId: string; levelId: string | null }>>([]);
-  const [selectedRegionId, setSelectedRegionId] = useState('');
-  const [preferencesHydrated, setPreferencesHydrated] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -157,36 +148,11 @@ export function ProfileEditPageClient() {
     setVisibilityStatus(profile.data.profile.visibilityStatus);
   }, [profile.data]);
 
-  useEffect(() => {
-    if (preferencesHydrated || !onboarding.data) return;
-    setSelectedSports(onboarding.data.sports.map((sport) => ({ sportId: sport.sportId, levelId: sport.levelId })));
-    setSelectedRegionId(onboarding.data.regions.find((region) => region.primary)?.regionId ?? onboarding.data.regions[0]?.regionId ?? '');
-    setPreferencesHydrated(true);
-  }, [onboarding.data, preferencesHydrated]);
-
-  const toggleSport = (sportId: string) => {
-    setSelectedSports((current) => {
-      const exists = current.some((sport) => sport.sportId === sportId);
-      return exists ? current.filter((sport) => sport.sportId !== sportId) : [...current, { sportId, levelId: null }];
-    });
-  };
-
-  const setSportLevel = (sportId: string, levelId: string) => {
-    setSelectedSports((current) => current.map((sport) => (sport.sportId === sportId ? { ...sport, levelId } : sport)));
-  };
-
-  const missingLevels = selectedSports.some((sport) => !sport.levelId);
-  const pending = update.isPending || updatePreferences.isPending;
-
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setMessage(null);
     if (!displayName.trim()) {
       setMessage('닉네임을 입력해 주세요.');
-      return;
-    }
-    if (missingLevels) {
-      setMessage('선택한 종목의 난이도를 모두 선택해 주세요.');
       return;
     }
 
@@ -197,11 +163,7 @@ export function ProfileEditPageClient() {
         profileImageUrl: profile.data?.profile.profileImageUrl ?? null,
         visibilityStatus,
       });
-      await updatePreferences.mutateAsync({
-        sports: selectedSports,
-        regions: selectedRegionId ? [{ regionId: selectedRegionId, primary: true }] : [],
-      });
-      setMessage('프로필과 운동 정보가 저장되었습니다.');
+      router.replace('/my');
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '프로필 저장에 실패했습니다.');
     }
@@ -234,21 +196,92 @@ export function ProfileEditPageClient() {
           </select>
         </label>
 
+        <Card pad={14} style={{ marginTop: 14, background: message ? 'var(--red50)' : 'var(--blue50)' }}>
+          <div className="tm-text-label">{message ?? '프로필만 저장합니다.'}</div>
+          <div className="tm-text-caption" style={{ marginTop: 5 }}>종목, 난이도, 활동 지역은 마이페이지의 운동 정보에서 따로 관리합니다.</div>
+        </Card>
+      </form>
+      <div className="tm-fixed-cta">
+        <button className="tm-btn tm-btn-lg tm-btn-primary tm-btn-block" type="submit" form="v1-profile-edit-form" disabled={update.isPending}>
+          {update.isPending ? '저장 중' : '프로필 저장'}
+        </button>
+      </div>
+    </AppChrome>
+  );
+}
+
+export function SportsSettingsPageClient() {
+  const router = useRouter();
+  const profile = useV1Profile();
+  const sportsQuery = useV1MasterSports();
+  const regionsQuery = useV1MasterRegions();
+  const updatePreferences = useV1UpdateMyPreferences();
+  const sports = sportsQuery.data ?? [];
+  const regions = toDistrictRegionOptions(regionsQuery.data ?? []);
+  const [selectedSports, setSelectedSports] = useState<Array<{ sportId: string; levelId: string | null }>>([]);
+  const [selectedRegionId, setSelectedRegionId] = useState('');
+  const [hydratedUserId, setHydratedUserId] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!profile.data || hydratedUserId === profile.data.userId) return;
+    setSelectedSports((profile.data.sports ?? []).map((sport) => ({ sportId: sport.sportId, levelId: sport.levelId })));
+    setSelectedRegionId(profile.data.regions?.find((region) => region.primary)?.regionId ?? profile.data.regions?.[0]?.regionId ?? '');
+    setHydratedUserId(profile.data.userId);
+  }, [hydratedUserId, profile.data]);
+
+  const toggleSport = (sportId: string) => {
+    setSelectedSports((current) => {
+      const exists = current.some((sport) => sport.sportId === sportId);
+      return exists ? current.filter((sport) => sport.sportId !== sportId) : [...current, { sportId, levelId: null }];
+    });
+  };
+
+  const setSportLevel = (sportId: string, levelId: string) => {
+    setSelectedSports((current) => current.map((sport) => (sport.sportId === sportId ? { ...sport, levelId } : sport)));
+  };
+
+  const missingLevels = selectedSports.some((sport) => !sport.levelId);
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setMessage(null);
+    if (missingLevels) {
+      setMessage('선택한 종목의 난이도를 모두 선택해 주세요.');
+      return;
+    }
+
+    try {
+      await updatePreferences.mutateAsync({
+        sports: selectedSports,
+        regions: selectedRegionId ? [{ regionId: selectedRegionId, primary: true }] : [],
+      });
+      router.replace('/my');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : '운동 정보 저장에 실패했습니다.');
+    }
+  };
+
+  return (
+    <AppChrome title="운동 정보" activeTab="my" bottomNav={false} backHref="/my">
+      <form className="tm-create-shell tm-profile-edit-shell" id="v1-sports-settings-form" onSubmit={submit}>
         <Card pad={16}>
           <div className="tm-text-body-lg">운동 종목</div>
-          <div className="tm-text-caption" style={{ marginTop: 4 }}>회원가입 때 선택한 종목을 여기서 다시 바꿀 수 있습니다.</div>
+          <div className="tm-text-caption" style={{ marginTop: 4 }}>추천과 모집 조건에 사용할 종목을 선택합니다.</div>
           <div className="tm-auth-sport-grid" style={{ marginTop: 14 }}>
-            {sports.map((sport) => (
-              <button
-                className={`tm-card tm-auth-option-card ${selectedSports.some((item) => item.sportId === sport.id) ? 'tm-auth-option-selected' : ''}`}
-                key={sport.id}
-                onClick={() => toggleSport(sport.id)}
-                type="button"
-              >
-                <div className="tm-text-body-lg">{sport.name}</div>
-                <div className="tm-text-caption">{selectedSports.some((item) => item.sportId === sport.id) ? '선택됨' : '선택 가능'}</div>
-              </button>
-            ))}
+            {sports.map((sport) => {
+              const selected = selectedSports.some((item) => item.sportId === sport.id);
+              return (
+                <button
+                  className={`tm-card tm-auth-option-card ${selected ? 'tm-auth-option-selected' : ''}`}
+                  key={sport.id}
+                  onClick={() => toggleSport(sport.id)}
+                  type="button"
+                >
+                  <div className="tm-text-body-lg">{sport.name}</div>
+                  <div className="tm-text-caption">{selected ? '선택됨' : '선택 가능'}</div>
+                </button>
+              );
+            })}
           </div>
         </Card>
 
@@ -267,7 +300,7 @@ export function ProfileEditPageClient() {
         ) : null}
 
         <Card pad={16}>
-          <div className="tm-text-body-lg">활동 위치</div>
+          <div className="tm-text-body-lg">기본 활동 지역</div>
           <div className="tm-text-caption" style={{ marginTop: 4 }}>매치와 팀 추천에 사용할 기본 지역입니다.</div>
           <label className="tm-create-field" style={{ marginTop: 14 }}>
             <span className="tm-text-label">지역</span>
@@ -280,14 +313,14 @@ export function ProfileEditPageClient() {
           </label>
         </Card>
 
-        <Card pad={14} style={{ marginTop: 14, background: message?.includes('실패') || message?.includes('선택해') || message?.includes('입력해') ? 'var(--red50)' : 'var(--blue50)' }}>
-          <div className="tm-text-label">{message ?? '저장할 수 있습니다.'}</div>
-          <div className="tm-text-caption" style={{ marginTop: 5 }}>저장하면 프로필, 종목, 난이도, 활동 위치가 함께 반영됩니다.</div>
+        <Card pad={14} style={{ marginTop: 14, background: message?.includes('실패') || message?.includes('선택해') ? 'var(--red50)' : 'var(--blue50)' }}>
+          <div className="tm-text-label">{message ?? '운동 정보를 따로 저장합니다.'}</div>
+          <div className="tm-text-caption" style={{ marginTop: 5 }}>저장 후 마이페이지의 종목 칩과 추천 기준에 바로 반영됩니다.</div>
         </Card>
       </form>
       <div className="tm-fixed-cta">
-        <button className="tm-btn tm-btn-lg tm-btn-primary tm-btn-block" type="submit" form="v1-profile-edit-form" disabled={pending || missingLevels}>
-          {pending ? '저장 중' : '프로필 저장'}
+        <button className="tm-btn tm-btn-lg tm-btn-primary tm-btn-block" type="submit" form="v1-sports-settings-form" disabled={updatePreferences.isPending}>
+          {updatePreferences.isPending ? '저장 중' : '운동 정보 저장'}
         </button>
       </div>
     </AppChrome>
@@ -314,73 +347,6 @@ function SportLevelPicker({
         ))}
       </div>
     </div>
-  );
-}
-
-function ProfileEditPageClientLegacy() {
-  const profile = useV1Profile();
-  const update = useV1UpdateProfile();
-  const [displayName, setDisplayName] = useState(profileEditModel.user.name);
-  const [bio, setBio] = useState(profileEditModel.user.intro);
-  const [visibilityStatus, setVisibilityStatus] = useState<'public' | 'members_only' | 'private'>('public');
-  const [message, setMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!profile.data) return;
-    setDisplayName(profile.data.profile.displayName);
-    setBio(profile.data.profile.bio ?? '');
-    setVisibilityStatus(profile.data.profile.visibilityStatus);
-  }, [profile.data]);
-
-  const submit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setMessage(null);
-    update.mutate(
-      { displayName, bio, profileImageUrl: profile.data?.profile.profileImageUrl ?? null, visibilityStatus },
-      {
-        onSuccess: () => setMessage('프로필이 저장되었습니다.'),
-        onError: (error) => setMessage(error instanceof Error ? error.message : '프로필 저장에 실패했습니다.'),
-      },
-    );
-  };
-
-  return (
-    <AppChrome title="프로필 수정" activeTab="my" bottomNav={false} backHref="/my">
-      <form className="tm-create-shell" id="v1-profile-edit-form" onSubmit={submit}>
-        <section className="tm-my-profile-head">
-          <div className="tm-my-avatar">{initials(displayName)}</div>
-          <div>
-            <div className="tm-text-body-lg">프로필 사진</div>
-            <div className="tm-text-caption" style={{ marginTop: 4 }}>목록과 신청 화면에 함께 표시됩니다.</div>
-          </div>
-        </section>
-        <label className="tm-create-field">
-          <span className="tm-text-label">닉네임</span>
-          <input className="tm-input" value={displayName} onChange={(event) => setDisplayName(event.target.value)} maxLength={40} required />
-        </label>
-        <label className="tm-create-field">
-          <span className="tm-text-label">소개</span>
-          <textarea className="tm-input tm-create-input-multiline" value={bio} onChange={(event) => setBio(event.target.value)} maxLength={500} />
-        </label>
-        <label className="tm-create-field">
-          <span className="tm-text-label">공개 범위</span>
-          <select className="tm-input" value={visibilityStatus} onChange={(event) => setVisibilityStatus(event.target.value as typeof visibilityStatus)}>
-            <option value="public">전체 공개</option>
-            <option value="members_only">멤버 공개</option>
-            <option value="private">비공개</option>
-          </select>
-        </label>
-        <Card pad={14} style={{ marginTop: 14, background: message?.includes('실패') ? 'var(--red50)' : 'var(--blue50)' }}>
-          <div className="tm-text-label">{message ?? '저장할 수 있습니다'}</div>
-          <div className="tm-text-caption" style={{ marginTop: 5 }}>저장하면 /me/profile API에 반영됩니다.</div>
-        </Card>
-      </form>
-      <div className="tm-fixed-cta">
-        <button className="tm-btn tm-btn-lg tm-btn-primary tm-btn-block" type="submit" form="v1-profile-edit-form" disabled={update.isPending}>
-          {update.isPending ? '저장 중' : '프로필 저장'}
-        </button>
-      </div>
-    </AppChrome>
   );
 }
 

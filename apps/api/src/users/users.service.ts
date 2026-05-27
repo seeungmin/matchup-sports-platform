@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { UpdateSportProfilesDto } from './dto/update-sport-profiles.dto';
 
 // Fields that must never be exposed in API responses
 const SAFE_USER_SELECT = {
@@ -73,6 +74,50 @@ export class UsersService {
         sportProfiles: true,
       },
     });
+  }
+
+  async updateSportProfiles(id: string, dto: UpdateSportProfilesDto) {
+    const uniqueSportTypes = new Set(dto.profiles.map((profile) => profile.sportType));
+    if (uniqueSportTypes.size !== dto.profiles.length) {
+      throw new BadRequestException('종목은 중복해서 등록할 수 없습니다.');
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id },
+        data: { sportTypes: dto.profiles.map((profile) => profile.sportType) },
+      });
+
+      await tx.userSportProfile.deleteMany({
+        where: {
+          userId: id,
+          sportType: { notIn: dto.profiles.map((profile) => profile.sportType) },
+        },
+      });
+
+      for (const profile of dto.profiles) {
+        await tx.userSportProfile.upsert({
+          where: {
+            userId_sportType: {
+              userId: id,
+              sportType: profile.sportType,
+            },
+          },
+          update: {
+            level: profile.level,
+            preferredPositions: profile.preferredPositions ?? [],
+          },
+          create: {
+            userId: id,
+            sportType: profile.sportType,
+            level: profile.level,
+            preferredPositions: profile.preferredPositions ?? [],
+          },
+        });
+      }
+    });
+
+    return this.findById(id);
   }
 
   /**

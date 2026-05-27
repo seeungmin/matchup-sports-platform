@@ -14,6 +14,7 @@ import { TeamsService } from '../teams/teams.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { UpdateSportProfilesDto } from './dto/update-sport-profiles.dto';
 
 @ApiTags('사용자')
 @Controller('users')
@@ -44,6 +45,19 @@ export class UsersController {
     @Body() dto: UpdateProfileDto,
   ) {
     return this.usersService.update(userId, dto);
+  }
+
+  @Patch('me/sport-profiles')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '내 운동정보 수정' })
+  @ApiOkResponse({ description: 'Sport profiles updated' })
+  @ApiUnauthorizedResponse({ description: 'JWT token missing or invalid' })
+  async updateSportProfiles(
+    @CurrentUser('id') userId: string,
+    @Body() dto: UpdateSportProfilesDto,
+  ) {
+    return this.usersService.updateSportProfiles(userId, dto);
   }
 
   @Get('me/matches')

@@ -49,7 +49,7 @@ export const myHomeModel: MyHomeViewModel = {
     {
       title: '설정',
       items: [
-        { label: '알림 설정', sub: '푸시와 매치 알림을 조정해요', href: '/my/settings/notifications', icon: 'N' },
+        { label: '운동 정보', sub: '종목, 난이도, 기본 활동 지역을 관리해요', href: '/my/settings/sports', icon: 'S' },
         { label: '계정 설정', sub: '프로필 공개 범위와 보안을 관리해요', href: '/my/settings', icon: 'S' },
       ],
     },
@@ -131,8 +131,6 @@ export const profileEditModel: ProfileEditViewModel = {
   user: myUser,
   fields: [
     { label: '닉네임', value: myUser.name },
-    { label: '활동 지역', value: myUser.region },
-    { label: '주 종목', value: myUser.sports.join(', ') },
     { label: '소개', value: myUser.intro, multiline: true },
   ],
 };
@@ -143,7 +141,6 @@ export const settingsModel: SettingsViewModel = {
     {
       title: '계정',
       items: [
-        { label: '프로필 수정', sub: '이름, 지역, 종목을 바꿔요', href: '/my/profile/edit', icon: 'P' },
         { label: '위치 및 활동 지역', sub: '현재 위치로 추천 기준 지역을 갱신해요', href: '/my/settings/location', icon: 'L' },
         { label: '알림 설정', sub: '매치와 채팅 알림을 관리해요', href: '/my/settings/notifications', icon: 'N' },
       ],

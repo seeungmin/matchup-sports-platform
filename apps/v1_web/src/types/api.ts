@@ -814,6 +814,11 @@ export type V1Profile = {
     levelName: string | null;
     primary: boolean;
   }>;
+  regions?: Array<{
+    regionId: string;
+    regionName: string;
+    primary: boolean;
+  }>;
   profile: {
     displayName: string;
     profileImageUrl: string | null;

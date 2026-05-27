@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Bell, Shield, FileText, Info, ChevronRight, User, Globe } from 'lucide-react';
+import { Bell, Shield, FileText, Info, ChevronRight, User, Globe, Dumbbell } from 'lucide-react';
 import { MobileGlassHeader } from '@/components/layout/mobile-glass-header';
 import { ThemePicker, LogoutButton } from './settings-client';
 
@@ -19,6 +19,7 @@ export default function SettingsPage() {
         {/* 계정 */}
         <SettingsSection title="계정">
           <SettingsLink icon={User} label="프로필 수정" desc="닉네임, 프로필 사진 변경" href="/profile" />
+          <SettingsLink icon={Dumbbell} label="운동정보 관리" desc="종목, 레벨, 선호 포지션" href="/settings/sports" />
           <SettingsLink icon={Shield} label="개인정보 관리" desc="비밀번호 변경, 계정 보안" href="/settings/account" />
         </SettingsSection>
 
