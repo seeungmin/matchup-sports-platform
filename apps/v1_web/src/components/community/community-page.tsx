@@ -57,7 +57,7 @@ export function ChatRoomPageView({ model }: { model: ChatRoomViewModel }) {
           <Link className="tm-card tm-chat-context-card" href={model.context.href}>
             <div className="tm-chat-context-icon"><ChatIcon size={20} strokeWidth={2} /></div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div className="tm-text-body-lg">{model.context.title}</div>
+              <div className="tm-text-body-lg tm-chat-context-title">{model.context.title}</div>
               <div className="tm-text-caption" style={{ marginTop: 3 }}>{model.context.sub}</div>
             </div>
             <ChevronRightIcon size={18} stroke="var(--text-caption)" />
@@ -198,10 +198,10 @@ function ChatRoomRow({ room }: { room: ChatRoomModel }) {
         <Link className="tm-chat-row-main" href={`/chat/${room.id}`} onClick={handleClick}>
           <div className="tm-chat-avatar" style={room.avatarUrl ? { backgroundImage: cssUrl(room.avatarUrl) } : undefined}>{room.avatarUrl ? null : room.initials}</div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}><div className="tm-text-body-lg line-clamp-2">{room.title}</div>{room.pinned ? <span className="tm-badge tm-badge-blue">고정</span> : null}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}><div className="tm-text-body-lg tm-chat-row-title">{room.title}</div>{room.pinned ? <span className="tm-badge tm-badge-blue">고정</span> : null}</div>
             <div className="tm-chat-last-line" style={{ marginTop: 3 }}>
               <span className="tm-chat-room-type">{room.type}</span>
-              <span className={`tm-chat-last-message line-clamp-2 ${room.unread > 0 ? 'tm-chat-last-message-unread' : ''}`}>{room.last}</span>
+              <span className={`tm-chat-last-message ${room.unread > 0 ? 'tm-chat-last-message-unread' : ''}`}>{room.last}</span>
               {room.unread > 0 ? <span className="tm-chat-inline-unread">{room.unread}</span> : null}
             </div>
           </div>

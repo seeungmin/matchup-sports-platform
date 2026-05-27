@@ -2,8 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, MapPin, Calendar, Clock, Users, Trophy } from 'lucide-react';
-import { EmptyState } from '@/components/ui/empty-state';
+import { ArrowLeft, MapPin, Calendar, Clock, Users } from 'lucide-react';
 import { ErrorState } from '@/components/ui/error-state';
 import { useRequireAuth } from '@/hooks/use-require-auth';
 import { useMyMatches } from '@/hooks/use-api';
@@ -57,7 +56,6 @@ export default function MyMatchesPage() {
       </header>
       <div className="hidden @3xl:block mb-2 px-5 @3xl:px-0 pt-4">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">매치 히스토리</h2>
-        <p className="text-base text-gray-500 mt-1">참가한 매치 이력을 확인하세요</p>
       </div>
 
       <div className="px-5 @3xl:px-0 pb-8 space-y-3 mt-3">
@@ -88,12 +86,9 @@ export default function MyMatchesPage() {
               onRetry={() => { void refetch(); }}
             />
           ) : matches.length === 0 ? (
-            <EmptyState
-              icon={Trophy}
-              title="참가한 매치가 아직 없어요"
-              description="관심 있는 매치에 참가하면 이력과 상태가 여기에 표시됩니다"
-              action={{ label: '매치 찾기', href: '/matches' }}
-            />
+            <p className="py-20 text-center text-base font-medium text-gray-500 dark:text-gray-400">
+              표시할 매치가 없어요
+            </p>
           ) : (
             matches.map((match) => {
               const st = statusLabel[match.status] || statusLabel.recruiting;

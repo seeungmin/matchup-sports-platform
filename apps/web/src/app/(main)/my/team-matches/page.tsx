@@ -3,8 +3,7 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Calendar, Clock, MapPin, Users, Pencil, Trash2, AlertTriangle, Eye, Plus, Swords } from 'lucide-react';
-import { EmptyState } from '@/components/ui/empty-state';
+import { ArrowLeft, Calendar, Clock, MapPin, Users, Pencil, Trash2, AlertTriangle, Eye, Plus } from 'lucide-react';
 import { Modal } from '@/components/ui/modal';
 import { useToast } from '@/components/ui/toast';
 import { useRequireAuth } from '@/hooks/use-require-auth';
@@ -90,7 +89,6 @@ export default function MyTeamMatchesPage() {
       <div className="hidden @3xl:flex @3xl:items-center @3xl:justify-between mb-6 px-5 pt-4 @3xl:px-0">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">내 팀 매칭</h2>
-          <p className="mt-1 text-base text-gray-500 dark:text-gray-400">팀 매칭 모집과 신청 현황을 관리해요</p>
         </div>
         {activeTab === 'hosted' && (
           <Link
@@ -132,12 +130,9 @@ export default function MyTeamMatchesPage() {
               ))}
             </div>
           ) : posts.length === 0 ? (
-            <EmptyState
-              icon={Swords}
-              title="팀 매칭 모집글이 없어요"
-              description="새로운 모집글을 작성해 보세요"
-              action={{ label: '모집글 작성', href: '/team-matches/new' }}
-            />
+            <p className="py-20 text-center text-base font-medium text-gray-500 dark:text-gray-400">
+              표시할 매치가 없어요
+            </p>
           ) : (
             posts.map((post) => {
               const statusMeta = getTeamMatchStatusMeta(post.status);
@@ -222,12 +217,9 @@ export default function MyTeamMatchesPage() {
               ))}
             </div>
           ) : myApplications.length === 0 ? (
-            <EmptyState
-              icon={Swords}
-              title="신청한 팀 매칭이 없어요"
-              description="팀 매칭 목록에서 마음에 드는 상대를 찾아보세요"
-              action={{ label: '팀 매칭 찾기', href: '/team-matches' }}
-            />
+            <p className="py-20 text-center text-base font-medium text-gray-500 dark:text-gray-400">
+              표시할 매치가 없어요
+            </p>
           ) : (
             myApplications.map((application) => {
               const applicationStatus = appStatusConfig[application.status] ?? appStatusConfig.pending;

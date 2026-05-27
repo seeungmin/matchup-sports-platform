@@ -47,9 +47,9 @@ function ChatRoomItem({
         <div className="flex h-11 w-11 items-center justify-center rounded-xl text-md font-bold shrink-0 bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-300">
           {(room.name ?? '?').charAt(0)}
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-2">
-            <h3 className="text-md font-semibold text-gray-900 dark:text-gray-100 truncate">
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 items-center justify-between gap-2">
+            <h3 className="min-w-0 flex-1 truncate whitespace-nowrap text-md font-semibold text-gray-900 dark:text-gray-100">
               {room.name}
             </h3>
             {room.lastMessageAt && (
@@ -58,8 +58,8 @@ function ChatRoomItem({
               </span>
             )}
           </div>
-          <div className="flex items-center justify-between mt-1.5">
-            <p className="text-sm text-gray-500 truncate flex-1 mr-2">
+          <div className="mt-1.5 flex min-w-0 items-center justify-between">
+            <p className="mr-2 min-w-0 flex-1 truncate whitespace-nowrap text-sm text-gray-500">
               {room.lastMessage ?? '대화를 시작해보세요'}
             </p>
             {(room.unreadCount ?? 0) > 0 && (

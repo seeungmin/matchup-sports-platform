@@ -20,6 +20,22 @@ const sportFilters: Array<{ key: SportType | ''; label: string }> = [
   ...Object.entries(sportLabel).map(([key, label]) => ({ key: key as SportType, label })),
 ];
 
+const genderFilters = [
+  { key: '', label: '전체' },
+  { key: 'any', label: '성별무관' },
+  { key: 'male', label: '남자' },
+  { key: 'female', label: '여자' },
+] as const;
+
+const sortFilters = [
+  { key: 'recommended', label: '추천순' },
+  { key: 'deadline', label: '마감임박' },
+  { key: 'latest', label: '최신순' },
+] as const;
+
+type GenderFilter = (typeof genderFilters)[number]['key'];
+type SortFilter = (typeof sortFilters)[number]['key'];
+
 export function TeamList() {
   const te = useTranslations('empty');
   const router = useRouter();
@@ -32,6 +48,8 @@ export function TeamList() {
   const rawSport = searchParams.get('sport');
   const activeSport: SportType | '' = rawSport && sportFilters.some(f => f.key === rawSport) ? rawSport as SportType : '';
   const [searchInput, setSearchInput] = useState('');
+  const [activeGender, setActiveGender] = useState<GenderFilter>('');
+  const [activeSort, setActiveSort] = useState<SortFilter>('recommended');
 
   const updateSportFilter = useCallback((sport: SportType | '') => {
     const params = new URLSearchParams(searchParams.toString());
@@ -60,8 +78,22 @@ export function TeamList() {
         t.description?.toLowerCase().includes(q),
       );
     }
-    return result;
-  }, [allTeams, isAuthenticated, myTeamIds, activeSport, debouncedSearch]);
+    const toTime = (value?: string) => (value ? new Date(value).getTime() : 0);
+    const sorted = [...result];
+
+    if (activeSort === 'latest') {
+      sorted.sort((a, b) => toTime(b.createdAt) - toTime(a.createdAt));
+    } else if (activeSort === 'deadline') {
+      sorted.sort((a, b) => Number(b.isRecruiting) - Number(a.isRecruiting));
+    } else {
+      sorted.sort((a, b) => {
+        const scoreDiff = (b.mannerScore ?? 0) - (a.mannerScore ?? 0);
+        return scoreDiff || (b.memberCount ?? 0) - (a.memberCount ?? 0);
+      });
+    }
+
+    return sorted;
+  }, [allTeams, isAuthenticated, myTeamIds, activeSport, debouncedSearch, activeGender, activeSort]);
 
   if (isLoading) {
     return (
@@ -101,6 +133,42 @@ export function TeamList() {
             aria-pressed={activeSport === filter.key}
             className={`shrink-0 min-h-[44px] rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
               activeSport === filter.key
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-50 text-gray-600 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+            }`}
+          >
+            {filter.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {sortFilters.map((filter) => (
+          <button
+            key={filter.key}
+            type="button"
+            onClick={() => setActiveSort(filter.key)}
+            aria-pressed={activeSort === filter.key}
+            className={`shrink-0 min-h-[44px] rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+              activeSort === filter.key
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-50 text-gray-600 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+            }`}
+          >
+            {filter.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {genderFilters.map((filter) => (
+          <button
+            key={filter.key || 'all'}
+            type="button"
+            onClick={() => setActiveGender(filter.key)}
+            aria-pressed={activeGender === filter.key}
+            className={`shrink-0 min-h-[44px] rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+              activeGender === filter.key
                 ? 'bg-blue-500 text-white'
                 : 'bg-gray-50 text-gray-600 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
             }`}

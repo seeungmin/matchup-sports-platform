@@ -63,15 +63,15 @@ const LEVEL_FILTERS: Array<{ key: MatchDiscoveryLevel; translationKey: string }>
 
 const GENDER_FILTERS: Array<{ key: MatchDiscoveryGender; label: string }> = [
   { key: 'all', label: '전체' },
-  { key: 'any', label: '성별 무관' },
-  { key: 'male', label: '남성' },
-  { key: 'female', label: '여성' },
+  { key: 'any', label: '성별무관' },
+  { key: 'male', label: '남자' },
+  { key: 'female', label: '여자' },
 ];
 
-const SORT_FILTERS: Array<{ key: MatchDiscoverySort; translationKey: string }> = [
-  { key: 'upcoming', translationKey: 'upcoming' },
-  { key: 'latest', translationKey: 'latest' },
-  { key: 'deadline', translationKey: 'deadline' },
+const SORT_FILTERS: Array<{ key: MatchDiscoverySort; label: string }> = [
+  { key: 'recommended', label: '추천순' },
+  { key: 'deadline', label: '마감임박' },
+  { key: 'latest', label: '최신순' },
 ];
 
 
@@ -136,7 +136,7 @@ export function MatchesPage() {
       draftFilters.city ||
       draftFilters.level !== 'all' ||
       draftFilters.gender !== 'all' ||
-      draftFilters.sort !== 'upcoming'
+      draftFilters.sort !== 'recommended'
     ) {
       setShowFilters(true);
     }
@@ -166,9 +166,9 @@ export function MatchesPage() {
     }
     if (draftFilters.fee === 'free') summary.push(t('free'));
     if (draftFilters.available) summary.push(t('availableOnly'));
-    if (draftFilters.sort !== 'upcoming') {
-      const sortKey = SORT_FILTERS.find((item) => item.key === draftFilters.sort)?.translationKey;
-      if (sortKey) summary.push(t(sortKey));
+    if (draftFilters.sort !== 'recommended') {
+      const sortLabel = SORT_FILTERS.find((item) => item.key === draftFilters.sort)?.label;
+      if (sortLabel) summary.push(sortLabel);
     }
     return summary;
   }, [draftFilters, t, today]);
@@ -184,7 +184,7 @@ export function MatchesPage() {
       gender: 'all',
       fee: 'all',
       available: false,
-      sort: 'upcoming',
+      sort: 'recommended',
     });
   }, [updateFilters]);
 
@@ -495,7 +495,7 @@ export function MatchesPage() {
                           : 'border border-gray-200 bg-white text-gray-600 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300'
                       }`}
                     >
-                      {t(filter.translationKey)}
+                      {filter.label}
                     </button>
                   );
                 })}

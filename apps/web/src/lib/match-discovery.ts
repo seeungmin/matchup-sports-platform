@@ -2,7 +2,7 @@ import type { MatchGender } from '@/types/api';
 
 export type MatchDiscoveryLevel = 'all' | 'beginner' | 'intermediate' | 'advanced';
 export type MatchDiscoveryFee = 'all' | 'free';
-export type MatchDiscoverySort = 'upcoming' | 'latest' | 'deadline';
+export type MatchDiscoverySort = 'recommended' | 'deadline' | 'latest';
 export type MatchDiscoveryGender = 'all' | MatchGender;
 
 export interface MatchDiscoveryFilters {
@@ -26,13 +26,13 @@ export const DEFAULT_MATCH_DISCOVERY_FILTERS: MatchDiscoveryFilters = {
   gender: 'all',
   fee: 'all',
   available: false,
-  sort: 'upcoming',
+  sort: 'recommended',
 };
 
 const LEVEL_OPTIONS = new Set<MatchDiscoveryLevel>(['all', 'beginner', 'intermediate', 'advanced']);
 const GENDER_OPTIONS = new Set<MatchDiscoveryGender>(['all', 'any', 'male', 'female']);
 const FEE_OPTIONS = new Set<MatchDiscoveryFee>(['all', 'free']);
-const SORT_OPTIONS = new Set<MatchDiscoverySort>(['upcoming', 'latest', 'deadline']);
+const SORT_OPTIONS = new Set<MatchDiscoverySort>(['recommended', 'deadline', 'latest']);
 
 function normalizeBoolean(value: string | null): boolean {
   return value === '1' || value === 'true';
@@ -63,7 +63,7 @@ export function parseMatchDiscoveryFilters(
     gender: GENDER_OPTIONS.has(rawGender) ? rawGender : 'all',
     fee: FEE_OPTIONS.has(rawFee) ? rawFee : 'all',
     available: normalizeBoolean(searchParams.get('available')),
-    sort: SORT_OPTIONS.has(rawSort) ? rawSort : 'upcoming',
+    sort: SORT_OPTIONS.has(rawSort) ? rawSort : 'recommended',
   };
 }
 
@@ -78,7 +78,7 @@ export function buildMatchDiscoverySearchParams(filters: MatchDiscoveryFilters):
   if (filters.gender !== 'all') params.set('gender', filters.gender);
   if (filters.fee !== 'all') params.set('fee', filters.fee);
   if (filters.available) params.set('available', '1');
-  if (filters.sort !== 'upcoming') params.set('sort', filters.sort);
+  if (filters.sort !== 'recommended') params.set('sort', filters.sort);
 
   return params;
 }
@@ -113,7 +113,7 @@ export function buildMatchApiParams(
     params.availableOnly = 'true';
   }
 
-  if (filters.sort !== 'upcoming') {
+  if (filters.sort !== 'recommended') {
     params.sort = filters.sort;
   }
 
@@ -131,7 +131,7 @@ export function countActiveMatchDiscoveryFilters(filters: MatchDiscoveryFilters)
   if (filters.gender !== 'all') count += 1;
   if (filters.fee !== 'all') count += 1;
   if (filters.available) count += 1;
-  if (filters.sort !== 'upcoming') count += 1;
+  if (filters.sort !== 'recommended') count += 1;
 
   return count;
 }

@@ -2350,6 +2350,18 @@ select.tm-create-input {
   flex: 0 0 auto;
 }
 
+.tm-chat-row-title,
+.tm-chat-context-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tm-chat-row-title {
+  flex: 1 1 auto;
+}
+
 .tm-chat-last-line {
   display: flex;
   align-items: center;
@@ -2367,7 +2379,11 @@ select.tm-create-input {
 }
 
 .tm-chat-last-message {
+  flex: 1 1 auto;
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--text-caption);
 }
 
