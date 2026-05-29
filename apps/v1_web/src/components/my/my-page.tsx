@@ -27,13 +27,17 @@ export function MyHomePageView({ model }: { model: MyHomeViewModel }) {
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="tm-text-heading">{model.user.name}</div>
             <div className="tm-text-caption" style={{ marginTop: 4 }}>{model.user.handle} · {model.user.region}</div>
-            {model.user.sports.length > 0 ? (
-              <div className="tm-my-chip-row">{model.user.sports.map((sport) => <span key={sport} className="tm-badge tm-badge-grey">{sport}</span>)}</div>
-            ) : (
-              <Link className="tm-btn tm-btn-sm tm-btn-ghost" href="/onboarding/sport" style={{ marginTop: 8 }}>
-                운동정보 설정
-              </Link>
-            )}
+            <div
+              className="tm-text-caption"
+              style={{
+                marginTop: 6,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {model.user.intro}
+            </div>
           </div>
           <Link className="tm-btn tm-btn-sm tm-btn-neutral" href="/my/profile/edit">수정</Link>
         </section>
@@ -57,10 +61,6 @@ export function MyMatchesPageView({ model }: { model: MyMatchesViewModel }) {
           <Link className={`tm-btn tm-btn-md ${joined ? 'tm-btn-primary' : 'tm-btn-neutral'}`} href="/my/matches/joined">참여한 매치</Link>
           <Link className={`tm-btn tm-btn-md ${!joined ? 'tm-btn-primary' : 'tm-btn-neutral'}`} href="/my/matches/created">생성한 매치</Link>
         </div>
-        <div>
-          <div className="tm-text-label">{model.title}</div>
-          <div className="tm-text-caption" style={{ marginTop: 3 }}>{joined ? '내가 신청한 승인 대기, 승인 완료, 종료된 매치만 보여줍니다.' : '내가 생성한 매치만 보여주고 참여자 관리와 매치 수정 상태를 분리합니다.'}</div>
-        </div>
         {model.apiNotice ? (
           <Card pad={14} className={model.apiNotice.tone === 'warning' ? 'tm-auth-soft-card-warning' : undefined}>
             <div className="tm-text-body-lg">{model.apiNotice.title}</div>
@@ -68,7 +68,13 @@ export function MyMatchesPageView({ model }: { model: MyMatchesViewModel }) {
           </Card>
         ) : null}
         <div className="tm-my-list-stack">
-          {model.matches.map((match) => <MyMatchCard key={match.id} match={match} manage={model.mode === 'created'} />)}
+          {model.matches.length === 0 ? (
+            <p className="tm-text-caption" style={{ margin: 0, padding: '72px 0', textAlign: 'center' }}>
+              표시할 매치가 없어요
+            </p>
+          ) : (
+            model.matches.map((match) => <MyMatchCard key={match.id} match={match} manage={model.mode === 'created'} />)
+          )}
         </div>
       </div>
     </AppChrome>

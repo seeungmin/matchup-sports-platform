@@ -288,8 +288,8 @@ export default function ChatRoomEmbed({
               </svg>
             </button>
           )}
-          <div className="flex-1 min-w-0">
-            <span className="text-lg font-bold text-gray-900 dark:text-white truncate block">
+          <div className="min-w-0 flex-1">
+            <span className="block w-full truncate whitespace-nowrap text-lg font-bold text-gray-900 dark:text-white">
               {room?.name ?? '채팅방'}
             </span>
           </div>
@@ -345,7 +345,7 @@ export default function ChatRoomEmbed({
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                 <MapPin size={14} className="text-gray-500" aria-hidden="true" />
-                <span>{room.name}</span>
+                <span className="min-w-0 truncate whitespace-nowrap">{room.name}</span>
               </div>
             </div>
           </div>

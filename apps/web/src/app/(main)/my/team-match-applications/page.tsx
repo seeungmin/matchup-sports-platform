@@ -2,8 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Calendar, Clock, MapPin, Users, Swords } from 'lucide-react';
-import { EmptyState } from '@/components/ui/empty-state';
+import { ArrowLeft, Calendar, Clock, MapPin, Users } from 'lucide-react';
 import { useMyTeamMatchApplications } from '@/hooks/use-api';
 import { useRequireAuth } from '@/hooks/use-require-auth';
 import { formatDateDot } from '@/lib/utils';
@@ -36,7 +35,6 @@ export default function MyTeamMatchApplicationsPage() {
 
       <div className="hidden @3xl:block px-5 @3xl:px-0 pt-4 mb-6">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">내 팀매칭 신청</h2>
-        <p className="text-base text-gray-500 mt-1">신청한 팀 매칭의 현황을 확인하세요</p>
       </div>
 
       <div className="px-5 @3xl:px-0 space-y-3 pb-8 mt-3">
@@ -47,12 +45,9 @@ export default function MyTeamMatchApplicationsPage() {
             ))}
           </div>
         ) : applications.length === 0 ? (
-          <EmptyState
-            icon={Swords}
-            title="신청한 팀 매치가 없어요"
-            description="팀 매치 목록에서 마음에 드는 상대팀을 찾아보세요"
-            action={{ label: '팀 매칭 찾기', href: '/team-matches' }}
-          />
+          <p className="py-20 text-center text-base font-medium text-gray-500 dark:text-gray-400">
+            표시할 매치가 없어요
+          </p>
         ) : (
           applications.map((app) => {
             const statusConf = appStatusConfig[app.status] ?? appStatusConfig.pending;

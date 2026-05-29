@@ -16,13 +16,13 @@ export function MyMatchesPageClient({ mode }: { mode: 'joined' | 'created' }) {
     ...fallback,
     matches: query.data ? matches : fallback.matches,
     summary: buildSummary(mode, query.data ? matches : fallback.matches),
-    apiNotice: getApiNotice(query.isLoading, query.isError, Boolean(query.data), matches.length),
+    apiNotice: getApiNotice(query.isLoading, query.isError),
   };
 
   return <MyMatchesPageView model={model} />;
 }
 
-function getApiNotice(isLoading: boolean, isError: boolean, hasData: boolean, matchCount: number): MyMatchesViewModel['apiNotice'] {
+function getApiNotice(isLoading: boolean, isError: boolean): MyMatchesViewModel['apiNotice'] {
   if (isLoading) {
     return {
       title: '내 매치를 불러오는 중입니다',
@@ -36,14 +36,6 @@ function getApiNotice(isLoading: boolean, isError: boolean, hasData: boolean, ma
       title: '내 매치를 불러오지 못했습니다',
       body: '일시적으로 최신 내역을 확인하지 못했습니다. 새로고침 후에도 반복되면 잠시 뒤 다시 시도해 주세요.',
       tone: 'warning',
-    };
-  }
-
-  if (hasData && matchCount === 0) {
-    return {
-      title: '표시할 내 매치가 없습니다',
-      body: '신청하거나 생성한 매치가 생기면 이 화면에 표시됩니다.',
-      tone: 'info',
     };
   }
 

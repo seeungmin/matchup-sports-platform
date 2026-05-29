@@ -20,17 +20,26 @@ const sportFilters = [
 
 
 const genderFilters = [
-  { key: '', label: '성별 전체' },
-  { key: 'any', label: '성별 무관' },
-  { key: 'male', label: '남성' },
-  { key: 'female', label: '여성' },
+  { key: '', label: '전체' },
+  { key: 'any', label: '성별무관' },
+  { key: 'male', label: '남자' },
+  { key: 'female', label: '여자' },
 ] as const;
+
+const sortFilters = [
+  { key: 'recommended', label: '추천순' },
+  { key: 'deadline', label: '마감임박' },
+  { key: 'latest', label: '최신순' },
+] as const;
+
+type SortFilter = (typeof sortFilters)[number]['key'];
 
 export default function TeamMatchesPage() {
   const [activeSport, setActiveSport] = useState('');
   const [activeGender, setActiveGender] = useState('');
   const [dateFilter, setDateFilter] = useState('');
   const [levelFilter, setLevelFilter] = useState('');
+  const [activeSort, setActiveSort] = useState<SortFilter>('recommended');
   const { isAuthenticated } = useAuthStore();
   const { data: myTeams } = useMyTeams();
   const params = {
@@ -49,6 +58,13 @@ export default function TeamMatchesPage() {
       return lvl >= min && lvl <= max;
     });
   }
+  const toTime = (value?: string) => (value ? new Date(value).getTime() : 0);
+  const toMatchTime = (match: TeamMatch) => toTime(`${match.matchDate}T${match.startTime || '00:00'}`);
+  matches = [...matches].sort((a, b) => {
+    if (activeSort === 'latest') return toTime(b.createdAt) - toTime(a.createdAt);
+    if (activeSort === 'deadline') return toMatchTime(a) - toMatchTime(b);
+    return (b.applicationCount ?? 0) - (a.applicationCount ?? 0);
+  });
 
   // Only teams where user is owner/manager are considered "my host teams"
   const myHostTeamIds = new Set(
@@ -98,6 +114,21 @@ export default function TeamMatchesPage() {
       {/* 필터 행 */}
       <div className="px-5 @3xl:px-0 mb-4 flex flex-wrap items-center gap-2">
         <div className="flex w-full gap-2 overflow-x-auto scrollbar-hide pb-1">
+          {sortFilters.map((f) => (
+            <button
+              key={f.key}
+              type="button"
+              aria-pressed={activeSort === f.key}
+              onClick={() => setActiveSort(f.key)}
+              className={`shrink-0 rounded-lg px-3.5 py-2 text-sm font-medium transition-colors ${
+                activeSort === f.key
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-50 text-gray-600 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
           {genderFilters.map((f) => (
             <button
               key={f.key || 'all'}

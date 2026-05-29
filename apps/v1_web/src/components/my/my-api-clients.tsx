@@ -587,7 +587,7 @@ function toMyHomeModel(
       handle: profile.email ?? authProviderLabel(profile.authProvider),
       region: profile.regionName ?? myHomeModel.user.region,
       initials: initials(displayName),
-      intro: profile.profile.bio ?? myHomeModel.user.intro,
+      intro: profile.profile.bio ?? '',
       sports: (profile.sports ?? []).map((sport) =>
         sport.levelName ? `${sport.sportName} ${sport.levelName}` : sport.sportName,
       ),

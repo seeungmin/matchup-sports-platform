@@ -1,23 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ChevronRight, LogOut, CreditCard, ShoppingBag, Settings, Star, History, Pencil, Users, Calendar, Clock, Swords, BookOpen, UserCheck, MessageSquare, MessageCircle, Bell, List, CalendarDays, Ticket, Plus, Award, Activity, Info, HelpCircle, FileText, Shield, MapPin, Dumbbell } from 'lucide-react';
+import { ChevronRight, LogOut, CreditCard, ShoppingBag, Settings, Star, History, Pencil, Users, Calendar, Clock, Swords, BookOpen, UserCheck, MessageSquare, MessageCircle, Bell, List, CalendarDays, Ticket, Plus, Award, Activity, Info, HelpCircle, FileText, Shield, MapPin } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { EmptyState } from '@/components/ui/empty-state';
 import { ErrorState } from '@/components/ui/error-state';
 import { MiniCalendar } from '@/components/ui/mini-calendar';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
 import { useRequireAuth } from '@/hooks/use-require-auth';
-import { SportIconMap } from '@/components/icons/sport-icons';
 import { MobileGlassHeader } from '@/components/layout/mobile-glass-header';
 import dynamic from 'next/dynamic';
 const EditProfileModal = dynamic(() => import('@/components/profile/edit-profile-modal').then(m => ({ default: m.EditProfileModal })), { ssr: false });
 import { useMyMatches, useChatUnreadTotal, useUnreadCount } from '@/hooks/use-api';
-import type { SportProfile, Match } from '@/types/api';
-
-import { sportLabel, levelLabel } from '@/lib/constants';
+import type { Match } from '@/types/api';
 
 type QuickAction = { href: string; label: string };
 type MenuItem = { label: string; icon: React.ElementType; href: string; quickAction?: QuickAction };
@@ -162,8 +158,8 @@ export default function ProfilePage() {
                   <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t('mannerScore')}</p>
                 </div>
                 <div className="px-3 py-3 text-center">
-                  <p className="text-xl font-bold text-gray-900 dark:text-white">{user.sportProfiles?.length || 0}</p>
-                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">종목</p>
+                  <p className="text-xl font-bold text-gray-900 dark:text-white">{notifUnread}</p>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">알림</p>
                 </div>
               </div>
             </div>
@@ -171,7 +167,7 @@ export default function ProfilePage() {
         ) : null}
 
         {mounted && isAuthenticated && user ? (
-          <SportInfoSection sportProfiles={user.sportProfiles ?? []} />
+          <ProfileGuideSection />
         ) : null}
 
         {/* 다가오는 일정 — mobile only */}
@@ -266,65 +262,20 @@ export default function ProfilePage() {
   );
 }
 
-function SportInfoSection({ sportProfiles }: { sportProfiles: SportProfile[] }) {
-  const hasSportInfo = sportProfiles.length > 0;
-
+function ProfileGuideSection() {
   return (
-    <section className="mt-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800" aria-labelledby="sport-info-title">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-500 dark:bg-blue-900/30 dark:text-blue-300">
-            <Dumbbell size={18} aria-hidden="true" />
-          </div>
-          <div className="min-w-0">
-            <h3 id="sport-info-title" className="text-base font-semibold text-gray-900 dark:text-white">운동정보</h3>
-            <p className="mt-0.5 text-xs leading-5 text-gray-500 dark:text-gray-400">
-              매칭 추천, 팀 신청, 용병 모집에 사용하는 종목과 실력 정보예요.
-            </p>
-          </div>
+    <section className="mt-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800" aria-labelledby="profile-guide-title">
+      <div className="flex min-w-0 items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-500 dark:bg-blue-900/30 dark:text-blue-300">
+          <Info size={18} aria-hidden="true" />
         </div>
-        <Link
-          href="/settings/sports"
-          className="shrink-0 rounded-xl bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-600 transition-colors hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50"
-        >
-          {hasSportInfo ? '운동정보 수정' : '운동정보 설정'}
-        </Link>
-      </div>
-
-      {hasSportInfo ? (
-        <div className="mt-4 space-y-2">
-          {sportProfiles.map((sp) => {
-            const SportIcon = SportIconMap[sp.sportType];
-            const winRate = sp.matchCount > 0 ? Math.round((sp.winCount / sp.matchCount) * 100) : null;
-            return (
-              <div key={sp.id} className="rounded-xl border border-gray-100 bg-gray-50/80 px-3 py-2.5 dark:border-gray-700/60 dark:bg-gray-900/50">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex min-w-0 items-center gap-2.5">
-                    {SportIcon && <SportIcon size={15} className="shrink-0 text-gray-500 dark:text-gray-400" />}
-                    <span className="truncate text-sm font-semibold text-gray-800 dark:text-gray-100">{sportLabel[sp.sportType]}</span>
-                    <span className="rounded-md bg-white px-1.5 py-0.5 text-2xs font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-300">
-                      {levelLabel[sp.level]}
-                    </span>
-                  </div>
-                  <span className="shrink-0 text-xs font-semibold text-gray-500 dark:text-gray-400">
-                    ELO {sp.eloRating}
-                  </span>
-                </div>
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  {sp.matchCount}전 {sp.winCount}승{winRate !== null ? ` · 승률 ${winRate}%` : ''}{sp.preferredPositions?.length ? ` · ${sp.preferredPositions.join(', ')}` : ''}
-                </p>
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="mt-4 rounded-xl border border-dashed border-gray-200 bg-gray-50/80 px-4 py-5 text-center dark:border-gray-700 dark:bg-gray-900/50">
-          <p className="text-sm font-semibold text-gray-900 dark:text-white">아직 등록된 운동정보가 없어요</p>
-          <p className="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">
-            종목과 실력 수준을 등록하면 더 맞는 매치를 추천받을 수 있어요.
+        <div className="min-w-0">
+          <h3 id="profile-guide-title" className="text-base font-semibold text-gray-900 dark:text-white">마이페이지 안내</h3>
+          <p className="mt-0.5 text-xs leading-5 text-gray-500 dark:text-gray-400">
+            내 일정과 신청 현황, 팀 활동, 결제 내역을 한곳에서 확인할 수 있어요.
           </p>
         </div>
-      )}
+      </div>
     </section>
   );
 }

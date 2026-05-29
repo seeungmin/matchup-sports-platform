@@ -90,7 +90,7 @@ describe('match discovery helpers', () => {
       gender: 'all',
       fee: 'free',
       available: true,
-      sort: 'upcoming',
+      sort: 'recommended',
     });
 
     expect(count).toBe(4);

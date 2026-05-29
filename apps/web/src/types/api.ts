@@ -452,6 +452,7 @@ export interface SportTeam {
   matchCount?: number;
   applicationCount?: number;
   owner?: { id: string; nickname: string; mannerScore?: number };
+  createdAt?: string;
 }
 
 export interface TeamHub {
@@ -569,6 +570,7 @@ export interface TeamMatch {
   applications?: TeamMatchApplication[];
   arrivalChecks?: TeamMatchArrivalCheck[];
   evaluations?: TeamMatchEvaluation[];
+  createdAt?: string;
 }
 
 export interface TeamMatchApplication {
