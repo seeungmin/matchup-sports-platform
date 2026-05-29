@@ -79,6 +79,8 @@ inventory and must stay visible in publishing work.
 | 12 | `admin-ops-sm-revision` | admin minimum dashboard/status/audit pages | `/admin`, `/admin/audit` | Imported | API exists for admin minimum. Non-minimum admin actions remain blocked/deferred. |
 | 13 | `common-flows-motion` | shared list/detail/form/mutation states across all domains | scattered state routes exist | Pending | Loading, empty, error, retry, stale, duplicate submit, permission denied, destructive confirm, optimistic navigation must become shared UI patterns. |
 | 14 | `reviews-post-event-sm-final` | completed schedule review inbox, target select, star rating, one selectable review tag, complete state | no dedicated v1 review route yet | Reference added | Reviews unlock only after completed personal/team match schedules. No free-text body; persist star rating plus one selected tag. |
+| 14-1 | `reviews-post-event-sm-final-14-1` | 14 review full-content design revision: review inbox, per-participant review writing for everyone who played together, star rating, exactly one selectable tag per target, complete state, received reviews grouped by match, locked/exception rules | static design section added under 14; app design source exports review screens | Design revision added | This section intentionally includes all 14 content so review design edits can proceed without mutating the original 14 baseline. |
+| 14-2 | `reviews-post-event-sm-final-14-2` | Service-facing copy of 14-1 with user-only screens: review list, per-participant write, complete, received reviews by match | static design section added under 14-1; internal rules/explanatory copy removed | Service copy added | Use this for product review of the actual user-facing experience. |
 
 ## Existing Route Coverage Snapshot
 

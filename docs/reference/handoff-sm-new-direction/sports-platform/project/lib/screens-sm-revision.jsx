@@ -3587,6 +3587,266 @@ const SMRevisionPostEventReviewRules = () => (
   ]}/>
 );
 
+const SMReview14OneScheduleRow = ({ title, sub, kind, state, reason, action, primary }) => (
+  <Card pad={16} interactive={primary} style={{ marginBottom: 10, opacity: state === 'locked' ? 0.76 : 1 }}>
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+      <div style={{ width: 46, height: 46, borderRadius: 16, background: primary ? 'var(--blue50)' : state === 'done' ? 'var(--green50)' : 'var(--grey100)', color: primary ? 'var(--blue500)' : state === 'done' ? 'var(--green500)' : 'var(--text-muted)', display: 'grid', placeItems: 'center' }}>
+        <Icon name={state === 'done' ? 'check' : 'star'} size={20}/>
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="tm-text-body-lg">{title}</div>
+        <div className="tm-text-caption" style={{ marginTop: 4 }}>{sub}</div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
+          <Badge tone={primary ? 'blue' : state === 'done' ? 'green' : 'grey'} size="sm">{kind}</Badge>
+          <Badge tone={state === 'locked' ? 'orange' : 'grey'} size="sm">{reason}</Badge>
+        </div>
+      </div>
+      <button className={`tm-btn tm-btn-sm ${primary ? 'tm-btn-primary' : 'tm-btn-neutral'}`} type="button" disabled={!primary}>{action}</button>
+    </div>
+  </Card>
+);
+
+const SMRevisionPostEventReviewInboxMobile14_1 = () => (
+  <SMRevisionShell title="리뷰" notificationNew={false} bottom navActive="my">
+    <div style={{ padding: '18px 20px 96px' }}>
+      <div className="tm-text-heading">리뷰할 일정을 확인하세요</div>
+      <div className="tm-text-body" style={{ marginTop: 6 }}>완료된 일정에서 같이 뛴 인원 모두에게 각각 리뷰를 남길 수 있습니다.</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginTop: 16 }}>
+        <SM2InlineStat label="리뷰할 경기" value="2건"/>
+        <SM2InlineStat label="남길 대상" value="9명"/>
+        <SM2InlineStat label="받은 리뷰" value="12건"/>
+      </div>
+      <SectionTitle title="작성 가능" sub="경기 안에서 참가자별 별점과 태그 1개를 남깁니다."/>
+      <SMReview14OneScheduleRow title="성수 풋살파크 개인 매치" sub="어제 20:00 · 나를 제외한 7명 중 3명 미작성" kind="개인매치" state="ready" reason="4/7 완료" action="이어쓰기" primary/>
+      <SMReview14OneScheduleRow title="마포 러너스 vs 성동 FC" sub="5월 21일 · 상대팀 5명에게 리뷰 가능" kind="팀매치" state="ready" reason="0/5 완료" action="리뷰" primary/>
+      <SectionTitle title="완료와 잠김" sub="다시 제출할 수 없는 이유를 CTA 옆에 남깁니다."/>
+      <SMReview14OneScheduleRow title="강남 토요 풋살" sub="6명에게 리뷰를 모두 보냈습니다" kind="개인매치" state="done" reason="작성 완료" action="완료"/>
+      <SMReview14OneScheduleRow title="평일 농구 오픈런" sub="일정 종료 후 14일이 지났습니다" kind="개인매치" state="locked" reason="기한 만료" action="잠김"/>
+      <SMReview14OneScheduleRow title="잠실 풋살 친선전" sub="취소된 일정은 평판에 반영하지 않습니다" kind="팀매치" state="locked" reason="취소됨" action="잠김"/>
+    </div>
+  </SMRevisionShell>
+);
+
+const SMReview14OneTargetReviewRow = ({ name, sub, image, rating = 4, tag = '매너가 좋아요', done = false, active = false }) => (
+  <Card pad={14} style={{ border: active ? '1px solid var(--blue500)' : '1px solid var(--grey100)', background: active ? 'var(--blue50)' : 'var(--bg)' }}>
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+      <div style={{ width: 42, height: 42, borderRadius: 14, background: `url(${image}) center/cover`, flexShrink: 0 }}/>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+          <div>
+            <div className="tm-text-body-lg">{name}</div>
+            <div className="tm-text-caption" style={{ marginTop: 2 }}>{sub}</div>
+          </div>
+          <Badge tone={done ? 'green' : active ? 'blue' : 'grey'} size="sm">{done ? '완료' : active ? '작성 중' : '대기'}</Badge>
+        </div>
+        <div style={{ display: 'flex', gap: 4, marginTop: 10 }}>
+          {[1,2,3,4,5].map((n) => <Icon key={n} name="star" size={18} color={n <= rating ? 'var(--blue500)' : 'var(--grey200)'} stroke={2}/>)}
+        </div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
+          {SM_REVIEW_TAGS.slice(0, 4).map((item) => <HapticChip key={item} active={item === tag}>{item}</HapticChip>)}
+        </div>
+      </div>
+    </div>
+  </Card>
+);
+
+const SMRevisionPostEventReviewSelectMobile14_1 = () => (
+  <SMRevisionShell title="리뷰 남기기" back notificationNew={false} bottom={false}>
+    <div style={{ padding: '18px 20px 128px' }}>
+      <Card pad={16}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'flex-start' }}>
+          <div>
+            <div className="tm-text-caption">완료된 일정</div>
+            <div className="tm-text-body-lg" style={{ marginTop: 4 }}>성수 풋살파크 개인 매치</div>
+            <div className="tm-text-caption" style={{ marginTop: 4 }}>같이 뛴 참가자에게 각각 별점과 태그 1개를 남깁니다.</div>
+          </div>
+          <Badge tone="blue" size="sm">D+1</Badge>
+        </div>
+      </Card>
+      <SectionTitle title="참가자별 리뷰" sub="각 대상마다 별점과 태그 1개를 따로 저장합니다."/>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <SMReview14OneTargetReviewRow name="민준" sub="참가자 · 공격수" image={IMG.av1} active/>
+        <SMReview14OneTargetReviewRow name="서연" sub="참가자 · 골키퍼" image={IMG.av2} rating={5} tag="시간 약속"/>
+        <SMReview14OneTargetReviewRow name="지훈" sub="참가자 · 수비수" image={IMG.av3} rating={4} tag="팀워크" done/>
+      </div>
+      <Card pad={14} style={{ marginTop: 12, background: 'var(--grey50)' }}>
+        <div className="tm-text-label">보낼 내용</div>
+        <div className="tm-text-caption" style={{ marginTop: 5 }}>작성 2명 · 완료 1명 · 남은 대상 4명</div>
+      </Card>
+    </div>
+    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '14px 20px 22px', background: 'var(--bg)', borderTop: '1px solid var(--grey100)' }}>
+      <SBtn full size="lg">리뷰 보내기</SBtn>
+    </div>
+  </SMRevisionShell>
+);
+
+const SMRevisionPostEventReviewCompleteMobile14_1 = () => (
+  <SMRevisionShell title="" notificationNew={false} bottom={false}>
+    <div style={{ padding: '68px 20px 118px', textAlign: 'center' }}>
+      <div style={{ width: 72, height: 72, borderRadius: 26, background: 'var(--blue50)', color: 'var(--blue500)', display: 'grid', placeItems: 'center', margin: '0 auto' }}>
+        <Icon name="check" size={34}/>
+      </div>
+      <div className="tm-text-heading" style={{ marginTop: 22 }}>리뷰를 보냈습니다</div>
+      <div className="tm-text-body" style={{ marginTop: 8 }}>같이 뛴 참가자별 리뷰가 저장됩니다. 이미 보낸 대상은 다시 제출할 수 없습니다.</div>
+      <Card pad={16} style={{ marginTop: 24, textAlign: 'left' }}>
+        <div className="tm-text-label">저장된 리뷰</div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
+          {['3명에게 전송', '별점/태그 저장', 'verified'].map((tag, index) => <Badge key={tag} tone={index === 2 ? 'grey' : 'blue'} size="sm">{tag}</Badge>)}
+        </div>
+      </Card>
+    </div>
+    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '14px 20px 22px', background: 'var(--bg)', borderTop: '1px solid var(--grey100)' }}>
+      <SBtn full size="lg">마이로 돌아가기</SBtn>
+    </div>
+  </SMRevisionShell>
+);
+
+const SMRevisionPostEventReviewRules14_1 = () => (
+  <SMRevisionRuleBoard title="14-1 리뷰 · 수정안 적용 범위" items={[
+    { title: '14 전체 포함', body: '리뷰함, 참가자별 작성, 별점, 태그 1개, 제출 완료, 받은 리뷰 경기별 보기, 중복/부적격 잠금 상태를 모두 포함한다.' },
+    { title: '본문 없음', body: '후기 textarea와 자유 입력 placeholder를 제거한다. 저장되는 입력은 별점과 선택형 태그 하나뿐이다.' },
+    { title: '참가자 전원 작성', body: '같이 경기한 인원 전체가 대상이다. 한 경기 안에서 대상별 별점과 태그를 각각 남길 수 있다.' },
+    { title: '태그 단일 선택', body: '대상 1명당 태그 chip은 하나만 active다. 선택 요약에도 대상별 하나의 태그만 표시한다.' },
+    { title: '받은 리뷰', body: '내가 받은 리뷰는 경기 단위로 묶어 보여주고, 누가 어떤 별점과 태그를 줬는지 확인할 수 있다.' },
+    { title: '잠금 사유', body: '취소, 미참가, 노쇼 분쟁, 기한 만료, 중복 제출은 CTA를 잠그고 구체적인 이유를 남긴다.' },
+  ]}/>
+);
+
+const SMReview14OneReceivedRow = ({ name, image, rating, tag }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 0', borderTop: '1px solid var(--grey100)' }}>
+    <div style={{ width: 36, height: 36, borderRadius: 13, background: `url(${image}) center/cover`, flexShrink: 0 }}/>
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <div className="tm-text-body-lg">{name}</div>
+      <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
+        {[1,2,3,4,5].map((n) => <Icon key={n} name="star" size={14} color={n <= rating ? 'var(--blue500)' : 'var(--grey200)'} stroke={2}/>)}
+      </div>
+    </div>
+    <Badge tone="blue" size="sm">{tag}</Badge>
+  </div>
+);
+
+const SMRevisionPostEventReviewReceivedMobile14_1 = () => (
+  <SMRevisionShell title="받은 리뷰" back notificationNew={false} bottom={false}>
+    <div style={{ padding: '18px 20px 32px' }}>
+      <div className="tm-text-heading">경기별로 받은 리뷰</div>
+      <div className="tm-text-body" style={{ marginTop: 6 }}>한 경기에서 받은 별점과 태그를 참가자별로 확인합니다.</div>
+      <Card pad={16} style={{ marginTop: 18 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+          <div>
+            <div className="tm-text-body-lg">성수 풋살파크 개인 매치</div>
+            <div className="tm-text-caption" style={{ marginTop: 4 }}>어제 20:00 · 받은 리뷰 5건</div>
+          </div>
+          <Badge tone="blue" size="sm">verified</Badge>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginTop: 14 }}>
+          <SM2InlineStat label="평균" value="4.8"/>
+          <SM2InlineStat label="태그" value="5개"/>
+          <SM2InlineStat label="응답" value="5/7"/>
+        </div>
+        <SMReview14OneReceivedRow name="민준" image={IMG.av1} rating={5} tag="팀워크"/>
+        <SMReview14OneReceivedRow name="서연" image={IMG.av2} rating={5} tag="시간 약속"/>
+        <SMReview14OneReceivedRow name="지훈" image={IMG.av3} rating={4} tag="매너가 좋아요"/>
+      </Card>
+      <Card pad={16} style={{ marginTop: 12 }}>
+        <div className="tm-text-body-lg">강남 토요 풋살</div>
+        <div className="tm-text-caption" style={{ marginTop: 4 }}>5월 18일 · 받은 리뷰 4건 · 평균 4.5</div>
+      </Card>
+    </div>
+  </SMRevisionShell>
+);
+
+const SMRevisionPostEventReviewInboxMobile14_2 = () => (
+  <SMRevisionShell title="리뷰" notificationNew={false} bottom navActive="my">
+    <div style={{ padding: '18px 20px 96px' }}>
+      <div className="tm-text-heading">리뷰</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginTop: 16 }}>
+        <SM2InlineStat label="경기" value="2건"/>
+        <SM2InlineStat label="대상" value="9명"/>
+        <SM2InlineStat label="받은 리뷰" value="12건"/>
+      </div>
+      <SectionTitle title="작성할 리뷰"/>
+      <SMReview14OneScheduleRow title="성수 풋살파크 개인 매치" sub="어제 20:00 · 4/7 완료" kind="개인매치" state="ready" reason="D+1" action="이어쓰기" primary/>
+      <SMReview14OneScheduleRow title="마포 러너스 vs 성동 FC" sub="5월 21일 · 0/5 완료" kind="팀매치" state="ready" reason="상대팀" action="리뷰" primary/>
+      <SectionTitle title="지난 리뷰"/>
+      <SMReview14OneScheduleRow title="강남 토요 풋살" sub="6명에게 전송 완료" kind="개인매치" state="done" reason="완료" action="보기"/>
+      <SMReview14OneScheduleRow title="평일 농구 오픈런" sub="작성 기간이 지났어요" kind="개인매치" state="locked" reason="만료" action="잠김"/>
+    </div>
+  </SMRevisionShell>
+);
+
+const SMRevisionPostEventReviewSelectMobile14_2 = () => (
+  <SMRevisionShell title="리뷰 남기기" back notificationNew={false} bottom={false}>
+    <div style={{ padding: '18px 20px 128px' }}>
+      <Card pad={16}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'flex-start' }}>
+          <div>
+            <div className="tm-text-caption">어제 20:00</div>
+            <div className="tm-text-body-lg" style={{ marginTop: 4 }}>성수 풋살파크 개인 매치</div>
+          </div>
+          <Badge tone="blue" size="sm">4/7 완료</Badge>
+        </div>
+      </Card>
+      <SectionTitle title="참가자"/>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <SMReview14OneTargetReviewRow name="민준" sub="공격수" image={IMG.av1} active/>
+        <SMReview14OneTargetReviewRow name="서연" sub="골키퍼" image={IMG.av2} rating={5} tag="시간 약속"/>
+        <SMReview14OneTargetReviewRow name="지훈" sub="수비수" image={IMG.av3} rating={4} tag="팀워크" done/>
+      </div>
+      <Card pad={14} style={{ marginTop: 12, background: 'var(--grey50)' }}>
+        <div className="tm-text-label">진행 상황</div>
+        <div className="tm-text-caption" style={{ marginTop: 5 }}>작성 2명 · 완료 1명 · 남은 대상 4명</div>
+      </Card>
+    </div>
+    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '14px 20px 22px', background: 'var(--bg)', borderTop: '1px solid var(--grey100)' }}>
+      <SBtn full size="lg">리뷰 보내기</SBtn>
+    </div>
+  </SMRevisionShell>
+);
+
+const SMRevisionPostEventReviewCompleteMobile14_2 = () => (
+  <SMRevisionShell title="" notificationNew={false} bottom={false}>
+    <div style={{ padding: '72px 20px 118px', textAlign: 'center' }}>
+      <div style={{ width: 72, height: 72, borderRadius: 26, background: 'var(--blue50)', color: 'var(--blue500)', display: 'grid', placeItems: 'center', margin: '0 auto' }}>
+        <Icon name="check" size={34}/>
+      </div>
+      <div className="tm-text-heading" style={{ marginTop: 22 }}>리뷰를 보냈습니다</div>
+      <Card pad={16} style={{ marginTop: 24, textAlign: 'left' }}>
+        <div className="tm-text-label">성수 풋살파크 개인 매치</div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
+          {['3명 전송', '4명 남음'].map((tag) => <Badge key={tag} tone="blue" size="sm">{tag}</Badge>)}
+        </div>
+      </Card>
+    </div>
+    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '14px 20px 22px', background: 'var(--bg)', borderTop: '1px solid var(--grey100)' }}>
+      <SBtn full size="lg">확인</SBtn>
+    </div>
+  </SMRevisionShell>
+);
+
+const SMRevisionPostEventReviewReceivedMobile14_2 = () => (
+  <SMRevisionShell title="받은 리뷰" back notificationNew={false} bottom={false}>
+    <div style={{ padding: '18px 20px 32px' }}>
+      <div className="tm-text-heading">받은 리뷰</div>
+      <Card pad={16} style={{ marginTop: 18 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+          <div>
+            <div className="tm-text-body-lg">성수 풋살파크 개인 매치</div>
+            <div className="tm-text-caption" style={{ marginTop: 4 }}>어제 20:00 · 5건</div>
+          </div>
+          <Badge tone="blue" size="sm">4.8</Badge>
+        </div>
+        <SMReview14OneReceivedRow name="민준" image={IMG.av1} rating={5} tag="팀워크"/>
+        <SMReview14OneReceivedRow name="서연" image={IMG.av2} rating={5} tag="시간 약속"/>
+        <SMReview14OneReceivedRow name="지훈" image={IMG.av3} rating={4} tag="매너가 좋아요"/>
+      </Card>
+      <Card pad={16} style={{ marginTop: 12 }}>
+        <div className="tm-text-body-lg">강남 토요 풋살</div>
+        <div className="tm-text-caption" style={{ marginTop: 4 }}>5월 18일 · 4건 · 평균 4.5</div>
+      </Card>
+    </div>
+  </SMRevisionShell>
+);
+
 const SM3_TEAM_BROWSE_ACTIONS_RESTORED = [
   ['검색 입력', '상단 검색바 focus/type', '검색 실행 버튼 활성화, query 유지', '검색 결과 목록. 빠른 입력은 마지막 query만 반영', 'search'],
   ['검색 실행', 'blue search icon tap', 'loading row 후 결과 갱신', 'empty/error/permission이면 복구 CTA와 context 유지', 'submit'],
@@ -3935,6 +4195,15 @@ Object.assign(window, {
   SMRevisionPostEventReviewSelectMobile,
   SMRevisionPostEventReviewCompleteMobile,
   SMRevisionPostEventReviewRules,
+  SMRevisionPostEventReviewInboxMobile14_1,
+  SMRevisionPostEventReviewSelectMobile14_1,
+  SMRevisionPostEventReviewCompleteMobile14_1,
+  SMRevisionPostEventReviewReceivedMobile14_1,
+  SMRevisionPostEventReviewRules14_1,
+  SMRevisionPostEventReviewInboxMobile14_2,
+  SMRevisionPostEventReviewSelectMobile14_2,
+  SMRevisionPostEventReviewCompleteMobile14_2,
+  SMRevisionPostEventReviewReceivedMobile14_2,
   SMRevisionPaymentMobile,
   SMRevisionLandingMobile,
   SMRevisionAdminMobile,

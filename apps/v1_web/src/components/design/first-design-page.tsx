@@ -49,6 +49,15 @@ import {
   SMRevisionPaymentMobile,
   SMRevisionProfileReviewMobileSM2,
   SMRevisionProfileStateMobileSM2,
+  SMRevisionPostEventReviewCompleteMobile14_1,
+  SMRevisionPostEventReviewInboxMobile14_1,
+  SMRevisionPostEventReviewReceivedMobile14_1,
+  SMRevisionPostEventReviewRules14_1,
+  SMRevisionPostEventReviewSelectMobile14_1,
+  SMRevisionPostEventReviewCompleteMobile14_2,
+  SMRevisionPostEventReviewInboxMobile14_2,
+  SMRevisionPostEventReviewReceivedMobile14_2,
+  SMRevisionPostEventReviewSelectMobile14_2,
   SMRevisionTeamBrowseDetailSM5,
   SMRevisionTeamBrowseFilterSheetSM5,
   SMRevisionTeamBrowseMobileSM5,
@@ -115,6 +124,15 @@ export type FirstDesignScreen =
   | 'payment'
   | 'profile'
   | 'profilePrivate'
+  | 'review14Complete'
+  | 'review14Inbox'
+  | 'review14Received'
+  | 'review14Rules'
+  | 'review14Select'
+  | 'review142Complete'
+  | 'review142Inbox'
+  | 'review142Received'
+  | 'review142Select'
   | 'search'
   | 'searchEmpty'
   | 'searchError'
@@ -184,6 +202,15 @@ const screenMap: Record<FirstDesignScreen, { node: ReactNode }> = {
   payment: { node: <SMRevisionPaymentMobile /> },
   profile: { node: <SMRevisionProfileReviewMobileSM2 /> },
   profilePrivate: { node: <SMRevisionProfileStateMobileSM2 /> },
+  review14Complete: { node: <SMRevisionPostEventReviewCompleteMobile14_1 /> },
+  review14Inbox: { node: <SMRevisionPostEventReviewInboxMobile14_1 /> },
+  review14Received: { node: <SMRevisionPostEventReviewReceivedMobile14_1 /> },
+  review14Rules: { node: <SMRevisionPostEventReviewRules14_1 /> },
+  review14Select: { node: <SMRevisionPostEventReviewSelectMobile14_1 /> },
+  review142Complete: { node: <SMRevisionPostEventReviewCompleteMobile14_2 /> },
+  review142Inbox: { node: <SMRevisionPostEventReviewInboxMobile14_2 /> },
+  review142Received: { node: <SMRevisionPostEventReviewReceivedMobile14_2 /> },
+  review142Select: { node: <SMRevisionPostEventReviewSelectMobile14_2 /> },
   search: { node: <SMRevisionHomeSearchFinalMobile /> },
   searchEmpty: { node: <SMRevisionHomeSearchFinalStateMobile state="empty" /> },
   searchError: { node: <SMRevisionHomeSearchFinalStateMobile state="error" /> },

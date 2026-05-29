@@ -3101,6 +3101,39 @@ function App() {
           </DCArtboard>
         </DCSection>
 
+        <DCSection id="reviews-post-event-sm-final-14-1" data-source-section="reviews-post-event-sm-final" title="14-1 · 리뷰 · 일정 종료 후 상호 평가 · 수정안" subtitle="14 리뷰의 전체 내용을 포함한 수정 섹션. 리뷰 대기 목록, 대상 선택, 별점, 선택형 태그 1개, 완료 상태, 예외 규칙을 한 묶음으로 확인한다.">
+          <DCArtboard id="reviews-post-event-inbox-14-1" label="14-1 · 리뷰 대기 목록" width={375} height={812}>
+            <SMRevisionPostEventReviewInboxMobile14_1/>
+          </DCArtboard>
+          <DCArtboard id="reviews-post-event-select-14-1" label="14-1 · 대상 선택 · 별점 · 태그 1개" width={375} height={812}>
+            <SMRevisionPostEventReviewSelectMobile14_1/>
+          </DCArtboard>
+          <DCArtboard id="reviews-post-event-complete-14-1" label="14-1 · 리뷰 완료" width={375} height={812}>
+            <SMRevisionPostEventReviewCompleteMobile14_1/>
+          </DCArtboard>
+          <DCArtboard id="reviews-post-event-received-14-1" label="14-1 · 받은 리뷰 · 경기별" width={375} height={812}>
+            <SMRevisionPostEventReviewReceivedMobile14_1/>
+          </DCArtboard>
+          <DCArtboard id="reviews-post-event-rules-14-1" label="14-1 · 리뷰 동작/예외 규칙" width={840} height={812}>
+            <SMRevisionPostEventReviewRules14_1/>
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="reviews-post-event-sm-final-14-2" data-source-section="reviews-post-event-sm-final-14-1" title="14-2 · 리뷰 · 서비스 화면 정리안" subtitle="14-1을 복사한 뒤 실제 서비스 이용에 필요 없는 설명 문구와 내부 규칙 보드를 제외한 사용자 화면 버전이다.">
+          <DCArtboard id="reviews-post-event-inbox-14-2" label="14-2 · 리뷰" width={375} height={812}>
+            <SMRevisionPostEventReviewInboxMobile14_2/>
+          </DCArtboard>
+          <DCArtboard id="reviews-post-event-select-14-2" label="14-2 · 리뷰 남기기" width={375} height={812}>
+            <SMRevisionPostEventReviewSelectMobile14_2/>
+          </DCArtboard>
+          <DCArtboard id="reviews-post-event-complete-14-2" label="14-2 · 리뷰 완료" width={375} height={812}>
+            <SMRevisionPostEventReviewCompleteMobile14_2/>
+          </DCArtboard>
+          <DCArtboard id="reviews-post-event-received-14-2" label="14-2 · 받은 리뷰" width={375} height={812}>
+            <SMRevisionPostEventReviewReceivedMobile14_2/>
+          </DCArtboard>
+        </DCSection>
+
         <DCSection id="m19-grid" title="M19 · 공통 플로우 · 인터랙션 (viewport grid)" subtitle="fix29에서 추가. ID schema m19-{mb|tb|dt}-{main|flow|state|components|assets|motion}. FormStepShell · StickyCTA · BottomSheet · Toast · Skeleton · edit-flow parity · reduced-motion.">
           <DCArtboard id="m19-mb-main" label="m19-mb-main — 공통 플로우 atlas" width={375} height={812}>
             <M19MobileMain/>
@@ -4676,6 +4709,8 @@ function SMNewViewerGuide({ onJump, viewMode, setViewMode }) {
     ['admin-ops-sm-revision', '12 관리자 SM'],
     ['common-flows-motion', '13 공통 플로우'],
     ['reviews-post-event-sm-final', '14 리뷰'],
+    ['reviews-post-event-sm-final-14-1', '14-1 리뷰 수정'],
+    ['reviews-post-event-sm-final-14-2', '14-2 리뷰 서비스'],
   ];
   const candidate = [
     ['lessons', 'C01 레슨'],
@@ -4726,6 +4761,8 @@ function SMNewViewerGuide({ onJump, viewMode, setViewMode }) {
     ['admin-ops-sm-revision', '12 관리자 SM'],
     ['common-flows-motion', '13 공통 플로우'],
     ['reviews-post-event-sm-final', '14 리뷰'],
+    ['reviews-post-event-sm-final-14-1', '14-1 리뷰 수정'],
+    ['reviews-post-event-sm-final-14-2', '14-2 리뷰 서비스'],
   ];
   const complete11 = [
     ['core-shell-sm-final-1-1', '00 SM 최종'],
