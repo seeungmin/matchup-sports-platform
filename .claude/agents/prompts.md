@@ -36,18 +36,18 @@
 - 상세 문서: `.codex/agents/backend-dev.md`
 - 범위: NestJS controller/service/module/DTO, Prisma schema/seed, fixtures, integration tests.
 - 필수 계약: `/api/v1`, `TransformInterceptor`, strict `ValidationPipe`, `JwtAuthGuard`, `AdminGuard`, `TeamMembershipService.assertRole(...)`.
-- sync 대상: `apps/api/test/fixtures/`, `apps/web/src/test/msw/`, `e2e/fixtures/`, inline mocks.
+- sync 대상: `apps/v1_api/test/fixtures/`, `apps/v1_web/src/test/msw/`, `e2e/fixtures/`, inline mocks.
 
 ### `frontend-dev`
 - 상세 문서: `.codex/agents/frontend-dev.md`
 - 범위: Next.js App Router UI, hooks/stores/types, React Query/Zustand, MSW, i18n, mock images.
-- 필수 계약: `.impeccable.md` 우선, Tailwind token-first, shared UI reuse, `useRequireAuth()` 적용.
-- sync 대상: `apps/web/src/test/msw/`, `apps/web/public/mock/`, `e2e/fixtures/`, 관련 타입과 inline test mock.
+- 필수 계약: `docs/reference/handoff-sm-new-direction/sports-platform/project/Teameet Design.html` 우선, Tailwind token-first, shared UI reuse, `useRequireAuth()` 적용.
+- sync 대상: `apps/v1_web/src/test/msw/`, `apps/v1_web/public/mock/`, `e2e/fixtures/`, 관련 타입과 inline test mock.
 
 ### `infra-dev`
 - 상세 문서: `.codex/agents/infra-dev.md`
 - 범위: compose/deploy/Makefile/workflows, runtime healthcheck, auth/config safety.
-- 필수 계약: dev `3003/8111`, prod `3000/8100`, destructive seed 금지, `.env*` 미접근.
+- 필수 계약: v1 dev `3013/8121`, destructive seed 금지, `.env*` 미접근.
 - 추가 계약: production deploy는 DB/JWT 같은 truly required env만 fail-fast 검증하고, Toss 결제 시크릿은 없으면 mock mode로 둔다. GitHub repo secrets를 쓰는 경우 EC2 `deploy/.env`도 그 값으로 수렴시켜 stale host secret을 남기지 않는다. readiness는 process liveness가 아니라 `/api/v1/health` 기준으로 본다. Next.js production image는 `NEXT_PUBLIC_API_URL`과 `INTERNAL_API_ORIGIN` build-time 주입을 명시적으로 처리한다.
 
 ## Review Team
@@ -117,20 +117,20 @@ The sections below fill project-specific gaps while preserving curated content a
 이 파일이 Codex built-in compatibility entry로 사용될 때는 위 매핑에 더해 아래 계약을 적용한다.
 
 #### `backend-dev`
-- owned surfaces: `apps/api/src/**`, `apps/api/prisma/**`, `apps/api/test/**`
-- stack context: NestJS 11, Prisma 6, PostgreSQL 16, Redis 7, Jest/Supertest, dev API `localhost:8111`
+- owned surfaces: `apps/v1_api/src/**`, `apps/v1_api/prisma/**`, `apps/v1_api/test/**`
+- stack context: v1 NestJS, Prisma, Jest/Supertest, API prefix `/api/v1`
 - mandatory checks: auth/authz, DTO completeness, fixture/MSW/E2E sync, live contract check when DTO/query changes
 - output: changed backend files, tests run, runtime contract verification, residual risks
 
 #### `frontend-dev`
-- owned surfaces: `apps/web/src/**`, `apps/web/public/mock/**`, `apps/web/messages/**`
-- stack context: Next.js 15 App Router, React 19, Tailwind v4, TanStack Query 5, Zustand 5, next-intl, Playwright on `localhost:3003`
-- mandatory checks: `.impeccable.md`, shared UI reuse, dark pair completeness, truthful trust signals, no false affordance
+- owned surfaces: `apps/v1_web/src/**`, `apps/v1_web/public/mock/**`, `apps/v1_web/messages/**`
+- stack context: v1 Next.js App Router, React, Tailwind, TanStack Query, Zustand, dev server `localhost:3013`
+- mandatory checks: Teameet Design HTML, shared UI reuse, dark pair completeness, truthful trust signals, no false affordance
 - output: changed routes/components/hooks, tests and typecheck, mock/image sync, UX regressions if any
 
 #### `infra-dev`
 - owned surfaces: `docker-compose*`, `deploy/**`, `Makefile`, `.github/workflows/**`, `infra/**`
-- stack context: Docker Compose dev, EC2 deploy, prod `web=3000` / `api=8100`, dev `web=3003` / `api=8111`
+- stack context: v1 dev `web=3013` / `api=8121`, infra/deploy compatibility only when explicitly scoped
 - mandatory checks: health-gated startup, idempotent data sync, no `.env*` access, no destructive seed on deploy path
 - output: changed infra files, validation steps, deploy/runtime impact, rollback considerations
 
@@ -151,7 +151,7 @@ The sections below fill project-specific gaps while preserving curated content a
 
 #### `design-main`
 - owned scope: theme direction, brand consistency, trust-first visual language
-- mandatory checks: `.impeccable.md` priority, restrained energy, non-template look, journey-level consistency
+- mandatory checks: Teameet Design HTML priority, restrained energy, non-template look, journey-level consistency
 - output: design findings with page/flow references and clear pass/fail rationale
 
 #### `ux-manager`

@@ -5,6 +5,7 @@
 
 ## Owned Surfaces
 - `AGENTS.md`
+- `.codex/*.md`
 - `.codex/agents/**`
 - `.claude/agents/prompts.md`
 - `README.md`
@@ -12,9 +13,10 @@
 - `docs/scenarios/*.md`
 
 ## Must Keep True
-- Commands and ports reflect `Makefile`, `docker-compose.yml`, and runtime docs.
+- Commands and ports reflect v1 runtime files first: `apps/v1_api/src/main.ts`, `apps/v1_web/package.json`, `apps/v1_web/next.config.ts`, then `Makefile`.
 - `.env*` content is never read or printed.
 - New repo rules or gotchas update both canonical and compatibility docs in the same change.
+- V1 scope remains explicit: `apps/v1_api`, `apps/v1_web`, and the Teameet Design HTML are the valid sources.
 
 ## Output
 - Updated files

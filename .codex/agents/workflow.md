@@ -56,7 +56,7 @@
 
 ## Ambiguity Escalation
 
-1. Builder가 task 문서, `AGENTS.md`, `CLAUDE.md`, `.impeccable.md`, 관련 코드에서 답을 못 찾으면 중단한다.
+1. Builder가 task 문서, `AGENTS.md`, `.codex/*.md`, Teameet Design HTML, 관련 v1 코드에서 답을 못 찾으면 중단한다.
 2. `BLOCKED: {구체적 질문}` 형식으로 planners에 되돌린다.
 3. Planners는 task 문서를 갱신하고 `Ambiguity Log`에 남긴다.
 4. Builder는 갱신된 문서를 기준으로 재개한다.

@@ -82,7 +82,7 @@
 18. **Runtime image fallback is mandatory** — 사용자-facing 이미지가 원격 URL을 받으면 로컬 mock으로 degrade
 19. **Deploy-safe data sync must be idempotent** — 운영 배포는 destructive seed 대신 idempotent backfill
 20. **URL-synced filter UIs must merge against pending local state** — stale searchParams 재사용 금지
-21. **Live runtime contract must be verified on the real port** — DTO/query 변경은 `localhost:8111` 응답 재확인
+21. **Live runtime contract must be verified on the real port** — DTO/query 변경은 v1 API `localhost:8121` 응답 재확인
 22. **Concurrent Playwright runners use isolated compose only** — shared `make dev` stack은 single active runner 계약 유지
 23. **Isolated web runtimes need per-stack `.next` storage** — host-shared `.next`는 Next dev artifact cross-talk를 만들어 `/landing` 500과 module-not-found를 유발
 
@@ -134,7 +134,7 @@ Critical ≥ 1 → 리뷰 통과 불가. Warning까지 0 → QA 진입.
 ## Ambiguity Escalation Loop (Builder → Planner)
 
 빌더가 아래 소스에서 모호함을 해소할 수 없을 때:
-- task 문서, 기존 코드, CLAUDE.md, `.impeccable.md`
+- task 문서, `.codex/*.md`, Teameet Design HTML, 관련 v1 코드
 
 → **작업 중단하고 에스컬레이션**:
 
@@ -164,15 +164,11 @@ Builder 작업 재개
 
 ## Current Repo Runtime Notes
 
-- `make dev`, `make up`, `make dev-local` for local development
+- v1 backend is `apps/v1_api`; v1 frontend is `apps/v1_web`
+- v1 frontend dev: `pnpm --filter v1_web dev`, default URL `http://localhost:3013`
+- v1 backend dev: `pnpm --filter v1_api dev`, default URL `http://localhost:8121/api/v1`
+- legacy app paths are not valid implementation references unless explicitly requested
 - Playwright canonical runbook: `docs/PLAYWRIGHT_E2E_RUNBOOK.md`
-- `make dev-web` is the official web-only recovery path and must rerun `deps + web` together; do not use `docker compose restart web` as a substitute
-- Dev ports: web=3003, api=8111, Swagger=`http://localhost:8111/docs`
-- Prod ports: web=3000, api=8100
-- Production EC2: `ec2-user`, may have standalone `docker-compose`
-- Dev Docker: glibc Node image, `nocopy` bootstrap, `bcryptjs` override, stack-local `.next` for shared and isolated web runtimes
-- If `docker compose ps` shows `web` healthy but `localhost:3003` still 500s, check `lsof -nP -iTCP:3003 -sTCP:LISTEN` for a stale host-side `pnpm --filter web dev` or `next dev` shadow process before touching app code
-- Postgres/Redis: internal Docker network, `web` gated on API healthcheck
 - Nest validation: strict (`whitelist + forbidNonWhitelisted`)
 - feature screenshot-set analysis/retry loops use `scripts/qa/run-e2e-analyzer.mjs`; resume from `ultraplan/runs/e2e-analyzer*` queue state instead of relying on ephemeral loop memory
 
@@ -182,26 +178,25 @@ Builder 작업 재개
 
 | Scope | Command |
 |-------|---------|
-| Frontend type check | `cd apps/web && npx tsc --noEmit` |
-| Frontend unit | `make test-web` or `pnpm --filter web test` |
-| Backend unit | `make test-api` or `pnpm --filter api test` |
-| Backend integration | `make test-integration` or `pnpm --filter api test:integration` |
-| E2E | `make test-e2e` or `pnpm exec playwright test --config=e2e/playwright.config.ts` |
+| Frontend build | `pnpm --filter v1_web build` |
+| Frontend unit | `pnpm --filter v1_web test` |
+| Backend unit | `pnpm --filter v1_api test` |
+| Backend integration | `pnpm --filter v1_api test:integration` |
+| E2E | confirm v1 route/data coverage before running repository Playwright config |
 | Isolated E2E up | `make e2e-isolated-up RUN=<id>` |
 | Isolated E2E full suite | `make test-e2e-isolated RUN=<id>` |
 | Isolated E2E targeted spec | `make test-e2e-isolated-spec RUN=<id> SPEC=<path> [PROJECT="Desktop Chrome"] [GREP="..."]` |
 | Isolated E2E down | `make e2e-isolated-down RUN=<id>` |
-| Full build | `pnpm build` |
-| Full lint | `pnpm lint` |
+| V1 combined unit | `pnpm v1:test` |
 
 ---
 
 ## Fixture / Mock Sync Gate
 
 Review is not complete if a change touches schema, DTOs, API responses, or seeded content without syncing:
-- `apps/api/test/fixtures/`
-- `apps/web/src/test/msw/`
-- `apps/web/public/mock/`
+- `apps/v1_api/test/fixtures/`
+- `apps/v1_web/src/test/msw/`
+- `apps/v1_web/public/mock/`
 - `e2e/fixtures/`
 - Affected inline mocks in `*.spec.ts` / `*.test.tsx`
 

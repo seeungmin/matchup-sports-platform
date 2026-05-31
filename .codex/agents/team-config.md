@@ -84,8 +84,8 @@
 
 | Agent | Owned surfaces | Must coordinate on |
 |-------|----------------|--------------------|
-| `backend-dev` | `apps/api/src/**`, `apps/api/prisma/**`, `apps/api/test/**` | frontend contract changes, realtime handshake, deploy-affecting runtime changes |
-| `frontend-dev` | `apps/web/src/**`, `apps/web/public/mock/**`, `apps/web/messages/**` | API contract changes, auth flows, payments, E2E data setup |
+| `backend-dev` | `apps/v1_api/src/**`, `apps/v1_api/prisma/**`, `apps/v1_api/test/**` | frontend contract changes, realtime handshake, deploy-affecting runtime changes |
+| `frontend-dev` | `apps/v1_web/src/**`, `apps/v1_web/public/mock/**`, `apps/v1_web/messages/**` | API contract changes, auth flows, payments, E2E data setup |
 | `infra-dev` | `docker-compose*`, `deploy/**`, `Makefile`, `.github/workflows/**`, `infra/**` | runtime port/auth changes, prod-safe data sync, CI assumptions |
 | `docs-writer` | `AGENTS.md`, `.codex/agents/**`, `.claude/agents/prompts.md`, docs/task docs | final behavior and command truth |
 
