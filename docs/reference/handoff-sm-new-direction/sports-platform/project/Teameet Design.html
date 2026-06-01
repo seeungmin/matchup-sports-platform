@@ -48,7 +48,7 @@ html, body { background: #f4f5f7; font-family: 'Pretendard', sans-serif; }
 <script type="text/babel" src="lib/screens-refresh3.jsx?v=20260425-fix32"></script>
 <script type="text/babel" src="lib/screens-v2main.jsx?v=20260425-fix32"></script>
 <script type="text/babel" src="lib/screens-v2main2.jsx?v=20260425-fix32"></script>
-<script type="text/babel" src="lib/screens-sm-revision.jsx?v=core00-final-restored-sm9-leave-2states-auth01-separated-team05-sm5-search-filter-review14"></script>
+<script type="text/babel" src="lib/screens-sm-revision.jsx?v=core00-final-restored-sm9-leave-2states-auth01-separated-team05-sm5-search-filter-review14-3"></script>
 <script type="text/babel" src="lib/screens-parity.jsx?v=20260425-fix32"></script>
 <script type="text/babel" src="lib/screens-case-matrix.jsx?v=20260425-fix32"></script>
 <script type="text/babel" src="lib/screens-readiness.jsx?v=20260425-fix32"></script>
@@ -3134,6 +3134,24 @@ function App() {
           </DCArtboard>
         </DCSection>
 
+        <DCSection id="reviews-post-event-sm-final-14-3" data-source-section="reviews-post-event-sm-final-14-2" title="14 리뷰 최종" subtitle="14-2를 복사한 뒤 상단 뒤로가기, 중복 제목 제거, 별점 1~5 클릭 상태, 사람별 복수 텍스트 선택을 반영한다.">
+          <DCArtboard id="reviews-post-event-inbox-14-3" width={375} height={812}>
+            <SMRevisionPostEventReviewInboxMobile14_3 tab="write"/>
+          </DCArtboard>
+          <DCArtboard id="reviews-post-event-written-14-3" width={375} height={812}>
+            <SMRevisionPostEventReviewInboxMobile14_3 tab="written"/>
+          </DCArtboard>
+          <DCArtboard id="reviews-post-event-select-14-3" width={375} height={812}>
+            <SMRevisionPostEventReviewSelectMobile14_3/>
+          </DCArtboard>
+          <DCArtboard id="reviews-post-event-received-14-3" width={375} height={812}>
+            <SMRevisionPostEventReviewReceivedMobile14_3/>
+          </DCArtboard>
+          <DCArtboard id="reviews-post-event-complete-14-3" width={375} height={812}>
+            <SMRevisionPostEventReviewCompleteMobile14_3/>
+          </DCArtboard>
+        </DCSection>
+
         <DCSection id="m19-grid" title="M19 · 공통 플로우 · 인터랙션 (viewport grid)" subtitle="fix29에서 추가. ID schema m19-{mb|tb|dt}-{main|flow|state|components|assets|motion}. FormStepShell · StickyCTA · BottomSheet · Toast · Skeleton · edit-flow parity · reduced-motion.">
           <DCArtboard id="m19-mb-main" label="m19-mb-main — 공통 플로우 atlas" width={375} height={812}>
             <M19MobileMain/>
@@ -4708,9 +4726,7 @@ function SMNewViewerGuide({ onJump, viewMode, setViewMode }) {
     ['admin-ops', '12 관리자'],
     ['admin-ops-sm-revision', '12 관리자 SM'],
     ['common-flows-motion', '13 공통 플로우'],
-    ['reviews-post-event-sm-final', '14 리뷰'],
-    ['reviews-post-event-sm-final-14-1', '14-1 리뷰 수정'],
-    ['reviews-post-event-sm-final-14-2', '14-2 리뷰 서비스'],
+    ['reviews-post-event-sm-final-14-3', '14 리뷰 최종'],
   ];
   const candidate = [
     ['lessons', 'C01 레슨'],
@@ -4760,9 +4776,7 @@ function SMNewViewerGuide({ onJump, viewMode, setViewMode }) {
     ['desktop-web', '11 데스크톱'],
     ['admin-ops-sm-revision', '12 관리자 SM'],
     ['common-flows-motion', '13 공통 플로우'],
-    ['reviews-post-event-sm-final', '14 리뷰'],
-    ['reviews-post-event-sm-final-14-1', '14-1 리뷰 수정'],
-    ['reviews-post-event-sm-final-14-2', '14-2 리뷰 서비스'],
+    ['reviews-post-event-sm-final-14-3', '14 리뷰 최종'],
   ];
   const complete11 = [
     ['core-shell-sm-final-1-1', '00 SM 최종'],

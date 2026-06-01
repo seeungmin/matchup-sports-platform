@@ -3847,6 +3847,203 @@ const SMRevisionPostEventReviewReceivedMobile14_2 = () => (
   </SMRevisionShell>
 );
 
+const SM_REVIEW_TAGS_14_3 = [
+  '⏰ 시간 약속을 잘 지켜요',
+  '😊 매너가 좋아요',
+  '🤝 팀워크가 좋아요',
+  '💬 소통이 원활해요',
+  '💪 운동에 적극적으로 참여해요',
+  '🙌 배려심이 있어요',
+  '🔥 열정적으로 운동해요',
+  '👍 또 같이 운동하고 싶어요',
+];
+
+const SMReview14ThreeTabs = ({ active = 'write', onChange }) => (
+  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6, padding: 4, borderRadius: 15, background: 'var(--grey100)', marginBottom: 16 }}>
+    {[
+      ['write', '작성할 리뷰'],
+      ['written', '작성된 리뷰'],
+    ].map(([id, label]) => {
+      const selected = active === id;
+      return (
+        <button key={id} type="button" className="tm-pressable" aria-pressed={selected} onClick={() => onChange && onChange(id)} style={{ height: 38, border: 0, borderRadius: 12, background: selected ? 'var(--bg)' : 'transparent', color: selected ? 'var(--text-strong)' : 'var(--text-muted)', fontWeight: selected ? 800 : 600 }}>
+          {label}
+        </button>
+      );
+    })}
+  </div>
+);
+
+const SMReview14ThreeFilledStars = ({ initial = 4 }) => {
+  const [rating, setRating] = useState(initial);
+  return (
+    <div style={{ display: 'flex', gap: 2, marginTop: 10 }} aria-label={`${rating}점`}>
+      {[1,2,3,4,5].map((n) => (
+        <button key={n} type="button" aria-label={`${n}점`} onClick={() => setRating(n)} style={{ width: 28, height: 28, border: 0, background: 'transparent', padding: 0, color: n <= rating ? 'var(--blue500)' : 'var(--grey200)', fontSize: 24, lineHeight: '28px' }}>
+          ★
+        </button>
+      ))}
+    </div>
+  );
+};
+
+const SMReview14ThreeSelectableChips = ({ initial = [] }) => {
+  const [selected, setSelected] = useState(initial);
+  const toggle = (tag) => setSelected((current) => (
+    current.includes(tag) ? current.filter((item) => item !== tag) : [...current, tag]
+  ));
+  return (
+    <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', marginTop: 12 }}>
+      {SM_REVIEW_TAGS_14_3.map((tag) => {
+        const active = selected.includes(tag);
+        return (
+          <button key={tag} type="button" aria-pressed={active} onClick={() => toggle(tag)} style={{ border: `1px solid ${active ? 'var(--blue500)' : 'var(--grey200)'}`, background: active ? 'var(--blue50)' : 'var(--bg)', color: active ? 'var(--blue700)' : 'var(--text-muted)', borderRadius: 999, padding: '7px 10px', fontWeight: active ? 800 : 600, fontSize: 12, lineHeight: '16px' }}>
+            {tag}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+const SMReview14ThreeTargetReviewRow = ({ name, sub, image, rating = 4, selectedTags = [], done = false, active = false }) => (
+  <Card pad={14} style={{ border: active ? '1px solid var(--blue500)' : '1px solid var(--grey100)', background: active ? 'var(--blue50)' : 'var(--bg)' }}>
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+      <div style={{ width: 42, height: 42, borderRadius: 14, background: `url(${image}) center/cover`, flexShrink: 0 }}/>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+          <div>
+            <div className="tm-text-body-lg">{name}</div>
+            <div className="tm-text-caption" style={{ marginTop: 2 }}>{sub}</div>
+          </div>
+          <Badge tone={done ? 'green' : active ? 'blue' : 'grey'} size="sm">{done ? '작성됨' : active ? '작성 중' : '대기'}</Badge>
+        </div>
+        <SMReview14ThreeFilledStars initial={rating}/>
+        <SMReview14ThreeSelectableChips initial={selectedTags}/>
+      </div>
+    </div>
+  </Card>
+);
+
+const SMRevisionPostEventReviewInboxMobile14_3 = ({ tab = 'write' }) => {
+  const [activeTab, setActiveTab] = useState(tab);
+  return (
+    <SMRevisionShell title="리뷰" back notificationNew={false} bottom navActive="my">
+      <div style={{ padding: '18px 20px 96px' }}>
+        <SMReview14ThreeTabs active={activeTab} onChange={setActiveTab}/>
+        {activeTab === 'write' ? (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+            <SM2InlineStat label="경기" value="2건"/>
+            <SM2InlineStat label="대상" value="9명"/>
+            <SM2InlineStat label="남은 리뷰" value="7명"/>
+          </div>
+          <div style={{ marginTop: 14 }}>
+            <SMReview14OneScheduleRow title="성수 풋살파크 개인 매치" sub="어제 20:00 · 4/7 완료" kind="개인매치" state="ready" reason="D+1" action="이어쓰기" primary/>
+            <SMReview14OneScheduleRow title="마포 러너스 vs 성동 FC" sub="5월 21일 · 0/5 완료" kind="팀매치" state="ready" reason="상대팀" action="리뷰" primary/>
+          </div>
+        </>
+      ) : (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+            <SM2InlineStat label="작성 완료" value="9명"/>
+            <SM2InlineStat label="받은 리뷰" value="12건"/>
+            <SM2InlineStat label="평균" value="4.8"/>
+          </div>
+          <div style={{ marginTop: 14 }}>
+            <SMReview14OneScheduleRow title="강남 토요 풋살" sub="6명에게 전송 완료" kind="개인매치" state="done" reason="완료" action="보기"/>
+            <SMReview14OneScheduleRow title="성수 풋살파크 개인 매치" sub="민준, 서연, 지훈에게 작성됨" kind="개인매치" state="done" reason="3명" action="보기"/>
+          </div>
+        </>
+        )}
+      </div>
+    </SMRevisionShell>
+  );
+};
+
+const SMRevisionPostEventReviewSelectMobile14_3 = () => (
+  <SMRevisionShell title="리뷰 남기기" back notificationNew={false} bottom={false}>
+    <div style={{ padding: '18px 20px 128px' }}>
+      <Card pad={16}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'flex-start' }}>
+          <div>
+            <div className="tm-text-caption">어제 20:00</div>
+            <div className="tm-text-body-lg" style={{ marginTop: 4 }}>성수 풋살파크 개인 매치</div>
+          </div>
+          <Badge tone="blue" size="sm">4/7 완료</Badge>
+        </div>
+      </Card>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 14 }}>
+        <SMReview14ThreeTargetReviewRow name="민준" sub="공격수" image={IMG.av1} rating={4} selectedTags={['😊 매너가 좋아요', '🤝 팀워크가 좋아요', '👍 또 같이 운동하고 싶어요']} active/>
+        <SMReview14ThreeTargetReviewRow name="서연" sub="골키퍼" image={IMG.av2} rating={5} selectedTags={['⏰ 시간 약속을 잘 지켜요', '💬 소통이 원활해요']} />
+        <SMReview14ThreeTargetReviewRow name="지훈" sub="수비수" image={IMG.av3} rating={4} selectedTags={['🤝 팀워크가 좋아요', '🙌 배려심이 있어요']} done/>
+      </div>
+      <Card pad={14} style={{ marginTop: 12, background: 'var(--grey50)' }}>
+        <div className="tm-text-label">진행 상황</div>
+        <div className="tm-text-caption" style={{ marginTop: 5 }}>작성 2명 · 완료 1명 · 남은 대상 4명</div>
+      </Card>
+    </div>
+    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '14px 20px 22px', background: 'var(--bg)', borderTop: '1px solid var(--grey100)' }}>
+      <SBtn full size="lg">리뷰 보내기</SBtn>
+    </div>
+  </SMRevisionShell>
+);
+
+const SMRevisionPostEventReviewReceivedMobile14_3 = () => (
+  <SMRevisionShell title="받은 리뷰" back notificationNew={false} bottom={false}>
+    <div style={{ padding: '18px 20px 32px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+        <SM2InlineStat label="받은 리뷰" value="12건"/>
+        <SM2InlineStat label="평균" value="4.8"/>
+        <SM2InlineStat label="태그" value="8개"/>
+      </div>
+      <Card pad={16} style={{ marginTop: 14 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+          <div>
+            <div className="tm-text-body-lg">성수 풋살파크 개인 매치</div>
+            <div className="tm-text-caption" style={{ marginTop: 4 }}>어제 20:00 · 받은 리뷰 5건</div>
+          </div>
+          <Badge tone="blue" size="sm">4.8</Badge>
+        </div>
+        <SMReview14OneReceivedRow name="민준" image={IMG.av1} rating={5} tag="🤝 팀워크"/>
+        <SMReview14OneReceivedRow name="서연" image={IMG.av2} rating={5} tag="⏰ 시간 약속"/>
+        <SMReview14OneReceivedRow name="지훈" image={IMG.av3} rating={4} tag="😊 매너"/>
+      </Card>
+      <Card pad={16} style={{ marginTop: 12 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+          <div>
+            <div className="tm-text-body-lg">강남 토요 풋살</div>
+            <div className="tm-text-caption" style={{ marginTop: 4 }}>5월 18일 · 받은 리뷰 4건</div>
+          </div>
+          <Badge tone="blue" size="sm">4.5</Badge>
+        </div>
+        <SMReview14OneReceivedRow name="도윤" image={IMG.av4} rating={5} tag="👍 또 같이"/>
+        <SMReview14OneReceivedRow name="하준" image={IMG.av5} rating={4} tag="💬 소통"/>
+      </Card>
+    </div>
+  </SMRevisionShell>
+);
+
+const SMRevisionPostEventReviewCompleteMobile14_3 = () => (
+  <SMRevisionShell title="" back notificationNew={false} bottom={false}>
+    <div style={{ padding: '72px 20px 118px', textAlign: 'center' }}>
+      <div style={{ width: 72, height: 72, borderRadius: 26, background: 'var(--blue50)', color: 'var(--blue500)', display: 'grid', placeItems: 'center', margin: '0 auto' }}>
+        <Icon name="check" size={34}/>
+      </div>
+      <div className="tm-text-heading" style={{ marginTop: 22 }}>리뷰를 보냈습니다</div>
+      <Card pad={16} style={{ marginTop: 24, textAlign: 'left' }}>
+        <div className="tm-text-label">성수 풋살파크 개인 매치</div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
+          {['3명 전송', '별점 저장', '복수 태그 저장', '4명 남음'].map((tag) => <Badge key={tag} tone="blue" size="sm">{tag}</Badge>)}
+        </div>
+      </Card>
+    </div>
+    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '14px 20px 22px', background: 'var(--bg)', borderTop: '1px solid var(--grey100)' }}>
+      <SBtn full size="lg">확인</SBtn>
+    </div>
+  </SMRevisionShell>
+);
+
 const SM3_TEAM_BROWSE_ACTIONS_RESTORED = [
   ['검색 입력', '상단 검색바 focus/type', '검색 실행 버튼 활성화, query 유지', '검색 결과 목록. 빠른 입력은 마지막 query만 반영', 'search'],
   ['검색 실행', 'blue search icon tap', 'loading row 후 결과 갱신', 'empty/error/permission이면 복구 CTA와 context 유지', 'submit'],
@@ -4204,6 +4401,10 @@ Object.assign(window, {
   SMRevisionPostEventReviewSelectMobile14_2,
   SMRevisionPostEventReviewCompleteMobile14_2,
   SMRevisionPostEventReviewReceivedMobile14_2,
+  SMRevisionPostEventReviewInboxMobile14_3,
+  SMRevisionPostEventReviewSelectMobile14_3,
+  SMRevisionPostEventReviewReceivedMobile14_3,
+  SMRevisionPostEventReviewCompleteMobile14_3,
   SMRevisionPaymentMobile,
   SMRevisionLandingMobile,
   SMRevisionAdminMobile,
