@@ -472,11 +472,19 @@ function toNotificationItem(notification: V1Notification | MockNotification): Mo
       body: notification.body ?? '',
       time: formatShortDate(notification.createdAt),
       read: notification.status === 'read',
-      href: notification.target.route ?? '/notifications',
+      href: normalizeNotificationRoute(notification.target.route, notification.type),
     };
   }
 
   return notification;
+}
+
+function normalizeNotificationRoute(route: string | null, type?: string | null) {
+  if (!route) return type?.includes('review') ? '/my/reviews' : '/notifications';
+  if (route === '/reviews' || route.startsWith('/reviews?')) return route.replace('/reviews', '/my/reviews');
+  if (route.startsWith('/reviews/')) return `/my${route}`;
+  if (type?.includes('review') && route === '/my') return '/my/reviews';
+  return route;
 }
 
 function toChatRoom(room: V1ChatRoom | MockChatRoom): MockChatRoom {

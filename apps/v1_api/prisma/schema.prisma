@@ -148,6 +148,22 @@ enum V1TeamMatchApplicationStatus {
   expired
 }
 
+enum V1PostEventReviewSourceType {
+  match
+  team_match
+}
+
+enum V1PostEventReviewTargetType {
+  user
+  team
+}
+
+enum V1PostEventReviewStatus {
+  submitted
+  hidden
+  removed
+}
+
 enum V1ChatRoomStatus {
   active
   archived
@@ -239,6 +255,8 @@ model V1User {
   adminUser              V1AdminUser?              @relation("V1AdminUserAccount")
   grantedAdmins          V1AdminUser[]             @relation("V1AdminGrantor")
   statusLogs             V1StatusChangeLog[]       @relation("V1StatusActorUser")
+  postEventReviewsWritten      V1PostEventReview[] @relation("V1PostEventReviewReviewer")
+  postEventUserReviewsReceived V1PostEventReview[] @relation("V1PostEventReviewTargetUser")
 
   @@index([accountStatus])
   @@index([onboardingStatus])
@@ -594,6 +612,8 @@ model V1Team {
   hostedTeamMatches     V1TeamMatch[]            @relation("V1HostTeamMatches")
   approvedTeamMatches   V1TeamMatch[]            @relation("V1ApprovedApplicantTeam")
   teamMatchApplications V1TeamMatchApplication[] @relation("V1TeamMatchApplicantTeam")
+  postEventReviewsWritten      V1PostEventReview[] @relation("V1PostEventReviewReviewerTeam")
+  postEventTeamReviewsReceived V1PostEventReview[] @relation("V1PostEventReviewTargetTeam")
 
   @@index([ownerUserId])
   @@index([sportId, regionId, status])
@@ -686,6 +706,55 @@ model V1TeamTrustScore {
 
   @@index([trustState])
   @@map("v1_team_trust_scores")
+}
+
+model V1PostEventReview {
+  id             String                      @id @default(uuid())
+  reviewerUserId String                      @map("reviewer_user_id")
+  reviewerTeamId String?                     @map("reviewer_team_id")
+  sourceType     V1PostEventReviewSourceType @map("source_type")
+  sourceId       String                      @map("source_id")
+  targetType     V1PostEventReviewTargetType @map("target_type")
+  targetUserId   String?                     @map("target_user_id")
+  targetTeamId   String?                     @map("target_team_id")
+  rating         Int
+  status         V1PostEventReviewStatus     @default(submitted)
+  submittedAt    DateTime                    @default(now()) @map("submitted_at")
+  hiddenAt       DateTime?                   @map("hidden_at")
+  removedAt      DateTime?                   @map("removed_at")
+  createdAt      DateTime                    @default(now()) @map("created_at")
+  updatedAt      DateTime                    @updatedAt @map("updated_at")
+
+  reviewerUser V1User  @relation("V1PostEventReviewReviewer", fields: [reviewerUserId], references: [id], onDelete: Restrict)
+  reviewerTeam V1Team? @relation("V1PostEventReviewReviewerTeam", fields: [reviewerTeamId], references: [id], onDelete: Restrict)
+  targetUser   V1User? @relation("V1PostEventReviewTargetUser", fields: [targetUserId], references: [id], onDelete: Restrict)
+  targetTeam   V1Team? @relation("V1PostEventReviewTargetTeam", fields: [targetTeamId], references: [id], onDelete: Restrict)
+  tags         V1PostEventReviewTag[]
+
+  @@unique([reviewerUserId, targetUserId, sourceType, sourceId])
+  @@unique([reviewerTeamId, targetTeamId, sourceType, sourceId])
+  @@index([reviewerUserId, sourceType, submittedAt])
+  @@index([reviewerTeamId, sourceType, submittedAt])
+  @@index([targetUserId, submittedAt])
+  @@index([targetTeamId, submittedAt])
+  @@index([sourceType, sourceId])
+  @@index([targetType])
+  @@index([status])
+  @@map("v1_post_event_reviews")
+}
+
+model V1PostEventReviewTag {
+  id            String   @id @default(uuid())
+  reviewId      String   @map("review_id")
+  tagCode       String   @map("tag_code")
+  labelSnapshot String   @map("label_snapshot")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  review V1PostEventReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewId, tagCode])
+  @@index([tagCode])
+  @@map("v1_post_event_review_tags")
 }
 
 model V1TeamMatch {

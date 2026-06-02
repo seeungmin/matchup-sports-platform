@@ -12,6 +12,12 @@ import {
   v1ProfileFixture,
   v1RecentSearchesFixture,
   v1RegionsFixture,
+  v1ReviewMatchSourceFixture,
+  v1ReviewsPendingFixture,
+  v1ReviewsReceivedFixture,
+  v1ReviewsWrittenFixture,
+  v1ReviewSubmitFixture,
+  v1ReviewTeamMatchSourceFixture,
   v1SettingsFixture,
   v1SportsFixture,
   v1TeamMatchesFixture,
@@ -152,6 +158,21 @@ export const v1MswHandlers = [
     return ok({ roomId: params.roomId, status: 'left' });
   }),
   http.get(`${api}/notifications`, () => ok(v1NotificationsFixture)),
+  http.get(`${api}/reviews`, ({ request }) => {
+    const tab = new URL(request.url).searchParams.get('tab');
+    return ok(tab === 'written' ? v1ReviewsWrittenFixture : v1ReviewsPendingFixture);
+  }),
+  http.get(`${api}/reviews/received`, () => ok(v1ReviewsReceivedFixture)),
+  http.get(`${api}/reviews/sources/:sourceType/:sourceId`, ({ params }) => {
+    return ok(params.sourceType === 'team_match' ? v1ReviewTeamMatchSourceFixture : v1ReviewMatchSourceFixture);
+  }),
+  http.post(`${api}/reviews`, async ({ request }) => {
+    const body = await request.json() as { targetTeamId?: string | null; targetUserId?: string | null };
+    if (body.targetUserId === 'user-2') {
+      return ok({ ...v1ReviewSubmitFixture, alreadySubmitted: true });
+    }
+    return ok(v1ReviewSubmitFixture);
+  }),
   http.patch(`${api}/notifications/:notificationId/read`, ({ params }) => {
     const readAt = new Date().toISOString();
     const notification = v1NotificationsFixture.items.find((item) => item.notificationId === params.notificationId);

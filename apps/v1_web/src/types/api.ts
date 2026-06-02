@@ -721,6 +721,115 @@ export type V1MyTeamMatch = {
   detailRoute: string;
 };
 
+export type V1ReviewSourceType = 'match' | 'team_match';
+export type V1ReviewTargetType = 'user' | 'team';
+
+export type V1ReviewActorUser = {
+  userId: string;
+  name: string;
+  imageUrl: string | null;
+};
+
+export type V1ReviewActorTeam = {
+  teamId: string;
+  name: string;
+  imageUrl?: string | null;
+  role?: 'owner' | 'manager';
+};
+
+export type V1ReviewTag = {
+  tagCode: string;
+  label: string;
+};
+
+export type V1ReviewDetail = {
+  reviewId: string;
+  sourceType: V1ReviewSourceType;
+  sourceId: string;
+  targetType: V1ReviewTargetType;
+  targetUser: V1ReviewActorUser | null;
+  targetTeam: V1ReviewActorTeam | null;
+  reviewerUser: V1ReviewActorUser;
+  reviewerTeam: V1ReviewActorTeam | null;
+  rating: number;
+  tags: V1ReviewTag[];
+  status: 'submitted' | 'hidden' | 'removed';
+  submittedAt: string;
+};
+
+export type V1ReviewListItem = {
+  sourceType: V1ReviewSourceType;
+  sourceId: string;
+  title: string;
+  completedAt: string | null;
+  targetType: V1ReviewTargetType;
+  targetCount: number;
+  reviewedCount: number;
+  remainingCount: number;
+  state: 'ready' | 'done';
+  reviewerTeam?: { teamId: string; name: string } | null;
+  targetTeam?: { teamId: string; name: string } | null;
+};
+
+export type V1ReviewListResponse = {
+  items: V1ReviewListItem[];
+  pageInfo: {
+    nextCursor: string | null;
+    hasNext: boolean;
+  };
+};
+
+export type V1ReviewReceivedResponse = {
+  items: V1ReviewDetail[];
+  pageInfo: {
+    nextCursor: string | null;
+    hasNext: boolean;
+  };
+};
+
+export type V1ReviewTarget = {
+  targetType: V1ReviewTargetType;
+  targetUserId: string | null;
+  targetTeamId: string | null;
+  name: string;
+  imageUrl: string | null;
+  subtitle: string;
+  alreadySubmitted: boolean;
+  review: V1ReviewDetail | null;
+  locked: boolean;
+  lockReason: string | null;
+};
+
+export type V1ReviewSourceResponse = {
+  source: {
+    sourceType: V1ReviewSourceType;
+    sourceId: string;
+    title: string;
+    completedAt: string | null;
+  };
+  reviewerTeam: {
+    teamId: string;
+    name: string;
+    role: 'owner' | 'manager';
+  } | null;
+  targets: V1ReviewTarget[];
+};
+
+export type V1ReviewSubmitPayload = {
+  sourceType: V1ReviewSourceType;
+  sourceId: string;
+  targetType: V1ReviewTargetType;
+  targetUserId?: string | null;
+  targetTeamId?: string | null;
+  rating: number;
+  tagCodes: string[];
+};
+
+export type V1ReviewSubmitResponse = {
+  review: V1ReviewDetail;
+  alreadySubmitted: boolean;
+};
+
 export type V1ChatRoom = {
   roomId: string;
   roomType: 'match' | 'team' | 'team_match';

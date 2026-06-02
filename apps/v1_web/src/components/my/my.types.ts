@@ -37,6 +37,7 @@ export type MyMatch = {
   statusLabel: string;
   note: string;
   href: string;
+  reviewHref?: string;
 };
 
 export type MyMatchesViewModel = {

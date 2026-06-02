@@ -59,7 +59,7 @@ export const myHomeModel: MyHomeViewModel = {
 const joinedMatches: MyMatch[] = [
   { id: 'match-1', title: '상암 주말 축구', meta: '5월 23일 토 · 18:00 · 상암 풋살파크', status: 'approved', statusLabel: '승인 완료', note: '경기 2시간 전까지 채팅방에서 출석을 확인해요.', href: '/matches/match-1' },
   { id: 'match-2', title: '강남 수영 레인', meta: '5월 25일 월 · 20:00 · 강남 스포츠센터', status: 'pending', statusLabel: '승인 대기', note: '호스트가 실력 레벨과 매너 기록을 검토 중이에요.', href: '/matches/match-2' },
-  { id: 'match-3', title: '마포 풋살', meta: '5월 12일 화 · 19:30 · 마포체육관', status: 'ended', statusLabel: '종료', note: '상대 평가와 리뷰를 남길 수 있어요.', href: '/matches/match-3' },
+  { id: 'match-3', title: '마포 풋살', meta: '5월 12일 화 · 19:30 · 마포체육관', status: 'ended', statusLabel: '종료', note: '상대 평가와 리뷰를 남길 수 있어요.', href: '/matches/match-3', reviewHref: '/my/reviews/match/match-3' },
 ];
 
 const createdMatches: MyMatch[] = [

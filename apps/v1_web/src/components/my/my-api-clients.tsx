@@ -17,6 +17,7 @@ import {
   useV1RejectTeamJoinApplication,
   useV1RemoveTeamMembership,
   useV1ResolveLocation,
+  useV1Reviews,
   useV1Settings,
   useV1TeamDetail,
   useV1TeamJoinApplications,
@@ -44,6 +45,7 @@ export function MyHomePageClient() {
   const activitySummary = useV1MyActivitySummary();
   const teams = useV1MyTeams();
   const notifications = useV1Notifications({ status: 'unread', limit: 1 });
+  const pendingReviews = useV1Reviews({ tab: 'pending', limit: 1 }, { enabled: Boolean(profile.data) });
 
   const model = useMemo(() => {
     if (!profile.data) return myHomeModel;
@@ -52,8 +54,9 @@ export function MyHomePageClient() {
       teams.data?.items ?? [],
       notificationUnreadCount(notifications.data) > 0,
       activitySummary.data,
+      hasPendingReview(pendingReviews.data),
     );
-  }, [profile.data, teams.data, notifications.data, activitySummary.data]);
+  }, [profile.data, teams.data, notifications.data, activitySummary.data, pendingReviews.data]);
 
   return <MyHomePageView model={model} />;
 }
@@ -574,13 +577,26 @@ function toMyHomeModel(
   teams: V1MyTeam[],
   hasNewNotification: boolean,
   activitySummary?: V1MyActivitySummary,
+  hasPendingReviews?: boolean,
 ): MyHomeViewModel {
   const displayName = profile.profile.displayName;
   const totalMannerScore = activitySummary?.totals.mannerScore ?? profile.reputation.mannerScore;
   const monthlyMannerScore = activitySummary?.monthly.mannerScore ?? totalMannerScore;
+  const sections = myHomeModel.sections.map((section) => ({ ...section, items: [...section.items] }));
+  const communitySection = sections.find((section) => section.title === '커뮤니티');
+  if (communitySection && !communitySection.items.some((item) => item.href === '/my/reviews')) {
+    communitySection.items.push({
+      label: '리뷰',
+      sub: hasPendingReviews ? '작성할 리뷰가 있어요' : '작성한 리뷰와 받은 리뷰를 확인해요',
+      href: '/my/reviews',
+      icon: 'R',
+    });
+  }
+
   return {
     ...myHomeModel,
     hasNewNotification,
+    sections,
     user: {
       ...myHomeModel.user,
       name: displayName,
@@ -710,6 +726,14 @@ function notificationUnreadCount(data: unknown) {
     return typeof count === 'number' ? count : 0;
   }
   return 0;
+}
+
+function hasPendingReview(data: unknown) {
+  if (typeof data === 'object' && data && 'items' in data) {
+    const items = (data as { items?: unknown }).items;
+    return Array.isArray(items) ? items.length > 0 : undefined;
+  }
+  return undefined;
 }
 
 function roleLabel(role: string) {

@@ -195,7 +195,7 @@ function toChatMessageModel(message: V1ChatMessage): ChatRoomViewModel['messages
 }
 
 function toNotificationModel(notification: V1Notification): NotificationModel {
-  const href = normalizeNotificationHref(notification.target?.route);
+  const href = normalizeNotificationHref(notification.target?.route, notification.type);
   return {
     id: notification.notificationId,
     group: formatNotificationGroup(notification.createdAt),
@@ -208,9 +208,12 @@ function toNotificationModel(notification: V1Notification): NotificationModel {
   };
 }
 
-function normalizeNotificationHref(route?: string | null) {
-  if (!route) return '/notifications';
+function normalizeNotificationHref(route?: string | null, type?: string | null) {
+  if (!route) return type?.includes('review') ? '/my/reviews' : '/notifications';
   if (route.startsWith('/chat/rooms/')) return route.replace('/chat/rooms/', '/chat/');
+  if (route === '/reviews' || route.startsWith('/reviews?')) return route.replace('/reviews', '/my/reviews');
+  if (route.startsWith('/reviews/')) return `/my${route}`;
+  if (type?.includes('review') && route === '/my') return '/my/reviews';
   return route;
 }
 

@@ -45,6 +45,12 @@ import type {
   V1ResolveLocationResponse,
   V1RecentSearch,
   V1RecentSearchesResponse,
+  V1ReviewListResponse,
+  V1ReviewReceivedResponse,
+  V1ReviewSourceResponse,
+  V1ReviewSourceType,
+  V1ReviewSubmitPayload,
+  V1ReviewSubmitResponse,
   V1Settings,
   V1Sport,
   V1Team,
@@ -688,6 +694,46 @@ export function useV1MyTeamMatches(filters?: ListFilters) {
   return useQuery({
     queryKey: [...v1Keys.all, 'me', 'team-matches', filters ?? {}] as const,
     queryFn: () => v1Get<CursorPage<V1MyTeamMatch>>('/me/team-matches', filters),
+  });
+}
+
+export function useV1Reviews(filters?: ListFilters, options?: QueryOptions) {
+  return useQuery({
+    queryKey: v1Keys.reviews(filters),
+    queryFn: () => v1Get<V1ReviewListResponse>('/reviews', filters),
+    enabled: options?.enabled,
+  });
+}
+
+export function useV1ReceivedReviews(filters?: ListFilters, options?: QueryOptions) {
+  return useQuery({
+    queryKey: v1Keys.reviewsReceived(filters),
+    queryFn: () => v1Get<V1ReviewReceivedResponse>('/reviews/received', filters),
+    enabled: options?.enabled,
+  });
+}
+
+export function useV1ReviewSource(sourceType: V1ReviewSourceType, sourceId: string, options?: QueryOptions) {
+  return useQuery({
+    queryKey: v1Keys.reviewSource(sourceType, sourceId),
+    queryFn: () => v1Get<V1ReviewSourceResponse>(`/reviews/sources/${sourceType}/${sourceId}`),
+    enabled: Boolean(sourceType && sourceId) && (options?.enabled ?? true),
+    retry: false,
+  });
+}
+
+export function useV1SubmitReview() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: V1ReviewSubmitPayload) => v1Post<V1ReviewSubmitResponse>('/reviews', body),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: v1Keys.reviews() });
+      queryClient.invalidateQueries({ queryKey: v1Keys.reviewsReceived() });
+      queryClient.invalidateQueries({ queryKey: v1Keys.reviewSource(variables.sourceType, variables.sourceId) });
+      queryClient.invalidateQueries({ queryKey: v1Keys.profile() });
+      queryClient.invalidateQueries({ queryKey: v1Keys.teams() });
+      if (variables.targetTeamId) queryClient.invalidateQueries({ queryKey: v1Keys.team(variables.targetTeamId) });
+    },
   });
 }
 

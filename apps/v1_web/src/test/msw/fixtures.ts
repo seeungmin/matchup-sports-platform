@@ -11,6 +11,11 @@ import type {
   V1Profile,
   V1Region,
   V1RecentSearch,
+  V1ReviewDetail,
+  V1ReviewListResponse,
+  V1ReviewReceivedResponse,
+  V1ReviewSourceResponse,
+  V1ReviewSubmitResponse,
   V1Settings,
   V1Sport,
   V1Team,
@@ -122,6 +127,201 @@ export const v1TeamMatchesFixture: V1TeamMatch[] = [
     applicantTeamState: 'eligible',
   },
 ];
+
+export const v1WrittenReviewFixture: V1ReviewDetail = {
+  reviewId: 'review-written-1',
+  sourceType: 'match',
+  sourceId: 'match-completed-1',
+  targetType: 'user',
+  targetUser: { userId: 'user-2', name: '민준', imageUrl: null },
+  targetTeam: null,
+  reviewerUser: { userId: 'user-1', name: '송준', imageUrl: null },
+  reviewerTeam: null,
+  rating: 5,
+  tags: [
+    { tagCode: 'manner', label: '매너가 좋아요' },
+    { tagCode: 'teamwork', label: '팀워크가 좋아요' },
+  ],
+  status: 'submitted',
+  submittedAt: '2026-05-18T22:10:00.000Z',
+};
+
+export const v1TeamWrittenReviewFixture: V1ReviewDetail = {
+  reviewId: 'review-team-written-1',
+  sourceType: 'team_match',
+  sourceId: 'team-match-completed-1',
+  targetType: 'team',
+  targetUser: null,
+  targetTeam: { teamId: 'team-2', name: '마포 FC', imageUrl: null },
+  reviewerUser: { userId: 'user-1', name: '송준', imageUrl: null },
+  reviewerTeam: { teamId: 'team-1', name: '성수 볼러즈', imageUrl: null },
+  rating: 4,
+  tags: [
+    { tagCode: 'punctual', label: '시간 약속을 잘 지켜요' },
+    { tagCode: 'communication', label: '소통이 원활해요' },
+  ],
+  status: 'submitted',
+  submittedAt: '2026-05-19T22:10:00.000Z',
+};
+
+export const v1ReviewsPendingFixture: V1ReviewListResponse = {
+  items: [
+    {
+      sourceType: 'match',
+      sourceId: 'match-completed-1',
+      title: '성수 풋살파크 개인 매치',
+      completedAt: '2026-05-18T21:30:00.000Z',
+      targetType: 'user',
+      targetCount: 3,
+      reviewedCount: 1,
+      remainingCount: 2,
+      state: 'ready',
+    },
+    {
+      sourceType: 'team_match',
+      sourceId: 'team-match-completed-1',
+      title: '성수 볼러즈 vs 마포 FC',
+      completedAt: '2026-05-19T21:30:00.000Z',
+      targetType: 'team',
+      targetCount: 1,
+      reviewedCount: 0,
+      remainingCount: 1,
+      reviewerTeam: { teamId: 'team-1', name: '성수 볼러즈' },
+      targetTeam: { teamId: 'team-2', name: '마포 FC' },
+      state: 'ready',
+    },
+  ],
+  pageInfo: { nextCursor: null, hasNext: false },
+};
+
+export const v1ReviewsWrittenFixture: V1ReviewListResponse = {
+  items: [
+    {
+      sourceType: 'match',
+      sourceId: 'match-completed-1',
+      title: '성수 풋살파크 개인 매치',
+      completedAt: '2026-05-18T21:30:00.000Z',
+      targetType: 'user',
+      targetCount: 3,
+      reviewedCount: 3,
+      remainingCount: 0,
+      state: 'done',
+    },
+    {
+      sourceType: 'team_match',
+      sourceId: 'team-match-completed-1',
+      title: '성수 볼러즈 vs 마포 FC',
+      completedAt: '2026-05-19T21:30:00.000Z',
+      targetType: 'team',
+      targetCount: 1,
+      reviewedCount: 1,
+      remainingCount: 0,
+      reviewerTeam: { teamId: 'team-1', name: '성수 볼러즈' },
+      targetTeam: { teamId: 'team-2', name: '마포 FC' },
+      state: 'done',
+    },
+  ],
+  pageInfo: { nextCursor: null, hasNext: false },
+};
+
+export const v1ReviewsReceivedFixture: V1ReviewReceivedResponse = {
+  items: [
+    {
+      reviewId: 'review-received-1',
+      sourceType: 'match',
+      sourceId: 'match-completed-1',
+      targetType: 'user',
+      targetUser: { userId: 'user-1', name: '송준', imageUrl: null },
+      targetTeam: null,
+      reviewerUser: { userId: 'user-2', name: '민준', imageUrl: null },
+      reviewerTeam: null,
+      rating: 5,
+      tags: [{ tagCode: 'play_again', label: '또 같이 운동하고 싶어요' }],
+      status: 'submitted',
+      submittedAt: '2026-05-18T22:14:00.000Z',
+    },
+    {
+      reviewId: 'review-team-received-1',
+      sourceType: 'team_match',
+      sourceId: 'team-match-completed-1',
+      targetType: 'team',
+      targetUser: null,
+      targetTeam: { teamId: 'team-1', name: '성수 볼러즈', imageUrl: null },
+      reviewerUser: { userId: 'user-3', name: '도윤', imageUrl: null },
+      reviewerTeam: { teamId: 'team-2', name: '마포 FC', imageUrl: null },
+      rating: 4,
+      tags: [{ tagCode: 'communication', label: '소통이 원활해요' }],
+      status: 'submitted',
+      submittedAt: '2026-05-19T22:14:00.000Z',
+    },
+  ],
+  pageInfo: { nextCursor: null, hasNext: false },
+};
+
+export const v1ReviewMatchSourceFixture: V1ReviewSourceResponse = {
+  source: {
+    sourceType: 'match',
+    sourceId: 'match-completed-1',
+    title: '성수 풋살파크 개인 매치',
+    completedAt: '2026-05-18T21:30:00.000Z',
+  },
+  reviewerTeam: null,
+  targets: [
+    {
+      targetType: 'user',
+      targetUserId: 'user-2',
+      targetTeamId: null,
+      name: '민준',
+      imageUrl: null,
+      subtitle: '개인 매치 참가자',
+      alreadySubmitted: true,
+      review: v1WrittenReviewFixture,
+      locked: true,
+      lockReason: 'ALREADY_SUBMITTED',
+    },
+    {
+      targetType: 'user',
+      targetUserId: 'user-3',
+      targetTeamId: null,
+      name: '서연',
+      imageUrl: null,
+      subtitle: '개인 매치 참가자',
+      alreadySubmitted: false,
+      review: null,
+      locked: false,
+      lockReason: null,
+    },
+  ],
+};
+
+export const v1ReviewTeamMatchSourceFixture: V1ReviewSourceResponse = {
+  source: {
+    sourceType: 'team_match',
+    sourceId: 'team-match-completed-1',
+    title: '성수 볼러즈 vs 마포 FC',
+    completedAt: '2026-05-19T21:30:00.000Z',
+  },
+  reviewerTeam: { teamId: 'team-1', name: '성수 볼러즈', role: 'owner' },
+  targets: [
+    {
+      targetType: 'team',
+      targetUserId: null,
+      targetTeamId: 'team-2',
+      name: '마포 FC',
+      imageUrl: null,
+      subtitle: '상대 팀',
+      alreadySubmitted: false,
+      review: null,
+      locked: false,
+      lockReason: null,
+    },
+  ],
+};
+
+export const v1ReviewSubmitFixture: V1ReviewSubmitResponse = {
+  review: v1TeamWrittenReviewFixture,
+  alreadySubmitted: false,
+};
 
 export const v1ChatRoomsFixture: CursorPage<V1ChatRoom> = {
   items: [

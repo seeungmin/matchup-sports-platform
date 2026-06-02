@@ -54,6 +54,7 @@ function toMyMatch(match: V1Match): MyMatch {
     statusLabel: statusLabel(status),
     note: buildNote(match, status),
     href: `/matches/${id}`,
+    reviewHref: status === 'ended' ? `/my/reviews/match/${id}` : undefined,
   };
 }
 

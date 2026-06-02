@@ -66,33 +66,33 @@ Every numbered step in this task requires explicit user approval before implemen
   - Team-match team-review actor decision: one representative owner/manager review per participating team, backed by `reviewerTeamId`.
   - Output: approved Prisma design before schema edits.
 
-- [ ] 89-3. API design approval.
+- [x] 89-3. API design approval.
   - Decide endpoint paths, DTOs, response shapes, duplicate submit behavior, and permission rules.
   - Output: approved controller/service contract before backend edits.
 
-- [ ] 89-4. Frontend design approval.
+- [x] 89-4. Frontend design approval.
   - Decide routes, component structure, query state, loading/error/empty states, submit success flow, and existing `/my` CTA integration.
   - Output: approved frontend implementation plan before UI edits.
 
-- [ ] 89-5. Prisma schema and migration implementation.
+- [x] 89-5. Prisma schema and migration implementation.
   - Update `apps/v1_api/prisma/schema.prisma`.
   - Add migration.
   - Update seed data if needed.
   - Run Prisma generation.
 
-- [ ] 89-6. Backend reviews module implementation.
+- [x] 89-6. Backend reviews module implementation.
   - Add `reviews.module.ts`, `reviews.controller.ts`, `reviews.service.ts`, DTOs, and tests.
   - Implement eligibility, submit, written list, received list, and reputation update.
 
-- [ ] 89-7. Frontend data layer implementation.
+- [x] 89-7. Frontend data layer implementation.
   - Add review API types, query keys, and hooks.
   - Add fallback view-model data only for loading/error/empty-safe UI, not fake save success.
 
-- [ ] 89-8. Frontend UI implementation.
+- [x] 89-8. Frontend UI implementation.
   - Add review routes and components based on `14 리뷰 최종`.
   - Implement write/written tabs, per-target stars/tags, received reviews, and completion state.
 
-- [ ] 89-9. Existing surface integration.
+- [x] 89-9. Existing surface integration.
   - Link `/my` ended match CTA to reviews.
   - Link review notification destinations to reviews.
   - Ensure navigation is not lost after submit/invalidation.
@@ -419,7 +419,7 @@ Minimum approved direction to evaluate in 89-2:
 
 All endpoints use `/api/v1` prefix through Nest global config.
 
-89-3 status: pending user approval.
+89-3 status: approved by user on 2026-06-02.
 
 ### Recommended API Surface
 
@@ -570,26 +570,37 @@ Team match submit permission:
 
 ### API Approval Questions For 89-3
 
-1. Approve endpoints: `GET /reviews`, `GET /reviews/received`, `GET /reviews/sources/:sourceType/:sourceId`, `POST /reviews`?
-2. Approve submit DTO with `targetType`, nullable `targetUserId`, nullable `targetTeamId`, and service-resolved `reviewerTeamId`?
-3. Approve duplicate submit behavior: return existing review with `alreadySubmitted: true`, no overwrite?
-4. Approve team-match ambiguity rule: if a user manages both teams, reject with `AMBIGUOUS_REVIEWER_TEAM` for v1?
-5. Approve received list including both current user's received reviews and teams where current user is owner/manager?
+1. Approved by user on 2026-06-02: endpoints are `GET /reviews`, `GET /reviews/received`, `GET /reviews/sources/:sourceType/:sourceId`, `POST /reviews`.
+2. Approved by user on 2026-06-02: submit DTO uses `targetType`, nullable `targetUserId`, nullable `targetTeamId`, and service-resolved `reviewerTeamId`.
+3. Approved by user on 2026-06-02: duplicate submit returns existing review with `alreadySubmitted: true`, no overwrite.
+4. Approved by user on 2026-06-02: if a user manages both teams, reject with `AMBIGUOUS_REVIEWER_TEAM` for v1.
+5. Approved by user on 2026-06-02: received list includes both current user's received reviews and teams where current user is owner/manager.
 
-If all five are approved, 89-3 can be marked complete and 89-4 frontend design can begin.
+89-3 is complete. 89-4 frontend design can begin.
 
 ## Proposed Frontend Direction
+
+89-4 status: approved by user on 2026-06-02.
 
 Candidate routes:
 
 - `/my/reviews`
-  - Write/written tabs from `14 리뷰 최종`.
+  - Main review hub from `14 리뷰 최종`.
+  - Two tabs: `작성할 리뷰`, `작성된 리뷰`.
+  - Query state: `?tab=pending|written`.
+  - Uses `GET /reviews`.
 
 - `/my/reviews/[sourceType]/[sourceId]`
-  - Per-target rating/tag entry screen.
+  - Per-source rating/tag entry screen.
+  - Uses `GET /reviews/sources/:sourceType/:sourceId`.
+  - Submits through `POST /reviews`.
+  - Personal match: multiple user targets can appear in one screen.
+  - Team match: one opposing-team target appears, with reviewer team context shown.
 
 - `/my/reviews/received`
   - Received reviews grouped by event.
+  - Uses `GET /reviews/received`.
+  - Shows user received reviews and owner/manager team received reviews with clear target labels.
 
 Candidate files:
 
@@ -598,14 +609,115 @@ Candidate files:
 - `apps/v1_web/src/app/my/reviews/received/page.tsx`
 - `apps/v1_web/src/components/reviews/reviews-client.tsx`
 - `apps/v1_web/src/components/reviews/reviews-page.tsx`
+- `apps/v1_web/src/components/reviews/reviews-source-page.tsx`
+- `apps/v1_web/src/components/reviews/reviews-received-page.tsx`
+- `apps/v1_web/src/components/reviews/reviews-api-clients.tsx`
 - `apps/v1_web/src/components/reviews/reviews.types.ts`
 - `apps/v1_web/src/components/reviews/reviews.view-model.ts`
+
+### Component Structure
+
+- `ReviewsClient`
+  - Owns tab query state, calls list API, maps API data into view model.
+  - Keeps `pending` and `written` tabs mounted through stable list layout where possible.
+
+- `ReviewsPage`
+  - Pure UI for `/my/reviews`.
+  - Renders compact stats row, segmented tab control, schedule/review cards, empty/error/loading states.
+
+- `ReviewSourceClient`
+  - Loads source detail and target list.
+  - Maintains local draft ratings and selected tag codes per target.
+  - Converts visible UI state into DTO-compatible submit payloads.
+
+- `ReviewSourcePage`
+  - Pure UI for target rows, stars, tag chips, progress card, sticky submit CTA.
+  - For team matches, renders a team target card and a small represented-team label.
+
+- `ReviewsReceivedClient` / `ReviewsReceivedPage`
+  - Loads received reviews and groups them by source.
+  - Separates "내가 받은 리뷰" and "내 팀이 받은 리뷰" when both exist.
+
+### State And UX Contract
+
+- Loading:
+  - Use skeleton cards matching the final card heights to prevent layout jump.
+
+- Empty pending:
+  - Show compact solid empty state: no completed matches to review.
+  - CTA may return to `/my/matches` or `/team-matches`, but must not simulate available reviews.
+
+- Empty written:
+  - Show completed-review empty state with no fake rating totals.
+
+- Error:
+  - Preserve current tab/source route.
+  - Show retry button wired to query refetch.
+
+- Submit success:
+  - If all targets for a source are done, navigate to a completion state or `/my/reviews?tab=written`.
+  - If some personal match targets remain, keep user on source page and mark submitted targets as completed.
+  - If API returns `alreadySubmitted: true`, show submitted state without overwriting local server data.
+
+- Ineligible/locked source:
+  - Display the lock reason from API.
+  - Disable stars/chips/submit, keep route readable.
+
+### Visual Direction
+
+- Use `14 리뷰 최종` as visual reference, not as directly imported JSX.
+- Use existing `AppChrome`, `MobileGlassHeader` where current `/my` pages use it, v1 shared primitives, and existing `tm-*` classes.
+- Keep review pages as account/utility surfaces: compact header, solid content cards, no hero/marketing intro.
+- Keep cards at 8px radius or existing v1 radius scale; avoid nested cards.
+- Tag chips are multi-select controls; star buttons are accessible buttons with selected state.
+- Team match cards must label the review target as a team, not a participant user.
+
+### `/my` Integration
+
+- Add a review entry CTA from the existing `/my` surface only if it does not create a false affordance.
+- Recommended entry:
+  - `/my` quick action or menu row: `리뷰`
+  - Badge/count from `GET /reviews?tab=pending` when available.
+  - No local mock "pending" count after API integration.
+
+### Frontend API Types
+
+Add to `apps/v1_web/src/types/api.ts` or local reviews types before promoting shared types:
+
+- `ReviewSourceType = 'match' | 'team_match'`
+- `ReviewTargetType = 'user' | 'team'`
+- `ReviewListItem`
+- `ReviewSourceResponse`
+- `ReviewTarget`
+- `SubmitReviewPayload`
+- `SubmitReviewResponse`
+
+### MSW / Fixture Direction
+
+- Add MSW handlers for the four API routes.
+- Fixtures must include:
+  - personal match pending with multiple user targets.
+  - team match pending with one opposing team target and reviewer team context.
+  - written reviews.
+  - received user reviews.
+  - received team reviews for owner/manager.
+  - duplicate submit response with `alreadySubmitted: true`.
 
 Implementation principle:
 
 - Build real product UI using `AppChrome`, v1 primitives, and existing `tm-*` compatibility classes.
 - Do not render the design-source JSX directly in product routes.
 - Use `14 리뷰 최종` as visual and flow reference.
+
+### Frontend Approval Questions For 89-4
+
+1. Approved by user on 2026-06-02: routes are `/my/reviews`, `/my/reviews/[sourceType]/[sourceId]`, `/my/reviews/received`.
+2. Approved by user on 2026-06-02: `/my/reviews` tab state uses `?tab=pending|written`.
+3. Approved by user on 2026-06-02: team-match source page is a single opposing-team target with represented-team context.
+4. Approved by user on 2026-06-02: received page shows both user received reviews and owner/manager team received reviews.
+5. Approved by user on 2026-06-02: `/my` review entry CTA is added only after API-backed pending count is available, with no fake count.
+
+89-4 is complete. 89-5 Prisma schema/migration implementation can begin after explicit user approval.
 
 ## Validation Plan
 
@@ -635,14 +747,21 @@ Scenario:
 
 - 2026-06-01: Created approval-gated task document.
 - 2026-06-01: 89-2 DB design approved by user.
-- Current step: 89-3 API design proposal ready; pending user approval.
-- Next step after approval: 89-4 frontend design approval.
+- 2026-06-02: 89-3 API design approved by user.
+- 2026-06-02: 89-4 frontend design approved by user.
+- 2026-06-02: 89-5 Prisma schema/migration implementation completed.
+- 2026-06-02: 89-6 backend reviews module implementation completed.
+- 2026-06-02: 89-7 frontend data layer implementation completed.
+- 2026-06-02: 89-8 frontend UI implementation completed.
+- 2026-06-02: 89-9 existing surface integration completed.
+- Current step: 89-9 complete.
+- Next step pending approval: 89-10 scenario and docs sync.
 
 ## Ambiguity Log
 
 - Team-match review target eligibility may need a completed-event participant snapshot to be exact. Current v1 schema has team memberships and approved applicant team, but no per-event team roster snapshot.
 - User clarified that team matches should create reviews for the opposing team, not individual opposing players.
-- Duplicate submit policy is pending 89-3 approval. Recommended direction is idempotent convergence with `alreadySubmitted: true`.
+- Duplicate submit policy approved for first pass: idempotent convergence with `alreadySubmitted: true`.
 - `trustState` transition policy approved for first pass: `1-2` submitted reviews are `estimated`, `3+` submitted reviews are `verified`.
 
 ## Change Log
@@ -655,3 +774,28 @@ Scenario:
 - Updated 89-2 DB proposal so team matches use one owner/manager representative review per team via `reviewerTeamId`.
 - Marked 89-2 complete after user approval.
 - Added 89-3 API design proposal with endpoints, DTOs, response shapes, duplicate policy, and permission rules.
+
+### 2026-06-02
+
+- Marked 89-3 complete after user approval.
+- Added 89-4 frontend design proposal with routes, component boundaries, state handling, visual direction, `/my` integration, API types, and MSW fixture direction.
+- Marked 89-4 complete after user approval.
+- Added Prisma enums, review models, user/team relations, and `20260602000000_v1_post_event_reviews` migration.
+- Verified `prisma validate` with a dummy `DATABASE_URL`; schema is valid.
+- Ran `pnpm v1:db:generate` with a dummy `DATABASE_URL`; Prisma Client generation succeeded.
+- Marked 89-5 complete.
+- Added backend reviews module, controller, DTOs, service logic, AppModule registration, and controller contract spec.
+- Implemented pending/written/received/source/submit review APIs, personal match user review eligibility, team match representative team review eligibility, duplicate submit convergence, and user/team score recalculation.
+- Verified backend type check with `pnpm --filter v1_api exec tsc --noEmit`.
+- Attempted targeted Jest runs for `reviews.controller.spec.ts`; Jest reached `Running one project: unit` but timed out after 60s with no test result. This remains a test runner follow-up, not a TypeScript compile failure.
+- Marked 89-6 complete.
+- Added v1_web review API types, query keys, hooks, MSW fixtures, and MSW handlers for list/source/received/submit review APIs.
+- Verified frontend type check with `pnpm --filter v1_web exec tsc --noEmit`.
+- Marked 89-7 complete.
+- Added `/my/reviews`, `/my/reviews/[sourceType]/[sourceId]`, and `/my/reviews/received` routes.
+- Added review hub, per-source review writing, received review grouping, star/tag controls, and submit complete state using the v1 review API hooks.
+- Verified frontend type check with `pnpm --filter v1_web exec tsc --noEmit`.
+- Marked 89-8 complete.
+- Added API-backed `/my` review menu entry, ended-match review CTA links, and review notification route normalization.
+- Verified frontend type check with `pnpm --filter v1_web exec tsc --noEmit`.
+- Marked 89-9 complete.
