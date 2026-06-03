@@ -6,7 +6,7 @@ import type {
   V1ReviewTarget,
 } from '@/types/api';
 
-export type ReviewsTab = 'pending' | 'written';
+export type ReviewsTab = 'pending' | 'written' | 'received';
 
 export type ReviewStat = {
   label: string;
@@ -25,7 +25,6 @@ export type ReviewsPageModel = {
   tab: ReviewsTab;
   stats: ReviewStat[];
   cards: ReviewListCardModel[];
-  receivedHref: string;
   emptyTitle: string;
   emptySub: string;
 };

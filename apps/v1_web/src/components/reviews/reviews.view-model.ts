@@ -2,9 +2,9 @@ import type { ReviewsPageModel, ReviewsReceivedPageModel, ReviewsTab, ReviewSour
 import type { V1ReviewDetail, V1ReviewListResponse, V1ReviewReceivedResponse, V1ReviewSourceResponse, V1ReviewSourceType, V1ReviewTarget } from '@/types/api';
 
 export const REVIEW_TAG_OPTIONS = [
-  { code: 'manners', label: '매너가 좋아요' },
+  { code: 'manner', label: '매너가 좋아요' },
   { code: 'teamwork', label: '팀워크가 좋아요' },
-  { code: 'again', label: '또 같이 운동하고 싶어요' },
+  { code: 'play_again', label: '또 같이 운동하고 싶어요' },
   { code: 'punctual', label: '시간 약속을 잘 지켜요' },
   { code: 'communication', label: '소통이 원활해요' },
   { code: 'considerate', label: '배려심이 있어요' },
@@ -37,7 +37,6 @@ export function toReviewsPageModel(data: V1ReviewListResponse | undefined, tab: 
       meta: buildListMeta(item.completedAt, item.reviewedCount, item.targetCount, item.remainingCount),
       ctaLabel: item.state === 'done' ? '보기' : item.reviewedCount > 0 ? '이어쓰기' : '리뷰',
     })),
-    receivedHref: '/my/reviews/received',
     emptyTitle: tab === 'pending' ? '작성할 리뷰가 없어요' : '작성된 리뷰가 없어요',
     emptySub: tab === 'pending' ? '종료된 일정에서 리뷰 가능 대상이 생기면 여기에 표시됩니다.' : '보낸 리뷰는 완료된 경기 단위로 정리됩니다.',
   };

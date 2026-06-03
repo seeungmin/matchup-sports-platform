@@ -17,38 +17,74 @@ export function ReviewsPageView({
   model,
   onRetry,
   onTabChange,
+  receivedModel,
 }: QueryStateProps & {
   model: ReviewsPageModel;
   onTabChange: (tab: ReviewsTab) => void;
+  receivedModel: ReviewsReceivedPageModel;
 }) {
+  const isReceivedTab = model.tab === 'received';
+
   return (
     <AppChrome title="리뷰" activeTab="my" backHref="/my">
       <div className="tm-review-shell">
         <ReviewTabs active={model.tab} onChange={onTabChange} />
-        <ReviewStats stats={model.stats} />
-        <div style={{ display: 'grid', gap: 10 }}>
-          {loading ? <ReviewSkeleton count={2} /> : null}
-          {!loading && errorMessage ? <ReviewNotice title="리뷰를 불러오지 못했어요" sub={errorMessage} onRetry={onRetry} /> : null}
-          {!loading && !errorMessage && model.cards.length === 0 ? <ReviewEmpty title={model.emptyTitle} sub={model.emptySub} /> : null}
-          {!loading && !errorMessage ? model.cards.map((card) => (
-            <Link key={`${card.sourceType}:${card.sourceId}`} className="tm-review-schedule-card tm-pressable" href={card.href}>
-              <div className="tm-review-card-head">
-                <div style={{ minWidth: 0 }}>
-                  <div className="tm-text-body-lg line-clamp-2">{card.title}</div>
-                  <div className="tm-text-caption" style={{ marginTop: 4 }}>{card.meta}</div>
-                </div>
-                <span className={`tm-badge ${card.state === 'done' ? 'tm-badge-green' : 'tm-badge-blue'}`}>{card.badgeLabel}</span>
-              </div>
-              <div className="tm-review-card-foot">
-                <span className="tm-badge tm-badge-grey">{card.kindLabel}</span>
-                <span className="tm-text-label">{card.ctaLabel}</span>
-              </div>
-            </Link>
-          )) : null}
-        </div>
-        <Link className="tm-btn tm-btn-md tm-btn-neutral tm-btn-block" href={model.receivedHref}>받은 리뷰 보기</Link>
+        {isReceivedTab ? (
+          <ReviewsReceivedContent
+            errorMessage={errorMessage}
+            loading={loading}
+            model={receivedModel}
+            onRetry={onRetry}
+          />
+        ) : (
+          <>
+            <ReviewStats stats={model.stats} />
+            <div style={{ display: 'grid', gap: 10 }}>
+              {loading ? <ReviewSkeleton count={2} /> : null}
+              {!loading && errorMessage ? <ReviewNotice title="리뷰를 불러오지 못했어요" sub={errorMessage} onRetry={onRetry} /> : null}
+              {!loading && !errorMessage && model.cards.length === 0 ? <ReviewEmpty title={model.emptyTitle} sub={model.emptySub} /> : null}
+              {!loading && !errorMessage ? model.cards.map((card) => (
+                <Link key={`${card.sourceType}:${card.sourceId}`} className="tm-review-schedule-card tm-pressable" href={card.href}>
+                  <div className="tm-review-card-head">
+                    <div style={{ minWidth: 0 }}>
+                      <div className="tm-text-body-lg line-clamp-2">{card.title}</div>
+                      <div className="tm-text-caption" style={{ marginTop: 4 }}>{card.meta}</div>
+                    </div>
+                    <span className={`tm-badge ${card.state === 'done' ? 'tm-badge-green' : 'tm-badge-blue'}`}>{card.badgeLabel}</span>
+                  </div>
+                  <div className="tm-review-card-foot">
+                    <span className="tm-badge tm-badge-grey">{card.kindLabel}</span>
+                    <span className="tm-text-label">{card.ctaLabel}</span>
+                  </div>
+                </Link>
+              )) : null}
+            </div>
+          </>
+        )}
       </div>
     </AppChrome>
+  );
+}
+
+function ReviewsReceivedContent({
+  errorMessage,
+  loading,
+  model,
+  onRetry,
+}: QueryStateProps & {
+  model: ReviewsReceivedPageModel;
+}) {
+  const empty = model.userGroups.length === 0 && model.teamGroups.length === 0;
+
+  return (
+    <>
+      <ReviewStats stats={model.stats} />
+      {loading ? <ReviewSkeleton count={2} /> : null}
+      {!loading && errorMessage ? <ReviewNotice title="받은 리뷰를 불러오지 못했어요" sub={errorMessage} onRetry={onRetry} /> : null}
+      {!loading && !errorMessage && empty ? <ReviewEmpty title="받은 리뷰가 없어요" sub="상대가 보낸 리뷰가 생기면 경기 단위로 정리됩니다." /> : null}
+      {!loading && !errorMessage && model.userGroups.length > 0 ? <ReceivedGroupSection title="내가 받은 리뷰" groups={model.userGroups} /> : null}
+      {!loading && !errorMessage && model.teamGroups.length > 0 ? <ReceivedGroupSection title="내 팀이 받은 리뷰" groups={model.teamGroups} /> : null}
+    </>
   );
 }
 
@@ -131,17 +167,15 @@ export function ReviewsReceivedPageView({
 }: QueryStateProps & {
   model: ReviewsReceivedPageModel;
 }) {
-  const empty = model.userGroups.length === 0 && model.teamGroups.length === 0;
-
   return (
     <AppChrome title="받은 리뷰" activeTab="my" bottomNav={false} backHref="/my/reviews">
       <div className="tm-review-shell">
-        <ReviewStats stats={model.stats} />
-        {loading ? <ReviewSkeleton count={2} /> : null}
-        {!loading && errorMessage ? <ReviewNotice title="받은 리뷰를 불러오지 못했어요" sub={errorMessage} onRetry={onRetry} /> : null}
-        {!loading && !errorMessage && empty ? <ReviewEmpty title="받은 리뷰가 없어요" sub="상대가 보낸 리뷰가 생기면 경기 단위로 정리됩니다." /> : null}
-        {!loading && !errorMessage && model.userGroups.length > 0 ? <ReceivedGroupSection title="내가 받은 리뷰" groups={model.userGroups} /> : null}
-        {!loading && !errorMessage && model.teamGroups.length > 0 ? <ReceivedGroupSection title="내 팀이 받은 리뷰" groups={model.teamGroups} /> : null}
+        <ReviewsReceivedContent
+          errorMessage={errorMessage}
+          loading={loading}
+          model={model}
+          onRetry={onRetry}
+        />
       </div>
     </AppChrome>
   );
@@ -174,7 +208,7 @@ export function ReviewSubmitCompleteView({ model, onConfirm }: { model: ReviewSo
 }
 
 function ReviewTabs({ active, onChange }: { active: ReviewsTab; onChange: (tab: ReviewsTab) => void }) {
-  const tabs: Array<[ReviewsTab, string]> = [['pending', '작성할 리뷰'], ['written', '작성된 리뷰']];
+  const tabs: Array<[ReviewsTab, string]> = [['pending', '작성할 리뷰'], ['written', '작성된 리뷰'], ['received', '받은 리뷰']];
   return (
     <div className="tm-review-tabs" role="tablist">
       {tabs.map(([id, label]) => (

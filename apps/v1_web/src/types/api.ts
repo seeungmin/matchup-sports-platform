@@ -370,6 +370,10 @@ export type V1MyTeam = {
   logoUrl: string | null;
   sport: { sportId: string; name: string };
   region: { regionId: string; name: string } | null;
+  trust?: {
+    trustState: TrustState | 'none';
+    score: number | null;
+  };
   memberCount: number;
   canManage: boolean;
   canCreateTeamMatch: boolean;

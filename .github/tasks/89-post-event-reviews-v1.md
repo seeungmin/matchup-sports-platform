@@ -97,7 +97,7 @@ Every numbered step in this task requires explicit user approval before implemen
   - Link review notification destinations to reviews.
   - Ensure navigation is not lost after submit/invalidation.
 
-- [ ] 89-10. Scenario and docs sync.
+- [x] 89-10. Scenario and docs sync.
   - Update `docs/scenarios/12-v1-sm-new-e2e-scenarios.md`.
   - Update `docs/scenarios/09-payment-review-badge.md`.
   - Update task progress and any new gotchas.
@@ -754,8 +754,9 @@ Scenario:
 - 2026-06-02: 89-7 frontend data layer implementation completed.
 - 2026-06-02: 89-8 frontend UI implementation completed.
 - 2026-06-02: 89-9 existing surface integration completed.
-- Current step: 89-9 complete.
-- Next step pending approval: 89-10 scenario and docs sync.
+- 2026-06-03: 89-10 scenario and docs sync completed.
+- Current step: 89-10 complete.
+- Next step pending approval: 89-11 validation.
 
 ## Ambiguity Log
 
@@ -799,3 +800,10 @@ Scenario:
 - Added API-backed `/my` review menu entry, ended-match review CTA links, and review notification route normalization.
 - Verified frontend type check with `pnpm --filter v1_web exec tsc --noEmit`.
 - Marked 89-9 complete.
+
+### 2026-06-03
+
+- Synced `docs/scenarios/12-v1-sm-new-e2e-scenarios.md` `V1-14-*` with the implemented post-event review contract.
+- Updated `docs/scenarios/09-payment-review-badge.md` so `REV-001` points to Task 89's match/team-match review contract instead of stale sample-labelled review surfaces.
+- Updated `docs/scenarios/index.md` with Task 89 review scenario status and next validation follow-up.
+- Marked 89-10 complete.

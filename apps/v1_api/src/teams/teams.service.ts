@@ -393,6 +393,7 @@ export class TeamsService {
                 genderRule: true,
               },
             },
+            trustScore: { select: { trustState: true, mannerScore: true } },
           },
         },
       },
@@ -412,6 +413,10 @@ export class TeamsService {
           region: membership.team.region
             ? { regionId: membership.team.region.id, name: membership.team.region.name }
             : null,
+          trust: {
+            trustState: membership.team.trustScore?.trustState ?? 'none',
+            score: membership.team.trustScore?.mannerScore != null ? Number(membership.team.trustScore.mannerScore) : null,
+          },
           memberCount: membership.team.memberCount,
           canManage: membership.role === 'owner' || membership.role === 'manager',
           canCreateTeamMatch: membership.role === 'owner' || membership.role === 'manager',

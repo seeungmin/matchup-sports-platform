@@ -631,7 +631,7 @@ function toMyTeam(item: V1MyTeam): MyTeam {
     role: item.role,
     roleLabel: roleLabel(item.role),
     members: item.memberCount,
-    manner: '-',
+    manner: item.trust?.score != null && hasTrustValue(item.trust.trustState) ? String(item.trust.score) : '-',
     next: item.canCreateTeamMatch ? '팀매치 생성 가능' : '팀매치 참여 가능',
     description: `${item.sport.name} 팀입니다.`,
   };

@@ -423,6 +423,25 @@ async function seedTeams(userIds: Record<string, string>, sportIds: Record<strin
     },
   });
 
+  await prisma.v1TeamTrustScore.upsert({
+    where: { teamId: applicantTeam.id },
+    update: {
+      trustState: 'estimated',
+      mannerScore: 4.5,
+      matchCount: 3,
+      sourceLabel: '완료 팀매치 리뷰 기반',
+      calculatedAt: new Date('2026-05-18T00:00:00.000Z'),
+    },
+    create: {
+      teamId: applicantTeam.id,
+      trustState: 'estimated',
+      mannerScore: 4.5,
+      matchCount: 3,
+      sourceLabel: '완료 팀매치 리뷰 기반',
+      calculatedAt: new Date('2026-05-18T00:00:00.000Z'),
+    },
+  });
+
   await prisma.v1TeamProfile.upsert({
     where: { teamId: ownerTeam.id },
     update: { skillNote: '초보부터 중수까지', ...runningNoviceIntermediate, genderRule: '성별 무관' },
@@ -460,6 +479,21 @@ async function seedTeams(userIds: Record<string, string>, sportIds: Record<strin
     where: { teamId_userId: { teamId: ownerTeam.id, userId: userIds['member@teameet.v1'] } },
     update: { role: V1TeamMembershipRole.member, status: 'active', joinedAt: new Date('2026-05-18T00:00:00.000Z') },
     create: { teamId: ownerTeam.id, userId: userIds['member@teameet.v1'], role: V1TeamMembershipRole.member, status: 'active', joinedAt: new Date('2026-05-18T00:00:00.000Z') },
+  });
+  await prisma.v1TeamMembership.upsert({
+    where: { teamId_userId: { teamId: ownerTeam.id, userId: userIds['host@teameet.v1'] } },
+    update: { role: V1TeamMembershipRole.member, status: 'active', joinedAt: new Date('2026-05-18T00:00:00.000Z'), leftAt: null, removedByUserId: null },
+    create: { teamId: ownerTeam.id, userId: userIds['host@teameet.v1'], role: V1TeamMembershipRole.member, status: 'active', joinedAt: new Date('2026-05-18T00:00:00.000Z') },
+  });
+  await prisma.v1TeamMembership.upsert({
+    where: { teamId_userId: { teamId: applicantTeam.id, userId: userIds['host@teameet.v1'] } },
+    update: { role: V1TeamMembershipRole.owner, status: 'active', joinedAt: new Date('2026-05-18T00:00:00.000Z'), leftAt: null, removedByUserId: null },
+    create: { teamId: applicantTeam.id, userId: userIds['host@teameet.v1'], role: V1TeamMembershipRole.owner, status: 'active', joinedAt: new Date('2026-05-18T00:00:00.000Z') },
+  });
+  await prisma.v1TeamMembership.upsert({
+    where: { teamId_userId: { teamId: applicantTeam.id, userId: userIds['applicant@teameet.v1'] } },
+    update: { role: V1TeamMembershipRole.member, status: 'active', joinedAt: new Date('2026-05-18T00:00:00.000Z'), leftAt: null, removedByUserId: null },
+    create: { teamId: applicantTeam.id, userId: userIds['applicant@teameet.v1'], role: V1TeamMembershipRole.member, status: 'active', joinedAt: new Date('2026-05-18T00:00:00.000Z') },
   });
 
   return { ownerTeam, applicantTeam };
@@ -564,6 +598,465 @@ async function seedTeamMatches(
   });
 
   return teamMatch;
+}
+
+async function seedHostMinDemoData(
+  userIds: Record<string, string>,
+  sportIds: Record<string, string>,
+  regionId: string,
+  ownerTeamId: string,
+  applicantTeamId: string,
+) {
+  const futsalBeginnerIntermediate = await getLevelRangeIds(sportIds.futsal, 'beginner', 'intermediate');
+  const runningBeginnerNovice = await getLevelRangeIds(sportIds.running, 'beginner', 'novice');
+  const runningNoviceIntermediate = await getLevelRangeIds(sportIds.running, 'novice', 'intermediate');
+
+  type LevelRange = { minSportLevelId: string | null; maxSportLevelId: string | null };
+  type ReviewSeed = {
+    id: string;
+    reviewerUserId: string;
+    reviewerTeamId?: string | null;
+    sourceType: 'match' | 'team_match';
+    sourceId: string;
+    targetType: 'user' | 'team';
+    targetUserId?: string | null;
+    targetTeamId?: string | null;
+    rating: number;
+    submittedAt: Date;
+    tags: Array<readonly [string, string]>;
+  };
+
+  const upsertMatch = (
+    id: string,
+    data: {
+      hostUserId: string;
+      sportId: string;
+      title: string;
+      description: string;
+      placeName: string;
+      startAt: Date;
+      endAt: Date;
+      maxParticipants: number;
+      status: 'recruiting' | 'closed' | 'cancelled' | 'completed';
+      levelRange: LevelRange;
+      completedAt?: Date | null;
+      cancelledAt?: Date | null;
+    },
+  ) =>
+    prisma.v1Match.upsert({
+      where: { id },
+      update: {
+        hostUserId: data.hostUserId,
+        sportId: data.sportId,
+        regionId,
+        title: data.title,
+        description: data.description,
+        placeName: data.placeName,
+        placeAddress: '서울 강남구',
+        startAt: data.startAt,
+        endAt: data.endAt,
+        maxParticipants: data.maxParticipants,
+        status: data.status,
+        completedAt: data.completedAt ?? null,
+        cancelledAt: data.cancelledAt ?? null,
+        ...data.levelRange,
+      },
+      create: {
+        id,
+        hostUserId: data.hostUserId,
+        sportId: data.sportId,
+        regionId,
+        title: data.title,
+        description: data.description,
+        placeName: data.placeName,
+        placeAddress: '서울 강남구',
+        startAt: data.startAt,
+        endAt: data.endAt,
+        maxParticipants: data.maxParticipants,
+        status: data.status,
+        completedAt: data.completedAt ?? null,
+        cancelledAt: data.cancelledAt ?? null,
+        levelNote: '데모 상태 확인용',
+        ...data.levelRange,
+        genderRule: '성별 무관',
+        costNote: '무료',
+      },
+    });
+
+  const upsertParticipant = (
+    matchId: string,
+    userId: string,
+    role: 'host' | 'participant',
+    status: 'active' | 'completed' | 'cancelled' | 'no_show' = 'active',
+    applicationId: string | null = null,
+  ) =>
+    prisma.v1MatchParticipant.upsert({
+      where: { matchId_userId: { matchId, userId } },
+      update: {
+        role,
+        status,
+        applicationId,
+        approvedAt: seedNow,
+        completedAt: status === 'completed' ? new Date('2026-05-12T12:00:00.000Z') : null,
+        cancelledAt: status === 'cancelled' ? new Date('2026-05-12T09:00:00.000Z') : null,
+      },
+      create: {
+        matchId,
+        userId,
+        role,
+        status,
+        applicationId,
+        approvedAt: seedNow,
+        completedAt: status === 'completed' ? new Date('2026-05-12T12:00:00.000Z') : null,
+        cancelledAt: status === 'cancelled' ? new Date('2026-05-12T09:00:00.000Z') : null,
+      },
+    });
+
+  const completedMatch = await upsertMatch('00000000-0000-4000-8000-000000000203', {
+    hostUserId: userIds['host@teameet.v1'],
+    sportId: sportIds.futsal,
+    title: '성수 풋살파크 완료 매치',
+    description: '리뷰 작성/받은 리뷰 데모용 완료 개인매치입니다.',
+    placeName: '성수 풋살파크',
+    startAt: new Date('2026-05-10T10:00:00.000Z'),
+    endAt: new Date('2026-05-10T12:00:00.000Z'),
+    maxParticipants: 6,
+    status: 'completed',
+    completedAt: new Date('2026-05-10T12:00:00.000Z'),
+    levelRange: futsalBeginnerIntermediate,
+  });
+  await upsertParticipant(completedMatch.id, userIds['host@teameet.v1'], 'host', 'completed');
+  await upsertParticipant(completedMatch.id, userIds['applicant@teameet.v1'], 'participant', 'completed');
+  await upsertParticipant(completedMatch.id, userIds['owner@teameet.v1'], 'participant', 'completed');
+
+  const pendingReviewMatch = await upsertMatch('00000000-0000-4000-8000-000000000204', {
+    hostUserId: userIds['host@teameet.v1'],
+    sportId: sportIds.running,
+    title: '한강 러닝 완료 매치',
+    description: '아직 작성하지 않은 리뷰 대상이 남는 완료 개인매치입니다.',
+    placeName: '한강공원 반포지구',
+    startAt: new Date('2026-05-12T09:00:00.000Z'),
+    endAt: new Date('2026-05-12T10:00:00.000Z'),
+    maxParticipants: 8,
+    status: 'completed',
+    completedAt: new Date('2026-05-12T10:00:00.000Z'),
+    levelRange: runningBeginnerNovice,
+  });
+  await upsertParticipant(pendingReviewMatch.id, userIds['host@teameet.v1'], 'host', 'completed');
+  await upsertParticipant(pendingReviewMatch.id, userIds['member@teameet.v1'], 'participant', 'completed');
+
+  const cancelledMatch = await upsertMatch('00000000-0000-4000-8000-000000000205', {
+    hostUserId: userIds['host@teameet.v1'],
+    sportId: sportIds.running,
+    title: '우천 취소 러닝',
+    description: '취소 상태 확인용 개인매치입니다.',
+    placeName: '잠실 한강공원',
+    startAt: new Date('2026-05-14T09:00:00.000Z'),
+    endAt: new Date('2026-05-14T10:00:00.000Z'),
+    maxParticipants: 8,
+    status: 'cancelled',
+    cancelledAt: new Date('2026-05-13T22:00:00.000Z'),
+    levelRange: runningBeginnerNovice,
+  });
+  await upsertParticipant(cancelledMatch.id, userIds['host@teameet.v1'], 'host', 'cancelled');
+
+  const closedMatch = await upsertMatch('00000000-0000-4000-8000-000000000206', {
+    hostUserId: userIds['host@teameet.v1'],
+    sportId: sportIds.running,
+    title: '정원 마감 러닝',
+    description: '마감 상태 확인용 개인매치입니다.',
+    placeName: '강남 탄천 산책로',
+    startAt: new Date('2026-06-03T10:00:00.000Z'),
+    endAt: new Date('2026-06-03T11:00:00.000Z'),
+    maxParticipants: 6,
+    status: 'closed',
+    levelRange: runningNoviceIntermediate,
+  });
+  await upsertParticipant(closedMatch.id, userIds['host@teameet.v1'], 'host', 'active');
+
+  const requestedMatch = await upsertMatch('00000000-0000-4000-8000-000000000207', {
+    hostUserId: userIds['owner@teameet.v1'],
+    sportId: sportIds.running,
+    title: '팀장원 러닝 신청 대기',
+    description: '호스트민이 신청 대기 중인 개인매치입니다.',
+    placeName: '양재천 입구',
+    startAt: new Date('2026-06-04T10:00:00.000Z'),
+    endAt: new Date('2026-06-04T11:00:00.000Z'),
+    maxParticipants: 8,
+    status: 'recruiting',
+    levelRange: runningNoviceIntermediate,
+  });
+  await prisma.v1MatchApplication.upsert({
+    where: { matchId_applicantUserId: { matchId: requestedMatch.id, applicantUserId: userIds['host@teameet.v1'] } },
+    update: { status: 'requested', message: '참가 신청합니다.', reviewedByUserId: null, reviewedAt: null, withdrawnAt: null },
+    create: { matchId: requestedMatch.id, applicantUserId: userIds['host@teameet.v1'], status: 'requested', message: '참가 신청합니다.' },
+  });
+
+  const approvedMatch = await upsertMatch('00000000-0000-4000-8000-000000000208', {
+    hostUserId: userIds['owner@teameet.v1'],
+    sportId: sportIds.futsal,
+    title: '승인 완료 풋살 참여',
+    description: '호스트민이 승인되어 참여 예정인 개인매치입니다.',
+    placeName: '마포 풋살장',
+    startAt: new Date('2026-06-05T10:00:00.000Z'),
+    endAt: new Date('2026-06-05T12:00:00.000Z'),
+    maxParticipants: 10,
+    status: 'recruiting',
+    levelRange: futsalBeginnerIntermediate,
+  });
+  const approvedApplication = await prisma.v1MatchApplication.upsert({
+    where: { matchId_applicantUserId: { matchId: approvedMatch.id, applicantUserId: userIds['host@teameet.v1'] } },
+    update: { status: 'approved', message: '참여 확정 부탁드립니다.', reviewedByUserId: userIds['owner@teameet.v1'], reviewedAt: seedNow, withdrawnAt: null },
+    create: { matchId: approvedMatch.id, applicantUserId: userIds['host@teameet.v1'], status: 'approved', message: '참여 확정 부탁드립니다.', reviewedByUserId: userIds['owner@teameet.v1'], reviewedAt: seedNow },
+  });
+  await upsertParticipant(approvedMatch.id, userIds['host@teameet.v1'], 'participant', 'active', approvedApplication.id);
+
+  const upsertTeamMatch = (
+    id: string,
+    data: {
+      hostTeamId: string;
+      createdByUserId: string;
+      title: string;
+      description: string;
+      startAt: Date;
+      endAt: Date;
+      status: 'recruiting' | 'matched' | 'cancelled' | 'completed';
+      approvedApplicantTeamId?: string | null;
+      completedAt?: Date | null;
+      cancelledAt?: Date | null;
+    },
+  ) =>
+    prisma.v1TeamMatch.upsert({
+      where: { id },
+      update: {
+        hostTeamId: data.hostTeamId,
+        createdByUserId: data.createdByUserId,
+        sportId: sportIds.futsal,
+        regionId,
+        title: data.title,
+        description: data.description,
+        placeName: '잠실 풋살장',
+        placeAddress: '서울 송파구',
+        startAt: data.startAt,
+        endAt: data.endAt,
+        status: data.status,
+        approvedApplicantTeamId: data.approvedApplicantTeamId ?? null,
+        completedAt: data.completedAt ?? null,
+        cancelledAt: data.cancelledAt ?? null,
+        ...futsalBeginnerIntermediate,
+      },
+      create: {
+        id,
+        hostTeamId: data.hostTeamId,
+        createdByUserId: data.createdByUserId,
+        sportId: sportIds.futsal,
+        regionId,
+        title: data.title,
+        description: data.description,
+        placeName: '잠실 풋살장',
+        placeAddress: '서울 송파구',
+        startAt: data.startAt,
+        endAt: data.endAt,
+        formatNote: '6:6',
+        status: data.status,
+        approvedApplicantTeamId: data.approvedApplicantTeamId ?? null,
+        completedAt: data.completedAt ?? null,
+        cancelledAt: data.cancelledAt ?? null,
+        ...futsalBeginnerIntermediate,
+        genderRule: '성별 무관',
+        costNote: '구장비 N분의 1',
+      },
+    });
+
+  const hostedCompletedTeamMatch = await upsertTeamMatch('00000000-0000-4000-8000-000000000303', {
+    hostTeamId: applicantTeamId,
+    createdByUserId: userIds['host@teameet.v1'],
+    title: '송파 풋살 모임 완료 팀매치',
+    description: '호스트민 팀이 주최한 완료 팀매치입니다.',
+    startAt: new Date('2026-05-11T10:00:00.000Z'),
+    endAt: new Date('2026-05-11T12:00:00.000Z'),
+    status: 'completed',
+    approvedApplicantTeamId: ownerTeamId,
+    completedAt: new Date('2026-05-11T12:00:00.000Z'),
+  });
+  await prisma.v1TeamMatchApplication.upsert({
+    where: { teamMatchId_applicantTeamId: { teamMatchId: hostedCompletedTeamMatch.id, applicantTeamId: ownerTeamId } },
+    update: { appliedByUserId: userIds['owner@teameet.v1'], status: 'approved', message: '상대팀으로 참여했습니다.', reviewedByUserId: userIds['host@teameet.v1'], reviewedAt: seedNow, withdrawnAt: null },
+    create: { teamMatchId: hostedCompletedTeamMatch.id, applicantTeamId: ownerTeamId, appliedByUserId: userIds['owner@teameet.v1'], status: 'approved', message: '상대팀으로 참여했습니다.', reviewedByUserId: userIds['host@teameet.v1'], reviewedAt: seedNow },
+  });
+
+  const appliedCompletedTeamMatch = await upsertTeamMatch('00000000-0000-4000-8000-000000000304', {
+    hostTeamId: ownerTeamId,
+    createdByUserId: userIds['owner@teameet.v1'],
+    title: '강남 러닝 크루 완료 팀매치',
+    description: '호스트민 팀이 상대팀으로 참여한 완료 팀매치입니다.',
+    startAt: new Date('2026-05-13T10:00:00.000Z'),
+    endAt: new Date('2026-05-13T12:00:00.000Z'),
+    status: 'completed',
+    approvedApplicantTeamId: applicantTeamId,
+    completedAt: new Date('2026-05-13T12:00:00.000Z'),
+  });
+  await prisma.v1TeamMatchApplication.upsert({
+    where: { teamMatchId_applicantTeamId: { teamMatchId: appliedCompletedTeamMatch.id, applicantTeamId } },
+    update: { appliedByUserId: userIds['host@teameet.v1'], status: 'approved', message: '상대팀으로 참여했습니다.', reviewedByUserId: userIds['owner@teameet.v1'], reviewedAt: seedNow, withdrawnAt: null },
+    create: { teamMatchId: appliedCompletedTeamMatch.id, applicantTeamId, appliedByUserId: userIds['host@teameet.v1'], status: 'approved', message: '상대팀으로 참여했습니다.', reviewedByUserId: userIds['owner@teameet.v1'], reviewedAt: seedNow },
+  });
+
+  await upsertTeamMatch('00000000-0000-4000-8000-000000000305', {
+    hostTeamId: applicantTeamId,
+    createdByUserId: userIds['host@teameet.v1'],
+    title: '취소된 팀매치',
+    description: '호스트민 팀의 취소 상태 팀매치입니다.',
+    startAt: new Date('2026-05-16T10:00:00.000Z'),
+    endAt: new Date('2026-05-16T12:00:00.000Z'),
+    status: 'cancelled',
+    cancelledAt: new Date('2026-05-15T12:00:00.000Z'),
+  });
+
+  await upsertTeamMatch('00000000-0000-4000-8000-000000000306', {
+    hostTeamId: applicantTeamId,
+    createdByUserId: userIds['host@teameet.v1'],
+    title: '새 상대팀 모집중',
+    description: '호스트민 팀이 주최한 모집중 팀매치입니다.',
+    startAt: new Date('2026-06-06T10:00:00.000Z'),
+    endAt: new Date('2026-06-06T12:00:00.000Z'),
+    status: 'recruiting',
+  });
+
+  const matchedTeamMatch = await upsertTeamMatch('00000000-0000-4000-8000-000000000307', {
+    hostTeamId: applicantTeamId,
+    createdByUserId: userIds['host@teameet.v1'],
+    title: '상대 확정 팀매치',
+    description: '상대팀 확정 상태 확인용 팀매치입니다.',
+    startAt: new Date('2026-06-07T10:00:00.000Z'),
+    endAt: new Date('2026-06-07T12:00:00.000Z'),
+    status: 'matched',
+    approvedApplicantTeamId: ownerTeamId,
+  });
+  await prisma.v1TeamMatchApplication.upsert({
+    where: { teamMatchId_applicantTeamId: { teamMatchId: matchedTeamMatch.id, applicantTeamId: ownerTeamId } },
+    update: { appliedByUserId: userIds['owner@teameet.v1'], status: 'approved', message: '상대팀 확정 상태입니다.', reviewedByUserId: userIds['host@teameet.v1'], reviewedAt: seedNow, withdrawnAt: null },
+    create: { teamMatchId: matchedTeamMatch.id, applicantTeamId: ownerTeamId, appliedByUserId: userIds['owner@teameet.v1'], status: 'approved', message: '상대팀 확정 상태입니다.', reviewedByUserId: userIds['host@teameet.v1'], reviewedAt: seedNow },
+  });
+
+  const reviewSeeds: ReviewSeed[] = [
+    {
+      id: '00000000-0000-4000-8000-000000000601',
+      reviewerUserId: userIds['applicant@teameet.v1'],
+      sourceType: 'match',
+      sourceId: completedMatch.id,
+      targetType: 'user',
+      targetUserId: userIds['host@teameet.v1'],
+      rating: 5,
+      submittedAt: new Date('2026-05-10T12:30:00.000Z'),
+      tags: [['manner', '매너가 좋아요'], ['play_again', '또 같이 운동하고 싶어요']],
+    },
+    {
+      id: '00000000-0000-4000-8000-000000000602',
+      reviewerUserId: userIds['owner@teameet.v1'],
+      sourceType: 'match',
+      sourceId: completedMatch.id,
+      targetType: 'user',
+      targetUserId: userIds['host@teameet.v1'],
+      rating: 4,
+      submittedAt: new Date('2026-05-10T12:35:00.000Z'),
+      tags: [['punctual', '시간 약속을 잘 지켜요'], ['communication', '소통이 원활해요']],
+    },
+    {
+      id: '00000000-0000-4000-8000-000000000603',
+      reviewerUserId: userIds['host@teameet.v1'],
+      sourceType: 'match',
+      sourceId: completedMatch.id,
+      targetType: 'user',
+      targetUserId: userIds['applicant@teameet.v1'],
+      rating: 5,
+      submittedAt: new Date('2026-05-10T12:40:00.000Z'),
+      tags: [['teamwork', '팀워크가 좋아요'], ['manner', '매너가 좋아요']],
+    },
+    {
+      id: '00000000-0000-4000-8000-000000000604',
+      reviewerUserId: userIds['owner@teameet.v1'],
+      reviewerTeamId: ownerTeamId,
+      sourceType: 'team_match',
+      sourceId: hostedCompletedTeamMatch.id,
+      targetType: 'team',
+      targetTeamId: applicantTeamId,
+      rating: 4,
+      submittedAt: new Date('2026-05-11T12:30:00.000Z'),
+      tags: [['manner', '매너가 좋아요'], ['communication', '소통이 원활해요']],
+    },
+    {
+      id: '00000000-0000-4000-8000-000000000605',
+      reviewerUserId: userIds['host@teameet.v1'],
+      reviewerTeamId: applicantTeamId,
+      sourceType: 'team_match',
+      sourceId: appliedCompletedTeamMatch.id,
+      targetType: 'team',
+      targetTeamId: ownerTeamId,
+      rating: 5,
+      submittedAt: new Date('2026-05-13T12:35:00.000Z'),
+      tags: [['teamwork', '팀워크가 좋아요'], ['punctual', '시간 약속을 잘 지켜요']],
+    },
+  ];
+
+  for (const review of reviewSeeds) {
+    await prisma.v1PostEventReview.upsert({
+      where: { id: review.id },
+      update: {
+        reviewerUserId: review.reviewerUserId,
+        reviewerTeamId: review.reviewerTeamId ?? null,
+        sourceType: review.sourceType,
+        sourceId: review.sourceId,
+        targetType: review.targetType,
+        targetUserId: review.targetUserId ?? null,
+        targetTeamId: review.targetTeamId ?? null,
+        rating: review.rating,
+        status: 'submitted',
+        submittedAt: review.submittedAt,
+        hiddenAt: null,
+        removedAt: null,
+      },
+      create: {
+        id: review.id,
+        reviewerUserId: review.reviewerUserId,
+        reviewerTeamId: review.reviewerTeamId ?? null,
+        sourceType: review.sourceType,
+        sourceId: review.sourceId,
+        targetType: review.targetType,
+        targetUserId: review.targetUserId ?? null,
+        targetTeamId: review.targetTeamId ?? null,
+        rating: review.rating,
+        status: 'submitted',
+        submittedAt: review.submittedAt,
+      },
+    });
+
+    await prisma.v1PostEventReviewTag.deleteMany({ where: { reviewId: review.id } });
+    for (const [tagCode, labelSnapshot] of review.tags) {
+      await prisma.v1PostEventReviewTag.create({
+        data: { reviewId: review.id, tagCode, labelSnapshot },
+      });
+    }
+  }
+
+  await prisma.v1UserReputationSummary.upsert({
+    where: { userId: userIds['host@teameet.v1'] },
+    update: {
+      trustState: 'estimated',
+      mannerScore: 4.5,
+      reviewCount: 2,
+      sourceLabel: '완료 경기 리뷰 기반',
+      calculatedAt: new Date('2026-05-18T00:00:00.000Z'),
+    },
+    create: {
+      userId: userIds['host@teameet.v1'],
+      trustState: 'estimated',
+      mannerScore: 4.5,
+      reviewCount: 2,
+      sourceLabel: '완료 경기 리뷰 기반',
+      calculatedAt: new Date('2026-05-18T00:00:00.000Z'),
+    },
+  });
 }
 
 async function seedChatAndNotifications(
@@ -1625,6 +2118,7 @@ async function main() {
   const { ownerTeam, applicantTeam } = await seedTeams(userIds, sportIds, regions.seoulGangnam.id);
   const match = await seedMatches(userIds, sportIds, regions.seoulGangnam.id);
   const teamMatch = await seedTeamMatches(userIds, sportIds, regions.seoulSongpa.id, ownerTeam.id, applicantTeam.id);
+  await seedHostMinDemoData(userIds, sportIds, regions.seoulGangnam.id, ownerTeam.id, applicantTeam.id);
 
   await seedChatAndNotifications(userIds, match.id, teamMatch.id);
   await seedHostChatDemoData(userIds, sportIds, regions.seoulSongpa.id, match.id, teamMatch.id, ownerTeam.id);

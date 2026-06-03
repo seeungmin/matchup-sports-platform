@@ -49,15 +49,15 @@ export class ProfileService {
       : null;
 
     const [
-      reputation,
+      receivedReviewAggregate,
       personalActivityCount,
       monthlyPersonalMatchCount,
       teamActivityCount,
       monthlyTeamMatchCount,
     ] = await Promise.all([
-      this.prisma.v1UserReputationSummary.findUnique({
-        where: { userId: user.id },
-        select: { mannerScore: true },
+      this.prisma.v1PostEventReview.aggregate({
+        where: { targetUserId: user.id, targetType: 'user', status: 'submitted' },
+        _avg: { rating: true },
       }),
       this.prisma.v1MatchParticipant.count({
         where: {
@@ -83,7 +83,9 @@ export class ProfileService {
           })
         : 0,
     ]);
-    const mannerScore = reputation?.mannerScore ? Number(reputation.mannerScore) : null;
+    const mannerScore = receivedReviewAggregate._avg.rating === null
+      ? null
+      : Number(receivedReviewAggregate._avg.rating.toFixed(2));
 
     return {
       totals: {

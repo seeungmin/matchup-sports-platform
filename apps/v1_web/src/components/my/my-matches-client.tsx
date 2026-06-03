@@ -45,6 +45,7 @@ function getApiNotice(isLoading: boolean, isError: boolean): MyMatchesViewModel[
 function toMyMatch(match: V1Match): MyMatch {
   const status = toMyStatus(match);
   const id = match.matchId ?? match.id;
+  const canReview = isReviewableMatch(match);
 
   return {
     id,
@@ -54,7 +55,7 @@ function toMyMatch(match: V1Match): MyMatch {
     statusLabel: statusLabel(status),
     note: buildNote(match, status),
     href: `/matches/${id}`,
-    reviewHref: status === 'ended' ? `/my/reviews/match/${id}` : undefined,
+    reviewHref: canReview ? `/my/reviews/match/${id}` : undefined,
   };
 }
 
@@ -79,6 +80,10 @@ function toMyStatus(match: V1Match): MyMatchStatus {
   return 'recruiting';
 }
 
+function isReviewableMatch(match: V1Match) {
+  return (match.displayState ?? match.status) === 'completed';
+}
+
 function statusLabel(status: MyMatchStatus) {
   if (status === 'pending') return '승인 대기';
   if (status === 'approved') return '승인 완료';
@@ -89,6 +94,7 @@ function statusLabel(status: MyMatchStatus) {
 function buildNote(match: V1Match, status: MyMatchStatus) {
   if (status === 'pending') return '호스트가 신청을 검토 중입니다.';
   if (status === 'approved') return '참가가 확정되었습니다. 상세에서 장소와 시간을 확인하세요.';
+  if (status === 'ended' && isReviewableMatch(match)) return '상대 평가와 리뷰를 남길 수 있어요.';
   if (status === 'ended') return '종료되었거나 더 이상 모집하지 않는 매치입니다.';
   return `${match.participantCount ?? 0}/${match.capacity ?? 0}명이 참가 확정했어요.`;
 }

@@ -6,6 +6,6 @@ type ReviewsPageProps = {
 
 export default async function ReviewsPage({ searchParams }: ReviewsPageProps) {
   const params = await searchParams;
-  const tab = params?.tab === 'written' ? 'written' : 'pending';
+  const tab = params?.tab === 'written' ? 'written' : params?.tab === 'received' ? 'received' : 'pending';
   return <ReviewsPageClient initialTab={tab} />;
 }

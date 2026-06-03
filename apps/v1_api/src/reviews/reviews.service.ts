@@ -110,9 +110,10 @@ export class ReviewsService {
       include: reviewInclude(),
     });
     const pageItems = reviews.slice(0, limit);
+    const sourceSummaries = await this.reviewSourceSummaries(pageItems);
 
     return {
-      items: pageItems.map((review) => this.toReviewDetail(review)),
+      items: pageItems.map((review) => this.toWrittenListItem(review, sourceSummaries)),
       pageInfo: { nextCursor: reviews.length > limit ? pageItems.at(-1)?.id ?? null : null, hasNext: reviews.length > limit },
     };
   }
@@ -365,9 +366,12 @@ export class ReviewsService {
       });
       await this.recalculateUserReputation(tx, targetUserId);
       return created;
+    }).catch(async (error: unknown) => {
+      if (!isUniqueConstraintError(error)) throw error;
+      return this.findExistingPersonalReview(user.id, dto.sourceId, targetUserId);
     });
 
-    return { review: this.toReviewDetail(review), alreadySubmitted: false };
+    return { review: this.toReviewDetail(review), alreadySubmitted: isExistingReviewResult(review) };
   }
 
   private async submitTeamReview(user: V1AuthUser, dto: SubmitReviewDto, tagCodes: ReviewTagCode[]) {
@@ -379,11 +383,12 @@ export class ReviewsService {
     const existing = target.review;
     if (existing) return { review: existing, alreadySubmitted: true };
 
+    const reviewerTeamId = source.reviewerTeam.teamId;
     const review = await this.prisma.$transaction(async (tx) => {
       const created = await tx.v1PostEventReview.create({
         data: {
           reviewerUserId: user.id,
-          reviewerTeamId: source.reviewerTeam.teamId,
+          reviewerTeamId,
           sourceType: 'team_match',
           sourceId: dto.sourceId,
           targetType: 'team',
@@ -395,9 +400,54 @@ export class ReviewsService {
       });
       await this.recalculateTeamTrust(tx, targetTeamId);
       return created;
+    }).catch(async (error: unknown) => {
+      if (!isUniqueConstraintError(error)) throw error;
+      return this.findExistingTeamReview(reviewerTeamId, dto.sourceId, targetTeamId);
     });
 
-    return { review: this.toReviewDetail(review), alreadySubmitted: false };
+    return { review: this.toReviewDetail(review), alreadySubmitted: isExistingReviewResult(review) };
+  }
+
+  private async findExistingPersonalReview(reviewerUserId: string, sourceId: string, targetUserId: string) {
+    const review = await this.prisma.v1PostEventReview.findFirst({
+      where: { reviewerUserId, sourceType: 'match', sourceId, targetUserId },
+      include: reviewInclude(),
+    });
+    if (!review) throw conflict('DUPLICATE_REVIEW_RETRY', 'Duplicate review was detected but existing review was not found');
+    return markExistingReviewResult(review);
+  }
+
+  private async findExistingTeamReview(reviewerTeamId: string, sourceId: string, targetTeamId: string) {
+    const review = await this.prisma.v1PostEventReview.findFirst({
+      where: { reviewerTeamId, sourceType: 'team_match', sourceId, targetTeamId },
+      include: reviewInclude(),
+    });
+    if (!review) throw conflict('DUPLICATE_REVIEW_RETRY', 'Duplicate review was detected but existing review was not found');
+    return markExistingReviewResult(review);
+  }
+
+  private async reviewSourceSummaries(reviews: ReviewWithIncludes[]) {
+    const matchIds = reviews.filter((review) => review.sourceType === 'match').map((review) => review.sourceId);
+    const teamMatchIds = reviews.filter((review) => review.sourceType === 'team_match').map((review) => review.sourceId);
+    const [matches, teamMatches] = await Promise.all([
+      matchIds.length
+        ? this.prisma.v1Match.findMany({
+            where: { id: { in: matchIds } },
+            select: { id: true, title: true, completedAt: true, startAt: true },
+          })
+        : [],
+      teamMatchIds.length
+        ? this.prisma.v1TeamMatch.findMany({
+            where: { id: { in: teamMatchIds } },
+            select: { id: true, title: true, completedAt: true, startAt: true },
+          })
+        : [],
+    ]);
+
+    return new Map([
+      ...matches.map((match) => [`match:${match.id}`, sourceSummary('match', match.id, match.title, match.completedAt ?? match.startAt)] as const),
+      ...teamMatches.map((match) => [`team_match:${match.id}`, sourceSummary('team_match', match.id, match.title, match.completedAt ?? match.startAt)] as const),
+    ]);
   }
 
   private async resolveReviewerTeam(userId: string, hostTeamId: string, approvedApplicantTeamId: string) {
@@ -531,11 +581,41 @@ export class ReviewsService {
       submittedAt: toIso(review.submittedAt),
     };
   }
+
+  private toWrittenListItem(review: ReviewWithIncludes, sources: Map<string, ReturnType<typeof sourceSummary>>) {
+    const source = sources.get(`${review.sourceType}:${review.sourceId}`);
+    const targetName = review.targetType === 'team'
+      ? review.targetTeam?.name ?? '상대 팀'
+      : review.targetUser?.profile?.nickname ?? '참가자';
+
+    return {
+      sourceType: review.sourceType,
+      sourceId: review.sourceId,
+      title: source?.title ?? `${targetName}에게 보낸 리뷰`,
+      completedAt: source?.completedAt ?? toIso(review.submittedAt),
+      targetType: review.targetType,
+      targetCount: 1,
+      reviewedCount: 1,
+      remainingCount: 0,
+      state: 'done' as const,
+      reviewerTeam: review.reviewerTeam ? { teamId: review.reviewerTeam.id, name: review.reviewerTeam.name } : null,
+      targetTeam: review.targetTeam ? { teamId: review.targetTeam.id, name: review.targetTeam.name } : null,
+    };
+  }
 }
 
 type ReviewWithIncludes = Prisma.V1PostEventReviewGetPayload<{
   include: ReturnType<typeof reviewInclude>;
 }>;
+type ExistingReviewWithIncludes = ReviewWithIncludes & { __alreadySubmitted: true };
+
+function markExistingReviewResult(review: ReviewWithIncludes): ExistingReviewWithIncludes {
+  return Object.assign(review, { __alreadySubmitted: true as const });
+}
+
+function isExistingReviewResult(review: ReviewWithIncludes): review is ExistingReviewWithIncludes {
+  return '__alreadySubmitted' in review;
+}
 
 function reviewInclude() {
   return {
@@ -613,6 +693,10 @@ function resolveReviewerTeamId(teamIds: string[], hostTeamId: string, approvedAp
 
 function teamReviewKey(sourceId: string, reviewerTeamId: string, targetTeamId: string) {
   return `${sourceId}:${reviewerTeamId}:${targetTeamId}`;
+}
+
+function isUniqueConstraintError(error: unknown) {
+  return Boolean(error && typeof error === 'object' && 'code' in error && error.code === 'P2002');
 }
 
 function badRequest(code: string, message: string) {

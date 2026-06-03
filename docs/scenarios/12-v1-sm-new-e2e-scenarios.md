@@ -466,17 +466,28 @@ Source design no: `14`
 Design section: `reviews-post-event-sm-final`
 
 Primary contracts:
-Reviewable completed schedules, review target eligibility, star rating, one selectable review tag, review submit.
+`GET /reviews?tab=pending|written`, `GET /reviews/received`,
+`GET /reviews/sources/:sourceType/:sourceId`, `POST /reviews`.
+
+Reviewable completed personal matches and team matches, review target eligibility,
+star rating `1-5`, one or more predefined review tags, idempotent review submit,
+written review list, received review grouping.
 
 DB evidence:
-Completed match/team-match participation, review records, selected review tag, reputation summary update.
+`v1_matches`, `v1_match_participants`, `v1_team_matches`,
+`v1_team_match_applications`, `v1_team_memberships`,
+`v1_post_event_reviews`, `v1_post_event_review_tags`,
+`v1_user_reputation_summaries`, `v1_team_trust_scores`.
 
 | ID | Scenario | Expected E2E assertion |
 |---|---|---|
-| V1-14-001 | Review unlocks after completed schedule | Only completed schedules where the user was an approved participant appear in the review inbox |
-| V1-14-002 | Select target and submit tag-only review | User selects a target, star rating, and exactly one predefined tag; no free-text body is required or shown |
-| V1-14-003 | Duplicate review lock | Submitting the same reviewer/target/schedule twice returns existing state or conflict without duplicate records |
-| V1-14-004 | Ineligible schedule lock | Cancelled, not-participated, disputed, or expired schedules show a locked CTA with a concrete reason |
+| V1-14-001 | Personal match review unlocks after completion | A completed personal match where the user has `active` or `completed` participation appears in `/my/reviews?tab=pending`; self-review is excluded; submitted user-target reviews reduce remaining count |
+| V1-14-002 | Team match review unlocks for representative team actor | A completed team match with host and approved applicant teams appears for a current active owner/manager of exactly one participating team; target is the opposing team and reviewer team context is shown |
+| V1-14-003 | Submit rating and predefined tags | Source page accepts rating `1-5` plus one or more predefined tag codes, posts DTO-compatible payload, creates review/tag records, and navigates to completion or written state without free-text review body |
+| V1-14-004 | Duplicate review convergence | Re-submitting the same reviewer, target, source tuple returns existing review data with `alreadySubmitted: true` and does not create duplicate review/tag records |
+| V1-14-005 | Ineligible and locked source handling | Not completed, cancelled, not-participated, self-target, already submitted, missing opponent, non-manager team actor, and ambiguous two-team-manager cases show concrete lock/error reasons rather than fake success |
+| V1-14-006 | Written and received review surfaces | Written reviews appear in `/my/reviews?tab=written`; received reviews appear in `/my/reviews/received` grouped by event and separated between user reviews and managed-team reviews |
+| V1-14-007 | Reputation and trust score recalculation | Personal match reviews recalculate target `V1UserReputationSummary`; team match reviews recalculate target `V1TeamTrustScore` with `1-2` reviews as `estimated` and `3+` as `verified` |
 
 ## Suggested Automation Files
 
