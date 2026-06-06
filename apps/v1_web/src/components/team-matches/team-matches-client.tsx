@@ -199,6 +199,8 @@ export function TeamMatchDetailPageClient({ teamMatchId }: { teamMatchId: string
 
 function toTeamMatch(match: V1TeamMatch, fallback: TeamMatchModel): TeamMatchModel {
   const status = statusToCardStatus(getStatus(match), getViewerState(match));
+  const rules = parseRules(match.rulesText, fallback);
+  const costs = parseCosts(match.costNote, fallback);
 
   return {
     ...fallback,
@@ -207,12 +209,16 @@ function toTeamMatch(match: V1TeamMatch, fallback: TeamMatchModel): TeamMatchMod
     sport: match.sport?.name ?? match.sportName ?? fallback.sport,
     hostTeam: match.hostTeam?.name ?? match.hostTeamName ?? fallback.hostTeam,
     venue: match.place?.name ?? match.placeName ?? fallback.venue,
+    region: match.region?.name ?? match.regionName ?? fallback.region,
     date: formatDate(match.startsAt),
     time: formatTime(match.startsAt),
-    grade: match.levelLabel ?? fallback.grade,
-    cost: parseMoney(match.costNote, fallback.cost),
-    opponentCost: parseMoney(match.costNote, fallback.opponentCost),
-    uniform: match.rulesText ?? fallback.uniform,
+    endTime: match.endsAt ? formatTime(match.endsAt) : undefined,
+    grade: rules.grade || match.levelLabel || fallback.grade,
+    format: rules.format || fallback.format,
+    style: rules.style || fallback.style,
+    cost: costs.cost,
+    opponentCost: costs.opponentCost,
+    uniform: rules.uniform || fallback.uniform,
     gender: match.genderRule ?? fallback.gender,
     status,
   };
@@ -438,9 +444,22 @@ function reasonLabel(reasonCode?: string) {
   return '신청할 팀 없음';
 }
 
-function parseMoney(value: string | null | undefined, fallback: number) {
-  const amount = value?.match(/\d[\d,]*/)?.[0]?.replace(/,/g, '');
-  return amount ? Number(amount) : fallback;
+function parseRules(value: string | null | undefined, fallback: TeamMatchModel) {
+  const [grade, format, style, uniform] = value?.split(' · ').map((item) => item.trim()).filter(Boolean) ?? [];
+  return {
+    grade: grade ?? fallback.grade,
+    format: format ?? fallback.format,
+    style: style ?? fallback.style,
+    uniform: uniform ?? fallback.uniform,
+  };
+}
+
+function parseCosts(value: string | null | undefined, fallback: TeamMatchModel) {
+  const amounts = value?.match(/\d[\d,]*/g)?.map((item) => Number(item.replace(/,/g, ''))) ?? [];
+  return {
+    cost: amounts[0] ?? fallback.cost,
+    opponentCost: amounts[1] ?? fallback.opponentCost,
+  };
 }
 
 function formatDate(value: string) {

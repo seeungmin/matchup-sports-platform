@@ -89,9 +89,6 @@ export function TeamEditPageClient({ teamId }: { teamId: string }) {
       genderRule: query.data.profile.genderRule ?? '성별 무관',
       activity: query.data.profile.activityAreaText ?? '',
       capacity: query.data.profile.memberGoalCount ?? query.data.memberCount,
-      logoImage: query.data.profile.logoUrl ?? '',
-      coverImage: query.data.profile.coverImageUrl ?? '',
-      activityImages: [],
     });
     setSportId(query.data.sport.sportId);
     setRegionId(query.data.region?.regionId ?? '');

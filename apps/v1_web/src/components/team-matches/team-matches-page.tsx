@@ -117,6 +117,7 @@ export function TeamMatchDetailPageView({ model }: { model: TeamMatchDetailViewM
   const ctaTone = mode === 'pending' ? 'tm-btn-warning' : mode === 'approved' ? 'tm-btn-success' : locked ? 'tm-btn-neutral' : 'tm-btn-primary';
   const canRunAction = Boolean(model.onApply);
   const showChat = mode === 'approved' && Boolean(model.onChat);
+  const timeRange = match.endTime ? `${match.time}-${match.endTime}` : match.time;
   return (
     <AppChrome title="" activeTab="teamMatches" bottomNav={false} topBar={false}>
       <article className="tm-match-detail">
@@ -134,14 +135,28 @@ export function TeamMatchDetailPageView({ model }: { model: TeamMatchDetailViewM
           </div>
         </div>
         <div className="tm-match-detail-body">
-          <InfoRow label="날짜와 시간" value={`${match.date} ${match.time}`} />
+          <InfoRow label="지역" value={match.region} />
+          <InfoRow label="날짜와 시간" value={`${match.date} ${timeRange}`} />
           <InfoRow label="장소" value={match.venue} sub={match.address} />
-          <InfoRow label="경기정보" value={`${match.sport} · ${match.format}`} sub={`${match.grade}등급 · 유니폼 ${match.uniform}`} />
+          <InfoRow label="종목" value={match.sport} />
+          <InfoRow label="실력등급" value={`${match.grade}등급`} />
+          <InfoRow label="경기방식" value={match.format} />
+          <InfoRow label="경기 스타일" value={match.style} />
+          <InfoRow label="유니폼 색상" value={match.uniform} />
           <InfoRow label="성별 조건" value={match.gender} />
-          <InfoRow label="참가비" value={`${match.opponentCost.toLocaleString('ko-KR')}원`} sub={match.opponentCost === 0 ? '무료초청 · 실제 청구 없음' : `총 비용 ${match.cost.toLocaleString('ko-KR')}원`} />
+          <InfoRow label="총비용" value={`${match.cost.toLocaleString('ko-KR')}원`} />
+          <InfoRow label="상대팀 부담금" value={`${match.opponentCost.toLocaleString('ko-KR')}원`} sub={match.opponentCost === 0 ? '무료초청 · 실제 청구 없음' : undefined} />
           {mode === 'pending' ? <StateCard tone="orange" title="신청 확인을 완료했어요" body="홈팀 검토가 끝나면 알림으로 알려드릴게요." /> : null}
           {mode === 'approved' ? <StateCard tone="green" title="승인완료" body="팀매치 참가가 확정되었습니다. 경기 전 안내를 계속 확인할 수 있습니다." /> : null}
-          <Link className="tm-btn tm-btn-md tm-btn-neutral tm-btn-block" href={match.hostTeamHref ?? '/teams'} style={{ marginTop: 14 }}>팀 정보 보기</Link>
+          {match.description ? <Card pad={16} style={{ marginTop: 10 }}><div className="tm-text-body-lg">설명</div><div className="tm-text-body" style={{ marginTop: 8, lineHeight: 1.55, color: 'var(--text-muted)' }}>{match.description}</div></Card> : null}
+          <Link className="tm-card tm-pressable" href={match.hostTeamHref ?? '/teams'} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: 14, marginTop: 14 }}>
+            <div style={{ minWidth: 0 }}>
+              <div className="tm-text-caption">홈팀 정보</div>
+              <div className="tm-text-body-lg" style={{ marginTop: 3 }}>{match.hostTeam}</div>
+              <div className="tm-text-micro" style={{ marginTop: 3, color: 'var(--text-caption)' }}>{match.sport} · {match.grade}등급</div>
+            </div>
+            <span className="tm-btn tm-btn-sm tm-btn-neutral">보기</span>
+          </Link>
           {mode === 'mine' ? <Card pad={16} style={{ marginTop: 10 }}><div className="tm-text-body-lg">신청팀</div><div style={{ display: 'grid', gap: 8, marginTop: 12 }}>{match.applicantTeams.map((team) => <div key={team.name}>{team.href ? <Link href={team.href} aria-label={`${team.name} 관리 페이지로 이동`}><ListItem title={team.name} sub={team.meta} trailing={team.status} /></Link> : <ListItem title={team.name} sub={team.meta} trailing={team.status} />}</div>)}</div></Card> : null}
         </div>
       </article>

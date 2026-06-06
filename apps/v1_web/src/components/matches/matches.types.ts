@@ -6,6 +6,7 @@ export type MatchCardModel = {
   region: string;
   date: string;
   time: string;
+  endTime?: string;
   current: number;
   capacity: number;
   actionLabel: string;
@@ -14,6 +15,7 @@ export type MatchCardModel = {
   host: string;
   image: string;
   deadline: string;
+  deadlineDetail?: string;
   status: 'open' | 'pending' | 'approved' | 'full' | 'mine';
 };
 
@@ -88,7 +90,7 @@ export type MatchDetailViewModel = {
   chatLabel?: string;
   chatPending?: boolean;
   onChat?: () => void;
-  onShare?: () => void;
+  onShare?: () => void | Promise<void>;
   onNotify?: () => void;
 };
 
@@ -114,6 +116,8 @@ export type MatchCreateViewModel = {
     date: string;
     startTime: string;
     endTime: string;
+    deadlineDate: string;
+    deadlineTime: string;
   };
   form?: {
     selectedSportId: string;

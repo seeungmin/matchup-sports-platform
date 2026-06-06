@@ -15,14 +15,12 @@ const teams = [
     sports: ['풋살', '축구'],
     region: '서울 성동',
     members: 18,
+    capacity: 24,
     status: 'open' as const,
     statusLabel: '모집중',
     tags: ['초보-중수', '주 1회', '친선'],
     genderRule: '성별 무관',
     intro: '주 1회 정기적으로 풋살을 즐기는 동네 팀입니다. 초보-중수 멤버와 빠른 응답을 중요하게 봅니다.',
-    fit: 94,
-    manner: '4.9',
-    trust: 'verified' as const,
     next: '오늘 21:00 정기전',
   },
   {
@@ -33,14 +31,12 @@ const teams = [
     sports: ['풋살'],
     region: '서울 강동',
     members: 22,
+    capacity: 28,
     status: 'reviewing' as const,
     statusLabel: '검토중',
     tags: ['중수', '평일 저녁', '리그 준비'],
     genderRule: '여',
     intro: '평일 저녁 풋살 위주로 운영하는 팀입니다. 가입 신청은 운영진 검토 후 확정합니다.',
-    fit: 88,
-    manner: '4.7',
-    trust: 'estimated' as const,
     next: '가입 신청 검토중',
   },
   {
@@ -51,14 +47,12 @@ const teams = [
     sports: ['축구', '풋살'],
     region: '서울 마포',
     members: 26,
+    capacity: 26,
     status: 'closed' as const,
     statusLabel: '마감',
     tags: ['11:11', '주말', 'A등급'],
     genderRule: '남',
     intro: '주말 11:11 경기를 꾸준히 하는 팀입니다. 현재 모집은 닫혀 있어 다음 모집 알림만 받을 수 있습니다.',
-    fit: 76,
-    manner: '-',
-    trust: 'none' as const,
     next: '다음 모집 알림 가능',
   },
   {
@@ -69,14 +63,12 @@ const teams = [
     sports: ['풋살', '러닝'],
     region: '서울 구로',
     members: 14,
+    capacity: 20,
     status: 'mine' as const,
     statusLabel: '내 팀',
     tags: ['팀장', '팀매치 운영', '친선'],
     genderRule: '성별 무관',
     intro: '내가 관리하는 풋살 팀입니다. 팀 소개, 멤버 권한, 모집 상태와 팀매치 생성을 관리할 수 있습니다.',
-    fit: 100,
-    manner: '4.8',
-    trust: 'verified' as const,
     next: '신청 3명 검토 필요',
   },
 ];
@@ -88,7 +80,7 @@ const teamByMode: Record<TeamDetailViewModel['mode'], (typeof teams)[number]> = 
   mine: teams[3],
 };
 
-const detailByMode: Record<TeamDetailViewModel['mode'], Pick<TeamDetailViewModel['team'], 'description' | 'activity' | 'condition' | 'schedule' | 'city' | 'county' | 'level' | 'contact' | 'links' | 'membersList'>> = {
+const detailByMode: Record<TeamDetailViewModel['mode'], Pick<TeamDetailViewModel['team'], 'description' | 'activity' | 'condition' | 'schedule' | 'city' | 'county' | 'level' | 'membersList'>> = {
   default: {
     description: '성수와 광진권에서 풋살 정기전을 운영하는 팀입니다. 신규 멤버는 2주 체험 후 정식 가입으로 전환합니다.',
     activity: '주 1회 정기전 · 신규 멤버 3명 모집',
@@ -97,12 +89,6 @@ const detailByMode: Record<TeamDetailViewModel['mode'], Pick<TeamDetailViewModel
     city: '서울',
     county: '성동구',
     level: '초보-중수',
-    contact: '비공개',
-    links: [
-      { label: 'Instagram', value: 'https://instagram.com/seongsu-runners' },
-      { label: 'Kakao', value: 'https://open.kakao.com/seongsu-runners' },
-      { label: 'Website', value: '등록된 링크 없음' },
-    ],
     membersList: [
       { name: '김도윤', role: '팀장', meta: 'FW', status: '관리자', visibility: '공개' },
       { name: '박서준', role: '운영진', meta: 'GK', status: '관리자', visibility: '공개' },
@@ -117,11 +103,6 @@ const detailByMode: Record<TeamDetailViewModel['mode'], Pick<TeamDetailViewModel
     city: '서울',
     county: '강동구',
     level: '중수',
-    contact: '승인 후 공개',
-    links: [
-      { label: 'Kakao', value: '승인 후 공개' },
-      { label: 'Website', value: '등록된 링크 없음' },
-    ],
     membersList: [
       { name: '운영진', role: '관리자', meta: '가입 신청 검토중', status: '검토중', visibility: '공개' },
       { name: '나', role: '신청자', meta: '가입 승인 대기', status: '검토중', visibility: '비공개' },
@@ -135,11 +116,6 @@ const detailByMode: Record<TeamDetailViewModel['mode'], Pick<TeamDetailViewModel
     city: '서울',
     county: '마포구',
     level: '중수-고수',
-    contact: '비공개',
-    links: [
-      { label: 'Instagram', value: 'https://instagram.com/mapo-oneday' },
-      { label: 'Kakao', value: '모집 재개 후 공개' },
-    ],
     membersList: [
       { name: '모집 상태', role: '마감', meta: '다음 모집 알림 가능', status: '마감', visibility: '비공개' },
     ],
@@ -152,11 +128,6 @@ const detailByMode: Record<TeamDetailViewModel['mode'], Pick<TeamDetailViewModel
     city: '서울',
     county: '구로구',
     level: '초보-중수',
-    contact: '팀장에게만 공개',
-    links: [
-      { label: 'Kakao', value: 'https://open.kakao.com/dynamic-fs' },
-      { label: 'Website', value: '등록된 링크 없음' },
-    ],
     membersList: [
       { name: '나', role: '팀장', meta: '모든 권한', status: '팀장', visibility: '공개' },
       { name: '정하늘', role: '운영진', meta: '가입 승인 가능', status: '관리자', visibility: '공개' },
@@ -248,14 +219,6 @@ export function getTeamFormViewModel(mode: TeamFormViewModel['mode']): TeamFormV
       genderRule: '성별 무관',
       activity: mode === 'edit' ? '평일 저녁 · 주 1회' : '',
       capacity: 24,
-      contact: mode === 'edit' ? '비공개' : '',
-      logoImage: '',
-      coverImage: '',
-      activityImages: [],
-      links: [
-        { label: 'Instagram', value: mode === 'edit' ? 'https://instagram.com/seongsu-runners' : '' },
-        { label: 'Kakao', value: mode === 'edit' ? 'https://open.kakao.com/seongsu-runners' : '' },
-      ],
     },
   };
 }

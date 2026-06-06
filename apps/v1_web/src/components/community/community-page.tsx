@@ -5,6 +5,7 @@ import type { MouseEvent, PointerEvent, ReactNode } from 'react';
 import { useRef, useState } from 'react';
 import { Pin, Send, X } from 'lucide-react';
 import { AppChrome } from '@/components/v1-ui/shell';
+import { EmptyState } from '@/components/v1-ui/primitives';
 import { BellIcon, ChatIcon, ChevronRightIcon, MatchIcon, PlusIcon } from '@/components/v1-ui/icons';
 import { cssUrl } from '@/lib/assets';
 import type { ChatListViewModel, ChatRoomModel, ChatRoomViewModel, NotificationModel, NotificationsViewModel } from './community.types';
@@ -96,6 +97,9 @@ export function NotificationsPageView({ model }: { model: NotificationsViewModel
       )}
     >
       <div className="tm-notification-list">
+        {model.notifications.length === 0 ? (
+          <EmptyState title="알림이 없어요" sub="매치, 팀매치, 채팅 알림이 생기면 이곳에 모아 보여드릴게요." />
+        ) : null}
         {groups.map((group) => {
           const items = model.notifications.filter((notification) => notification.group === group);
           if (items.length === 0) return null;

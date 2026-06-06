@@ -4,10 +4,13 @@ export type TeamMatchModel = {
   sport: string;
   hostTeam: string;
   venue: string;
+  region: string;
   date: string;
   time: string;
+  endTime?: string;
   format: string;
   grade: string;
+  style: string;
   cost: number;
   opponentCost: number;
   uniform: string;

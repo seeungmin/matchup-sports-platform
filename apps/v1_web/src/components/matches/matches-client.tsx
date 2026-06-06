@@ -199,6 +199,7 @@ function toMatchCard(match: V1Match, fallback: MatchCardModel): MatchCardModel {
     region: match.region?.name ?? match.regionName ?? fallback.region,
     date: formatDate(match.startsAt),
     time: formatTime(match.startsAt),
+    endTime: match.endsAt ? formatTime(match.endsAt) : undefined,
     current: capacity.current,
     capacity: capacity.capacity,
     level: match.levelLabel ?? fallback.level,
@@ -207,6 +208,7 @@ function toMatchCard(match: V1Match, fallback: MatchCardModel): MatchCardModel {
     image: match.imageUrl ?? fallback.image,
     status,
     deadline: formatDeadline(match.deadlineAt, status),
+    deadlineDetail: formatDeadlineDetail(match.deadlineAt, status),
     actionLabel: actionLabel(status),
   };
 }
@@ -433,6 +435,18 @@ function formatDeadline(value: string | null | undefined, status: MatchCardModel
   if (diffHours < 24) return `마감 ${diffHours}시간 전`;
   const diffDays = Math.ceil(diffHours / 24);
   return `마감 ${diffDays}일 전`;
+}
+
+function formatDeadlineDetail(value: string | null | undefined, status: MatchCardModel['status']) {
+  if (status === 'pending') return '승인 대기';
+  if (status === 'approved') return '승인 완료';
+  if (status === 'full') return '신청 마감';
+  if (status === 'mine') return '내 매치';
+  if (!value) return '경기 시작 전까지';
+
+  const deadline = new Date(value);
+  if (Number.isNaN(deadline.getTime())) return '경기 시작 전까지';
+  return `${formatDate(value)} ${formatTime(value)}`;
 }
 
 async function shareMatch(match: V1Match) {

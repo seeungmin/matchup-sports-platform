@@ -63,7 +63,7 @@ export function MatchCreatePageClient({ step }: { step: Exclude<MatchCreateStep,
       setError(null);
       const payload = buildPayload(draft, selectedSportId, regionId);
       if (!payload) {
-        setError('종목, 지역, 제목, 장소, 날짜와 시간을 확인해주세요.');
+        setError('종목, 지역, 제목, 장소, 날짜와 신청 마감시간을 확인해주세요.');
         return;
       }
       createMatch.mutate(payload, {
@@ -237,6 +237,8 @@ function buildDefaultDraft(): MatchDraft {
     date: '',
     startTime: '',
     endTime: '',
+    deadlineDate: '',
+    deadlineTime: '',
   };
 }
 
@@ -272,6 +274,7 @@ function normalizeStoredDraft(stored: Partial<MatchDraft>): Partial<MatchDraft> 
 function draftFromEdit(edit: V1MatchEdit): MatchDraft {
   const start = new Date(edit.form.startsAt);
   const end = edit.form.endsAt ? new Date(edit.form.endsAt) : null;
+  const deadline = edit.form.deadlineAt ? new Date(edit.form.deadlineAt) : null;
 
   return {
     ...buildDefaultDraft(),
@@ -288,6 +291,8 @@ function draftFromEdit(edit: V1MatchEdit): MatchDraft {
     date: toDateInput(start),
     startTime: toTimeInput(start),
     endTime: end ? toTimeInput(end) : toTimeInput(start),
+    deadlineDate: deadline ? toDateInput(deadline) : '',
+    deadlineTime: deadline ? toTimeInput(deadline) : '',
   };
 }
 
@@ -296,7 +301,9 @@ function buildPayload(draft: MatchDraft, sportId: string, regionId: string): V1M
 
   const startsAt = new Date(`${draft.date}T${draft.startTime}:00`);
   const endsAt = draft.endTime ? new Date(`${draft.date}T${draft.endTime}:00`) : null;
+  const deadlineAt = draft.deadlineDate && draft.deadlineTime ? new Date(`${draft.deadlineDate}T${draft.deadlineTime}:00`) : null;
   if (Number.isNaN(startsAt.getTime()) || startsAt <= new Date()) return null;
+  if (deadlineAt && (Number.isNaN(deadlineAt.getTime()) || deadlineAt >= startsAt)) return null;
 
   return {
     sportId,
@@ -306,7 +313,7 @@ function buildPayload(draft: MatchDraft, sportId: string, regionId: string): V1M
     imageUrl: draft.image || null,
     startsAt: startsAt.toISOString(),
     endsAt: endsAt && endsAt > startsAt ? endsAt.toISOString() : null,
-    deadlineAt: null,
+    deadlineAt: deadlineAt ? deadlineAt.toISOString() : null,
     capacity: Math.max(Number(draft.capacity) || 2, 2),
     manualPlaceName: draft.venue.trim(),
     addressText: draft.address.trim() || null,

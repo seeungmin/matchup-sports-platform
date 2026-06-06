@@ -156,11 +156,25 @@ function matchStatusBadgeLabel(mode: MatchDetailViewModel['mode'], status: Match
 
 export function MatchDetailPageView({ model }: { model: MatchDetailViewModel }) {
   const { match, mode } = model;
+  const [heroMessage, setHeroMessage] = useState('');
   const locked = mode === 'pending' || mode === 'approved' || match.status === 'full';
   const canRunAction = Boolean(model.onApply);
   const cta = model.applyLabel ?? (mode === 'mine' ? '매치 관리' : mode === 'approved' ? '승인 완료' : mode === 'pending' ? '신청 취소' : match.status === 'full' ? '신청 마감' : '참가 신청');
   const ctaTone = mode === 'pending' ? 'tm-btn-warning' : mode === 'approved' ? 'tm-btn-success' : locked ? 'tm-btn-neutral' : 'tm-btn-primary';
   const showChat = mode === 'approved' && Boolean(model.onChat);
+  const timeRange = match.endTime ? `${match.time}-${match.endTime}` : match.time;
+  const runHeroAction = (action: (() => void | Promise<void>) | undefined, successMessage: string) => {
+    if (!action) return;
+    void Promise.resolve(action())
+      .then(() => {
+        setHeroMessage(successMessage);
+        window.setTimeout(() => setHeroMessage(''), 1800);
+      })
+      .catch(() => {
+        setHeroMessage('처리하지 못했어요. 잠시 후 다시 시도해 주세요.');
+        window.setTimeout(() => setHeroMessage(''), 1800);
+      });
+  };
 
   return (
     <AppChrome title="" activeTab="matches" bottomNav={false} topBar={false}>
@@ -172,7 +186,7 @@ export function MatchDetailPageView({ model }: { model: MatchDetailViewModel }) 
                 <ChevronLeftIcon size={22} strokeWidth={2.2} />
               </Link>
               <div style={{ display: 'flex', gap: 4 }}>
-                <button className="tm-btn tm-btn-icon tm-btn-ghost tm-hero-button" type="button" aria-label="공유" onClick={model.onShare}><ShareIcon size={20} /></button>
+                <button className="tm-btn tm-btn-icon tm-btn-ghost tm-hero-button" type="button" aria-label="공유" onClick={() => runHeroAction(model.onShare, '공유 링크를 준비했어요')}><ShareIcon size={20} /></button>
                 <button className="tm-btn tm-btn-icon tm-btn-ghost tm-hero-button" type="button" aria-label="알림" onClick={model.onNotify}><BellIcon size={20} /></button>
               </div>
             </div>
@@ -185,15 +199,21 @@ export function MatchDetailPageView({ model }: { model: MatchDetailViewModel }) 
               </div>
               <h1 className="tm-match-detail-title">{match.title}</h1>
               <div className="tm-text-caption" style={{ color: 'rgba(255,255,255,.76)', marginTop: 6 }}>{match.host} 호스트 · {match.deadline}</div>
+              {heroMessage ? <div className="tm-text-caption" role="status" style={{ color: 'rgba(255,255,255,.86)', marginTop: 8 }}>{heroMessage}</div> : null}
             </div>
           </div>
         </div>
         <div className="tm-match-detail-body">
-          <InfoRow label="날짜와 시간" value={`${match.date} ${match.time}`} />
+          <InfoRow label="지역" value={match.region} />
+          <InfoRow label="날짜와 시간" value={`${match.date} ${timeRange}`} />
+          <InfoRow label="신청 마감" value={match.deadlineDetail ?? match.deadline} sub={match.deadline} />
           <InfoRow label="장소" value={match.venue} sub={match.address} />
           <InfoRow label="인원" value={`${match.current}/${match.capacity}명`} sub={`${Math.max(match.capacity - match.current, 0)}자리 남음`} />
+          <InfoRow label="레벨" value={match.level} />
           <InfoRow label="성별 조건" value={match.gender} />
           {mode === 'pending' ? <StateCard tone="orange" title="승인 대기" body="호스트가 신청을 확인하고 있습니다." /> : null}
+          {match.description ? <Card pad={16} style={{ marginTop: 10 }}><div className="tm-text-body-lg">설명</div><div className="tm-text-body" style={{ marginTop: 8, lineHeight: 1.55, color: 'var(--text-muted)' }}>{match.description}</div></Card> : null}
+          {match.rules.length ? <Card pad={16} style={{ marginTop: 10 }}><div className="tm-text-body-lg">규칙</div><div style={{ display: 'grid', gap: 6, marginTop: 10 }}>{match.rules.map((rule) => <div key={rule} className="tm-text-body" style={{ color: 'var(--text-muted)' }}>{rule}</div>)}</div></Card> : null}
           <Card pad={16} style={{ marginTop: 10 }}>
             <div className="tm-text-body-lg">참가자</div>
             <div style={{ display: 'grid', gap: 8, marginTop: 12 }}>
@@ -562,7 +582,7 @@ function ImageUploadField({ image, onChange }: { image: string; onChange?: (valu
       </div>
       <div style={{ padding: 14 }}>
         <label className="tm-btn tm-btn-md tm-btn-neutral tm-btn-block">
-          {fileName ? '이미지 변경' : '이미지 업로드'}
+          {fileName ? '이미지 변경' : '대표 이미지 선택'}
           <input className="sr-only" type="file" accept="image/*" onChange={handleChange} />
         </label>
         {fileName ? (
@@ -657,6 +677,11 @@ function PlaceTimeStep({ model }: { model: MatchCreateViewModel }) {
         <CreateField label="시작 시간" value={draft.startTime} type="time" onChange={(value) => model.form?.onFieldChange('startTime', value)} />
         <CreateField label="종료 시간" value={draft.endTime} type="time" onChange={(value) => model.form?.onFieldChange('endTime', value)} />
       </div>
+      <div className="tm-create-two-col">
+        <CreateField label="신청 마감일" value={draft.deadlineDate} type="date" onChange={(value) => model.form?.onFieldChange('deadlineDate', value)} />
+        <CreateField label="신청 마감시간" value={draft.deadlineTime} type="time" onChange={(value) => model.form?.onFieldChange('deadlineTime', value)} />
+      </div>
+      <div className="tm-text-caption" style={{ marginTop: 6 }}>비워두면 경기 시작 전까지 신청을 받을 수 있습니다.</div>
     </div>
   );
 }
@@ -677,7 +702,8 @@ function RegionSelect({ value, regions, onChange }: { value: string; regions: Ar
 function ConfirmStep({ model }: { model: MatchCreateViewModel }) {
   const draft = model.draft;
   const regionName = model.form?.regions.find((region) => region.id === model.form?.regionId)?.name ?? '지역 선택 필요';
-  return <div><h1 className="tm-text-heading">작성된 내용을 확인해주세요</h1><Card pad={0} style={{ marginTop: 16, overflow: 'hidden' }}><div className="tm-create-image-preview" style={{ backgroundImage: cssUrl(draft.image) }} /><div style={{ padding: 16 }}><div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}><span className="tm-badge tm-badge-blue">{model.selectedSport}</span><span className="tm-badge tm-badge-grey">{draft.minLevel}-{draft.maxLevel}</span><span className="tm-badge tm-badge-grey">{draft.gender}</span></div><div className="tm-text-subhead" style={{ marginTop: 10 }}>{draft.title}</div><div className="tm-text-caption" style={{ marginTop: 6 }}>{draft.description}</div></div></Card><Card pad={16} style={{ marginTop: 12 }}><InfoRow label="지역" value={regionName} sub="검색과 추천에 사용됩니다" /><InfoRow label="일시" value={`${draft.date} ${draft.startTime}-${draft.endTime}`} /><InfoRow label="장소" value={draft.venue} sub={draft.address} /><InfoRow label="인원" value={`최대 ${draft.capacity}명`} /><InfoRow label="이미지" value="대표 이미지" sub="목록과 상세 화면에 표시됩니다" /></Card></div>;
+  const deadlineText = draft.deadlineDate && draft.deadlineTime ? `${draft.deadlineDate} ${draft.deadlineTime}` : '경기 시작 전까지';
+  return <div><h1 className="tm-text-heading">작성된 내용을 확인해주세요</h1><Card pad={0} style={{ marginTop: 16, overflow: 'hidden' }}><div className="tm-create-image-preview" style={{ backgroundImage: cssUrl(draft.image) }} /><div style={{ padding: 16 }}><div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}><span className="tm-badge tm-badge-blue">{model.selectedSport}</span><span className="tm-badge tm-badge-grey">{draft.minLevel}-{draft.maxLevel}</span><span className="tm-badge tm-badge-grey">{draft.gender}</span></div><div className="tm-text-subhead" style={{ marginTop: 10 }}>{draft.title}</div><div className="tm-text-caption" style={{ marginTop: 6 }}>{draft.description}</div></div></Card><Card pad={16} style={{ marginTop: 12 }}><InfoRow label="지역" value={regionName} sub="검색과 추천에 사용됩니다" /><InfoRow label="일시" value={`${draft.date} ${draft.startTime}-${draft.endTime}`} /><InfoRow label="신청 마감" value={deadlineText} /><InfoRow label="장소" value={draft.venue} sub={draft.address} /><InfoRow label="인원" value={`최대 ${draft.capacity}명`} /><InfoRow label="이미지" value="대표 이미지" sub="목록과 상세 화면에 표시됩니다" /></Card></div>;
 }
 
 function MatchComplete({ model }: { model: MatchCreateViewModel }) {

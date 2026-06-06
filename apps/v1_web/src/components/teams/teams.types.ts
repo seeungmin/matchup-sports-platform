@@ -8,14 +8,12 @@ export type TeamModel = {
   sports: string[];
   region: string;
   members: number;
+  capacity: number;
   status: TeamStatus;
   statusLabel: string;
   tags: string[];
   genderRule: string;
   intro: string;
-  fit: number;
-  manner: string;
-  trust: 'verified' | 'estimated' | 'none';
   next: string;
 };
 
@@ -70,8 +68,6 @@ export type TeamDetailViewModel = {
     county: string;
     level: string;
     genderRule: string;
-    contact: string;
-    links: Array<{ label: string; value: string }>;
     membersList: Array<{ name: string; role: string; meta: string; status: string; visibility: '공개' | '비공개' }>;
   };
   mode: 'default' | 'pending' | 'mine' | 'closed';
@@ -96,11 +92,6 @@ export type TeamFormViewModel = {
     genderRule: string;
     activity: string;
     capacity: number;
-    contact: string;
-    logoImage: string;
-    coverImage: string;
-    activityImages: string[];
-    links: Array<{ label: string; value: string }>;
   };
   form?: {
     sportId: string;

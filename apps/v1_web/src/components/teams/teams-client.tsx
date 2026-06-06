@@ -205,8 +205,6 @@ export function TeamDetailPageClient({ teamId }: { teamId: string }) {
           city: fallback.team.city,
           county: query.data.region?.name ?? fallback.team.county,
           level: query.data.profile.levelLabel ?? query.data.profile.skillLevelText ?? fallback.team.level,
-          contact: fallback.team.contact,
-          links: fallback.team.links,
           membersList: query.data.membersPreview.map((member) => ({
             name: member.displayName,
             role: roleLabel(member.role),
@@ -293,9 +291,9 @@ function toTeam(team: V1Team, fallback: TeamModel): TeamModel {
     sports: [sportName],
     region: regionName,
     members: team.memberCount,
+    capacity: team.memberCount,
     status: team.joinPolicy === 'closed' ? 'closed' : 'open',
     statusLabel: team.joinPolicy === 'closed' ? '마감' : '모집중',
-    trust: toTrustBadge(team.trustState),
     tags: [team.levelLabel ?? team.skillLevelText ?? fallback.tags[0] ?? '전체 레벨', fallback.tags[1] ?? '주 1회', team.genderRule ?? fallback.genderRule],
     genderRule: team.genderRule ?? fallback.genderRule,
     intro: team.introductionPreview ?? `${regionName}에서 활동하는 ${sportName} 팀입니다. 가입은 팀 운영 정책에 따라 처리됩니다.`,
@@ -402,9 +400,9 @@ function toTeamDetail(team: V1TeamDetail, fallback: TeamModel): TeamModel {
     sports: [team.sport.name],
     region: team.region?.name ?? '지역 미정',
     members: team.memberCount,
+    capacity: team.profile.memberGoalCount ?? team.memberCount,
     status: team.profile.joinPolicy === 'closed' ? 'closed' : team.viewer.joinState === 'requested' ? 'reviewing' : team.viewer.role !== 'none' ? 'mine' : 'open',
     statusLabel: team.profile.joinPolicy === 'closed' ? '마감' : team.viewer.joinState === 'requested' ? '검토중' : team.viewer.role !== 'none' ? '내 팀' : '모집중',
-    trust: toTrustBadge(team.trustState ?? team.trust.trustState),
     genderRule: team.profile.genderRule ?? fallback.genderRule,
     intro: team.profile.introduction ?? fallback.intro,
   };
@@ -451,11 +449,6 @@ function roleLabel(role: string) {
   if (role === 'owner') return '팀장';
   if (role === 'manager') return '운영진';
   return '멤버';
-}
-
-function toTrustBadge(state: V1Team['trustState'] | V1TeamDetail['trustState']): TeamModel['trust'] {
-  if (!state || state === 'none' || state === 'sample') return 'none';
-  return state;
 }
 
 function toMemberModel(

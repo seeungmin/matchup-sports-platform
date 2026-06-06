@@ -15,6 +15,7 @@ const matches = [
     region: '목동',
     date: '5월 16일 토',
     time: '18:00',
+    endTime: '20:00',
     current: 8,
     capacity: 10,
     actionLabel: '승인제 신청',
@@ -23,6 +24,7 @@ const matches = [
     host: '김정민',
     image: '/mock/generated/futsal-rooftop.webp',
     deadline: '마감 18시간 전',
+    deadlineDetail: '5월 15일 24:00',
     status: 'open' as const,
   },
   {
@@ -33,6 +35,7 @@ const matches = [
     region: '송파',
     date: '5월 17일 일',
     time: '07:30',
+    endTime: '08:30',
     current: 5,
     capacity: 12,
     actionLabel: '승인 대기',
@@ -41,6 +44,7 @@ const matches = [
     host: '박서준',
     image: '/mock/generated/team-huddle.webp',
     deadline: '호스트 검토중',
+    deadlineDetail: '호스트 검토중',
     status: 'pending' as const,
   },
   {
@@ -51,6 +55,7 @@ const matches = [
     region: '마포',
     date: '5월 18일 월',
     time: '20:00',
+    endTime: '21:00',
     current: 7,
     capacity: 10,
     actionLabel: '승인 완료',
@@ -59,6 +64,7 @@ const matches = [
     host: '이하나',
     image: '/mock/generated/team-huddle.webp',
     deadline: '참가 확정',
+    deadlineDetail: '참가 확정',
     status: 'approved' as const,
   },
   {
@@ -69,6 +75,7 @@ const matches = [
     region: '목동',
     date: '5월 20일 수',
     time: '21:00',
+    endTime: '23:00',
     current: 20,
     capacity: 20,
     actionLabel: '모집 완료',
@@ -77,6 +84,7 @@ const matches = [
     host: '윤현우',
     image: '/mock/generated/team-huddle.webp',
     deadline: '모집 완료',
+    deadlineDetail: '모집 완료',
     status: 'full' as const,
   },
   {
@@ -87,6 +95,7 @@ const matches = [
     region: '성수',
     date: '5월 21일 목',
     time: '19:30',
+    endTime: '21:30',
     current: 6,
     capacity: 10,
     actionLabel: '매치 관리',
@@ -95,6 +104,7 @@ const matches = [
     host: '나',
     image: '/mock/generated/team-huddle.webp',
     deadline: '신청 3명 검토중',
+    deadlineDetail: '신청 3명 검토중',
     status: 'mine' as const,
   },
 ];
@@ -162,6 +172,8 @@ const draft = {
   date: '',
   startTime: '',
   endTime: '',
+  deadlineDate: '',
+  deadlineTime: '',
 };
 
 export function getMatchListViewModel(): MatchListViewModel {

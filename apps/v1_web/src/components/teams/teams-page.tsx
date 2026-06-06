@@ -131,13 +131,9 @@ export function TeamDetailPageView({ model }: { model: TeamDetailViewModel }) {
           <InfoRow label="구/군" value={team.county} />
           <InfoRow label="레벨" value={team.level} />
           <InfoRow label="성별 조건" value={team.genderRule} />
+          <InfoRow label="정원" value={`${team.capacity}명`} />
           <InfoRow label="모집 여부" value={`${team.statusLabel} · ${team.activity}`} />
           <InfoRow label="정기 일정" value={team.schedule} />
-        </Card>
-        <SectionTitle title="SNS 및 링크" sub="팀에서 공개한 연락처와 링크입니다." />
-        <Card pad={16}>
-          <InfoRow label="연락처" value={team.contact} />
-          {team.links.map((link) => <InfoRow key={link.label} label={link.label} value={link.value} muted={link.value.includes('없음')} />)}
         </Card>
         <Card pad={16} style={{ marginTop: 14 }}>
           <div className="tm-section-row" style={{ marginTop: 0 }}>
@@ -169,7 +165,6 @@ export function TeamFormPageView({ model }: { model: TeamFormViewModel }) {
   return (
     <AppChrome title={edit ? '팀 수정' : '팀 만들기'} activeTab="teams" bottomNav={false} backHref="/teams">
       <div className="tm-create-shell">
-        {!edit ? <TeamCreateProgress /> : null}
         <h1 className="tm-text-heading">{edit ? '팀 정보를 수정해요' : '새 팀을 만들어요'}</h1>
         {form?.error ? <Card pad={14} style={{ marginTop: 14, background: 'var(--red50)' }}><div className="tm-text-label">저장할 수 없어요</div><div className="tm-text-caption" style={{ marginTop: 5 }}>{form.error}</div></Card> : null}
         <CreateField label="팀 이름" value={team.name} placeholder="예: 성수 풋살 크루" onChange={(value) => form?.onFieldChange('name', value)} />
@@ -182,12 +177,6 @@ export function TeamFormPageView({ model }: { model: TeamFormViewModel }) {
         <div className="tm-create-two-col"><TeamLevelSelect value={team.level} onChange={(value) => form?.onFieldChange('level', value)} /><TeamCapacityField value={team.capacity} onChange={(value) => form?.onFieldChange('capacity', value)} /></div>
         <GenderRuleSelector value={team.genderRule} onChange={(value) => form?.onFieldChange('genderRule', value)} />
         <CreateField label="활동 방식" value={team.activity} placeholder="예: 평일 저녁 · 주 1회" onChange={(value) => form?.onFieldChange('activity', value)} />
-        <CreateField label="연락처" value={team.contact} placeholder="예: 오픈채팅 링크 또는 이메일" onChange={(value) => form?.onFieldChange('contact', value)} />
-        {team.links.map((link, index) => <CreateField key={link.label} label={link.label} value={link.value} placeholder={link.label === 'Instagram' ? '예: https://instagram.com/team-name' : '예: https://open.kakao.com/team-name'} onChange={(value) => {
-          const next = [...team.links];
-          next[index] = { ...link, value };
-          form?.onFieldChange('links', next);
-        }} />)}
       </div>
       <div className="tm-fixed-cta"><div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 8 }}><Link className="tm-btn tm-btn-lg tm-btn-neutral" href={edit ? '/teams' : '/teams'}>{edit ? '취소' : '이전'}</Link><button className="tm-btn tm-btn-lg tm-btn-primary" type="button" disabled={form?.submitting} onClick={form?.onSubmit}>{form?.submitting ? '저장 중' : edit ? '저장' : '팀 만들기'}</button></div></div>
     </AppChrome>
@@ -373,7 +362,7 @@ function TeamCard({ team }: { team: TeamModel }) {
     <Link className="tm-team-card tm-pressable" href={`/teams/${team.id}`}>
       <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
         <TeamLogo team={team} />
-        <div style={{ flex: 1, minWidth: 0 }}><div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><div className="tm-text-body-lg line-clamp-2">{team.name}</div><span className={`tm-badge ${team.status === 'closed' ? 'tm-badge-grey' : team.status === 'reviewing' ? 'tm-badge-orange' : 'tm-badge-blue'}`}>{team.statusLabel}</span></div><div className="tm-text-caption" style={{ marginTop: 4 }}>{team.sport} · {team.region} · {team.members}명</div><div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>{[...team.tags, team.genderRule].map((tag) => <span key={tag} className="tm-badge tm-badge-grey">{tag}</span>)}</div></div>
+        <div style={{ flex: 1, minWidth: 0 }}><div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><div className="tm-text-body-lg line-clamp-2">{team.name}</div><span className={`tm-badge ${team.status === 'closed' ? 'tm-badge-grey' : team.status === 'reviewing' ? 'tm-badge-orange' : 'tm-badge-blue'}`}>{team.statusLabel}</span></div><div className="tm-text-caption" style={{ marginTop: 4 }}>{team.sport} · {team.region} · {team.members}명</div><div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>{dedupeTags([...team.tags, team.genderRule]).map((tag) => <span key={tag} className="tm-badge tm-badge-grey">{tag}</span>)}</div></div>
       </div>
       <div className="tm-team-intro-box">
         <div className="tm-text-label">팀소개</div>
@@ -382,6 +371,10 @@ function TeamCard({ team }: { team: TeamModel }) {
       <div className="tm-team-card-footer"><span className="tm-text-caption">{team.next}</span><span className={`tm-btn tm-btn-sm ${team.status === 'closed' ? 'tm-btn-neutral' : 'tm-btn-primary'}`}>{team.status === 'closed' ? '알림받기' : '팀 보기'}</span></div>
     </Link>
   );
+}
+
+function dedupeTags(tags: string[]) {
+  return Array.from(new Set(tags.filter(Boolean)));
 }
 
 function TeamLogo({ team, large }: { team: Pick<TeamModel, 'logo'>; large?: boolean }) {
@@ -401,15 +394,6 @@ function InfoChips({ label, items }: { label: string; items: string[] }) {
     <div className="tm-team-info-block">
       <div className="tm-text-caption" style={{ color: 'var(--text-caption)', fontWeight: 600, marginBottom: 8 }}>{label}</div>
       <div className="tm-team-form-chip-row">{items.map((item) => <span key={item} className="tm-chip tm-chip-active">{item}</span>)}</div>
-    </div>
-  );
-}
-
-function TeamCreateProgress() {
-  return (
-    <div className="tm-create-progress">
-      <div className="tm-text-caption">1단계 / 1단계</div>
-      <div className="tm-create-bars"><span data-active="true" /></div>
     </div>
   );
 }
