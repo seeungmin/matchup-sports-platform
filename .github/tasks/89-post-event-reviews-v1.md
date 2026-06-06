@@ -1,6 +1,6 @@
 # 89. Post-Event Reviews V1
 
-Status: Draft / Approval-Gated
+Status: Complete
 Owner: Codex
 Scope: `apps/v1_api`, `apps/v1_web`, `docs/scenarios`
 Design Source: `docs/reference/handoff-sm-new-direction/sports-platform/project/Teameet Design.html` section `14 리뷰 최종`
@@ -102,7 +102,7 @@ Every numbered step in this task requires explicit user approval before implemen
   - Update `docs/scenarios/09-payment-review-badge.md`.
   - Update task progress and any new gotchas.
 
-- [ ] 89-11. Validation.
+- [x] 89-11. Validation.
   - Backend tests.
   - Frontend typecheck/tests.
   - Route smoke or E2E for `V1-14-001` through `V1-14-004` where feasible.
@@ -755,8 +755,9 @@ Scenario:
 - 2026-06-02: 89-8 frontend UI implementation completed.
 - 2026-06-02: 89-9 existing surface integration completed.
 - 2026-06-03: 89-10 scenario and docs sync completed.
-- Current step: 89-11 validation follow-up.
-- Next step: complete backend/frontend tests and route smoke/E2E for `V1-14-*`.
+- 2026-06-05: 89-11 validation completed. Regenerated Prisma Client, backend/frontend typechecks passed, backend unit suite passed, targeted frontend review view-model test passed, and review routes were added to responsive route smoke.
+- Current step: complete.
+- Next step: no Task 89 follow-up required; payment/badge scenarios remain outside this task.
 
 ## Ambiguity Log
 
@@ -812,3 +813,14 @@ Scenario:
 
 - Reconciled stale Acceptance Criteria checkboxes against implemented review API/UI/data/scenario evidence.
 - Kept 89-11 open because targeted Jest previously timed out and route smoke/E2E has not been completed.
+
+### 2026-06-05
+
+- Ran `pnpm v1:db:generate` to refresh the Prisma Client for Task 89 review models.
+- Verified `apps/v1_api` typecheck with `.\node_modules\.bin\tsc.CMD --noEmit`.
+- Verified `apps/v1_web` typecheck with `.\node_modules\.bin\tsc.CMD --noEmit`.
+- Verified backend unit suite with `pnpm --filter v1_api test -- --passWithNoTests`: 15 suites / 87 tests passed.
+- Verified targeted frontend review unit with `pnpm exec vitest run src/components/reviews/reviews.view-model.test.ts --config ./vitest.config.mts`: 1 file / 1 test passed. Sandbox execution was blocked by esbuild parent-directory access, so this was rerun with approval outside the sandbox.
+- Extended `scripts/qa/v1-responsive-route-smoke.mjs` to include review routes and query-string paths.
+- Verified review route smoke with `BASE_URL=http://localhost:3013/v1 RUN_ID=reviews-responsive-smoke-final node scripts/qa/v1-responsive-route-smoke.mjs`: 29 routes across 320/390/430, issues 0. Report: `output/playwright/v1-responsive-smoke/reviews-responsive-smoke-final/report.md`.
+- Marked 89-11 and Task 89 complete.

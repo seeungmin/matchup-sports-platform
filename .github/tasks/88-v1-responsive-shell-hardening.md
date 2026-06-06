@@ -103,7 +103,7 @@ This task is a responsive stability pass, not a redesign. Colors, typography, ca
     - Home quick actions and list summary rows adapt at `320px`.
     - Cards, chips, and CTA rows preserve the current design language.
 
-- [ ] 5. Fix utility responsive pressure points.
+- [x] 5. Fix utility responsive pressure points.
   - Routes:
     - `/search`
     - `/chat`
@@ -114,7 +114,7 @@ This task is a responsive stability pass, not a redesign. Colors, typography, ca
     - Notification toast and fixed elements do not overlap bottom UI.
     - Search chips/cards do not compress poorly at `320px`.
 
-- [ ] 6. Second pass for detail/create/edit/filter routes.
+- [x] 6. Second pass for detail/create/edit/filter routes.
   - Routes:
     - `/matches/[id]`
     - `/team-matches/[id]`
@@ -126,7 +126,7 @@ This task is a responsive stability pass, not a redesign. Colors, typography, ca
     - `/team-matches/filter`
     - `/teams/filter`
 
-- [ ] 7. Validate.
+- [x] 7. Validate.
   - Fast diagnostic:
     - `320`
     - `390`
@@ -140,7 +140,7 @@ This task is a responsive stability pass, not a redesign. Colors, typography, ca
     - `430`
     - `480`
 
-- [ ] 8. Restart affected server.
+- [x] 8. Restart affected server.
   - Restart `v1_web`.
   - Confirm `http://localhost:3013/v1` responds.
 
@@ -162,6 +162,13 @@ Record every change in this section before or immediately after editing.
 - Step 3 complete: replaced `/search` inline `375px` frame, topbar height, horizontal content padding, and error toast bottom spacing with the v1 shell tokens.
 - Step 4 complete: added narrow-viewport wrapping for main-tab quick actions, match/team summary rows, card footer rows, and my-page card actions without changing the default design state.
 
+### 2026-06-05
+
+- Step 5 complete: made chat input, notification list, and notification toast consume v1 safe-area/page padding tokens; added narrow-viewport search quick-filter wrapping.
+- Step 6 complete: added narrow-viewport safeguards for fixed CTA button grids, filter sheets/actions, info rows, team detail stats, team-match VS rows, and chat row/bubble widths.
+- Step 7 complete: validated with `pnpm.cmd --filter v1_web build` and direct `tsc.CMD --noEmit`.
+- Step 8 complete: started `pnpm.cmd --filter v1_web dev:e2e` and confirmed `http://localhost:3013/v1` returns `200 OK`.
+
 ## Backup / Rollback Map
 
 Use this section to identify exactly what can be reverted if a step changes the design unexpectedly.
@@ -179,11 +186,15 @@ Use this section to identify exactly what can be reverted if a step changes the 
 Record commands, route checks, and viewport observations here.
 
 - 2026-06-02: `pnpm --filter v1_web exec tsc --noEmit` passed after Steps 1-4.
+- 2026-06-05: `pnpm.cmd --filter v1_web build` passed after Steps 5-6.
+- 2026-06-05: `apps/v1_web/node_modules/.bin/tsc.CMD --noEmit` passed after build refreshed `.next/types`.
+- 2026-06-05: `http://localhost:3013/v1` returned `200 OK` after starting `pnpm.cmd --filter v1_web dev:e2e`.
+- 2026-06-05: `node scripts/qa/v1-responsive-route-smoke.mjs` passed on 22 routes across `320`, `390`, and `430` widths. Report: `output/playwright/v1-responsive-smoke/responsive-rerun-match-320/report.md`.
 
 ## Progress Snapshot
 
-- Current step: Step 4 main-tab responsive pressure points complete.
-- Next step: Step 5 fix utility responsive pressure points.
+- Current step: Step 8 complete. Responsive shell hardening checklist and viewport screenshot smoke are complete.
+- Next step: Use `scripts/qa/v1-responsive-route-smoke.mjs` for future responsive regression checks.
 
 ## Ambiguity Log
 

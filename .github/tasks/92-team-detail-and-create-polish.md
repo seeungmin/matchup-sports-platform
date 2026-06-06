@@ -1,5 +1,7 @@
 # 92 Team Detail And Create Polish
 
+Status: complete
+
 ## Scope
 
 - Frontend: `apps/v1_web/src/components/teams/*`
@@ -24,3 +26,4 @@
 ## Progress Snapshot
 
 - 2026-06-04: UI/type/view-model/payload 정리 완료. `pnpm --filter v1_web exec tsc --noEmit` 통과.
+- 2026-06-06: Validation completed. apps/v1_web tsc --noEmit passed, and BASE_URL=http://localhost:3013/v1 RUN_ID=task92-team-polish-smoke node scripts/qa/v1-responsive-route-smoke.mjs passed with 29 routes x 3 viewports, issues 0. Task 92 routes /teams/team-1 and /teams/new were included.

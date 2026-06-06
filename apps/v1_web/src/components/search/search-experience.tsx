@@ -160,7 +160,7 @@ export function SearchExperience({ state = 'results' }: SearchExperienceProps) {
         </div>
 
         <div className="tm-text-label" style={{ marginTop: 20 }}>빠른 조건</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
+        <div className="tm-search-quick-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
           {quickFilters.map(([title, sub]) => {
             const selected = selectedQuickFilter === title;
             return (

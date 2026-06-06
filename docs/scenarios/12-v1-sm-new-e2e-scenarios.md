@@ -489,6 +489,10 @@ DB evidence:
 | V1-14-006 | Written and received review surfaces | Written reviews appear in `/my/reviews?tab=written`; received reviews appear in `/my/reviews/received` grouped by event and separated between user reviews and managed-team reviews |
 | V1-14-007 | Reputation and trust score recalculation | Personal match reviews recalculate target `V1UserReputationSummary`; team match reviews recalculate target `V1TeamTrustScore` with `1-2` reviews as `estimated` and `3+` as `verified` |
 
+Validation evidence:
+
+- 2026-06-05: Task 89 `89-11` completed. `pnpm v1:db:generate`, API/Web `tsc --noEmit`, backend unit suite `87/87`, targeted review view-model test `1/1`, and review route responsive smoke `29 routes x 3 viewports` passed with 0 issues. Report: `output/playwright/v1-responsive-smoke/reviews-responsive-smoke-final/report.md`.
+
 ## Suggested Automation Files
 
 Initial E2E specs should be split by product journey, not by API module.

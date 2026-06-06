@@ -2,7 +2,7 @@
 
 Date: 2026-06-04
 Owner: codex
-Status: in_progress
+Status: complete
 
 ## Scope
 
@@ -25,8 +25,9 @@ Status: in_progress
 
 - [x] `pnpm --filter v1_api exec tsc --noEmit`
 - [x] `pnpm --filter v1_web exec tsc --noEmit`
-- [ ] Focused browser smoke for `/matches/new/*`, `/team-matches/:id`, and `/team-matches/new/*` when local runtime is available.
+- [x] Focused browser smoke for `/matches/new/*`, `/team-matches/:id`, and `/team-matches/new/*` when local runtime is available.
 
 ## Progress Snapshot
 
 - 2026-06-04: Implemented user feedback for match create image/region flow and team match detail/create authorization UX.
+- 2026-06-05: Responsive route smoke covered `/matches/new/*`, `/team-matches/team-match-1`, and `/team-matches/new/*` at 320/390/430 widths with 0 issues. Report: `output/playwright/v1-responsive-smoke/responsive-rerun-match-320/report.md`.

@@ -11,7 +11,7 @@
 
 - [x] TEAM-001 팀 생성 후 owner 관점 반영 (`e2e/tests/team-owner-flow.spec.ts`)
 - [x] TEAM-002 owner/manager 권한 차등 (`e2e/tests/team-manager-membership.spec.ts`)
-- [ ] TEAM-003 팀 상세 이미지 슬롯 제거와 주요 멤버 공개 범위 표시 (`visual/manual + follow-up automation`)
+- [x] TEAM-003 팀 상세 이미지 슬롯 제거와 주요 멤버 공개 범위 표시 (`visual/manual + follow-up automation`)
 - [x] TEAM-004 일반 멤버 self-leave와 내 팀 동기화
 - [x] TEAM-005 owner role change / remove member 반영 (`TEAM-005-A/B` pass, `TEAM-005-C` planned)
 
@@ -175,3 +175,4 @@
 - 2026-04-10: `/teams/new`는 실제 저장되는 필드만 submit하도록 정리했고, `/my/teams`와 `/teams/[id]`는 지원되지 않는 edit/delete CTA를 더 이상 노출하지 않는다.
 - 2026-04-10: `04-team-and-membership` 범위에서는 `TEAM-001-A~D`, `TEAM-002-A~C`, `TEAM-004-A`, `TEAM-005-A/B`가 통과했고 `TEAM-004-B`, `TEAM-005-C`는 follow-up contract로 남아 있다.
 - 2026-04-10: 같은 Playwright 실행 파일 묶음에는 다른 도메인 smoke인 `TM-SMOKE-001 /team-matches/new`도 포함되어 있어 전체 터미널 결과는 `10 passed / 1 skipped`로 기록됐다.
+- 2026-06-06: Task 92 validation completed. apps/v1_web tsc --noEmit passed; responsive smoke included /teams/team-1 and /teams/new across 320/390/430 with 0 issues. Report: output/playwright/v1-responsive-smoke/task92-team-polish-smoke/report.md.
